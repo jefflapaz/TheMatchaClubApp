@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Controller\" />
+    <Folder Include="Models\" />
+    <Folder Include="Resources\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Guna.UI2.WinForms" Version="2.0.4.7" />
+    <PackageReference Include="ReaLTaiizor" Version="3.8.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Forms\MainShellDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\LoginDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\DashboardDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\NavItemDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\ProductCardDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\InventoryCardDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\CustomOrderTableDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\QuickSaleDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\OrdersDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\ItemsDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\CustomersDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\ReportsDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\SettingsDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\SetupWizardDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="Forms\CheckoutDialogDesign.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="Forms\*Design.resx" />
+    <EmbeddedResource Include="Forms\DashboardDesign.resx" />
+    <EmbeddedResource Include="Forms\MainShellDesign.resx" />
+    <EmbeddedResource Include="Forms\NavItemDesign.resx" />
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

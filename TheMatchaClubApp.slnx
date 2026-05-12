@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TheMatchaClub.Infrastructure/TheMatchaClub.Infrastructure.csproj" Id="550c7f3a-9809-4382-93a2-d8aaf107d0f4" />
+  <Project Path="TheMatchaClub.Services/TheMatchaClub.Services.csproj" Id="39ef7b87-8894-4d1d-bc5c-48413aead318" />
+  <Project Path="TheMatchaClubApp/TheMatchaClubApp.csproj" />
+  <Project Path="TheMatchaClubDomain/TheMatchaClubDomain.csproj" />
+</Solution>
