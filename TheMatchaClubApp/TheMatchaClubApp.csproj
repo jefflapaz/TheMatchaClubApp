@@ -73,10 +73,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Remove="Forms\*Design.resx" />
-    <EmbeddedResource Include="Forms\DashboardDesign.resx" />
-    <EmbeddedResource Include="Forms\MainShellDesign.resx" />
-    <EmbeddedResource Include="Forms\NavItemDesign.resx" />
+
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
