@@ -64,6 +64,7 @@ namespace TheMatchaClubApp.Forms
 
             // ── Sidebar ────────────────────────────────────────────
             pnlSidebar.BackColor = SidebarBg;
+            pnlSidebar.Padding = new Padding(0, 32, 0, 0); // Balance with content padding
             pnlSidebar.Paint += PnlSidebar_Paint;
 
             // ── Logo header ────────────────────────────────────────
@@ -108,6 +109,7 @@ namespace TheMatchaClubApp.Forms
 
             // ── Content panel ──────────────────────────────────────
             pnlContent.BackColor = ContentBg;
+            pnlContent.Padding = new Padding(0, 32, 0, 0); // Push content down to clear window buttons
 
             // ── Footer ─────────────────────────────────────────────
             pnlFooter.BackColor = Color.White;
