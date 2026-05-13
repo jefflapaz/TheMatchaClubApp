@@ -1,9 +1,16 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TheMatchaClubApp.Core.Models;
 
 namespace TheMatchaClub.Infrastructure.Data
 {
-    public class MatchaClubDbContext : DbContext
+    /// <summary>
+    /// Main database context for the Matcha Club POS system.
+    /// Inherits from IdentityDbContext to include ASP.NET Identity tables
+    /// (AspNetUsers, AspNetRoles, AspNetUserRoles, etc.) alongside
+    /// the application's business tables.
+    /// </summary>
+    public class MatchaClubDbContext : IdentityDbContext<ApplicationUser>
     {
         public MatchaClubDbContext(DbContextOptions<MatchaClubDbContext> options)
             : base(options)
@@ -18,6 +25,7 @@ namespace TheMatchaClub.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // MUST call base — IdentityDbContext configures Identity table schemas here
             base.OnModelCreating(modelBuilder);
 
             // Apply all configurations from this assembly

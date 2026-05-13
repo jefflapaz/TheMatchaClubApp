@@ -1,8 +1,12 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
+using TheMatchaClubApp.Core.Models;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -71,7 +75,7 @@ namespace TheMatchaClubApp.Forms
             lblSubtitle.ForeColor = ColorTranslator.FromHtml("#6B7280");
             lblSubtitle.TextAlign = ContentAlignment.MiddleCenter;
 
-            // Email Field
+            // Email Field — no more hardcoded defaults
             lblEmail.Font = new Font("Segoe UI", 7F, FontStyle.Bold);
             lblEmail.ForeColor = ColorTranslator.FromHtml("#6B7280");
             
@@ -80,12 +84,11 @@ namespace TheMatchaClubApp.Forms
             txtEmail.BorderRadius = 8;
             txtEmail.ForeColor = ColorTranslator.FromHtml("#374151");
             txtEmail.Font = new Font("Segoe UI", 9F);
-            txtEmail.DefaultText = "admin@matchacafe.pos";
-            txtEmail.PlaceholderText = "";
+            txtEmail.DefaultText = "";
+            txtEmail.PlaceholderText = "Enter your email or username";
             txtEmail.TextOffset = new Point(5, 0);
-            // txtEmail.IconLeft = Properties.Resources.user_icon; // Uncomment and replace with actual PNG resource
 
-            // Password Field
+            // Password Field — no more hardcoded defaults
             lblPassword.Font = new Font("Segoe UI", 7F, FontStyle.Bold);
             lblPassword.ForeColor = ColorTranslator.FromHtml("#6B7280");
 
@@ -100,10 +103,9 @@ namespace TheMatchaClubApp.Forms
             txtPassword.ForeColor = ColorTranslator.FromHtml("#374151");
             txtPassword.Font = new Font("Segoe UI", 9F);
             txtPassword.UseSystemPasswordChar = true;
-            txtPassword.DefaultText = "password123";
-            txtPassword.PlaceholderText = "";
+            txtPassword.DefaultText = "";
+            txtPassword.PlaceholderText = "Enter your password";
             txtPassword.TextOffset = new Point(5, 0);
-            // txtPassword.IconLeft = Properties.Resources.lock_icon; // Uncomment and replace with actual PNG resource
 
             // Sign In Button
             btnSignIn.FillColor = ColorTranslator.FromHtml("#52B743");
@@ -219,20 +221,114 @@ namespace TheMatchaClubApp.Forms
             dragging = false;
         }
 
-        private void BtnSignIn_Click(object? sender, EventArgs e)
+        /// <summary>
+        /// Authenticates the user against the Identity database.
+        /// Supports login by email OR username.
+        /// Uses Identity's built-in password verification (no custom hashing).
+        /// </summary>
+        private async void BtnSignIn_Click(object? sender, EventArgs e)
         {
-            var shell = new MainShell();
-            shell.FormClosed += (_, __) =>
+            // ── Validate empty fields ───────────────────────────────
+            string loginInput = txtEmail.Text.Trim();
+            string password = txtPassword.Text;
+
+            if (string.IsNullOrWhiteSpace(loginInput))
             {
-                this.Show(); // return to login when shell is closed
-            };
-            this.Hide();
-            shell.Show();
+                MessageBox.Show("Please enter your email or username.",
+                    "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtEmail.Focus();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                MessageBox.Show("Please enter your password.",
+                    "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtPassword.Focus();
+                return;
+            }
+
+            // ── Disable button during auth ──────────────────────────
+            btnSignIn.Enabled = false;
+            btnSignIn.Text = "Signing In...";
+
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+                // ── Try to find user by email first, then by username ─
+                ApplicationUser? user = null;
+
+                // Check if input looks like an email
+                if (loginInput.Contains('@'))
+                {
+                    user = await userManager.FindByEmailAsync(loginInput);
+                }
+
+                // If not found by email, try username
+                if (user == null)
+                {
+                    user = await userManager.FindByNameAsync(loginInput);
+                }
+
+                // If still not found, also try email for non-@ inputs
+                if (user == null)
+                {
+                    user = await userManager.FindByEmailAsync(loginInput);
+                }
+
+                if (user == null)
+                {
+                    MessageBox.Show("Invalid email/username or password.",
+                        "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // ── Verify password using Identity's built-in hashing ─
+                var passwordValid = await userManager.CheckPasswordAsync(user, password);
+
+                if (!passwordValid)
+                {
+                    MessageBox.Show("Invalid email/username or password.",
+                        "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // ── Login successful! ───────────────────────────────
+                // Store logged-in user info for the session
+                Program.CurrentUser = user;
+
+                var shell = new MainShell();
+                shell.FormClosed += (_, __) =>
+                {
+                    // Clear user on logout and return to login
+                    Program.CurrentUser = null;
+                    txtPassword.Text = "";
+                    this.Show();
+                };
+                this.Hide();
+                shell.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred during login: {ex.Message}",
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnSignIn.Enabled = true;
+                btnSignIn.Text = "Sign In to Terminal";
+            }
         }
 
+        /// <summary>
+        /// Opens the Admin Setup form for creating additional accounts.
+        /// </summary>
         private void LnkSetup_Click(object? sender, EventArgs e)
         {
-            MessageBox.Show("Navigate to SetupWizardForm", "First Time Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var setupForm = new AdminSetupForm(_serviceProvider);
+            setupForm.ShowDialog(this);
         }
 
         private void LoginForm_Resize(object? sender, EventArgs e)
