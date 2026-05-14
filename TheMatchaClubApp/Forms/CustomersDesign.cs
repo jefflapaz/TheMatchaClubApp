@@ -40,13 +40,6 @@ namespace TheMatchaClubApp.Forms
             lblViewName.ForeColor = CTextPrimary;
             lblViewName.BackColor = Color.Transparent;
 
-            btnAddCustomer.FillColor = CGreen;
-            btnAddCustomer.HoverState.FillColor = ColorTranslator.FromHtml("#46A037");
-            btnAddCustomer.ForeColor = Color.White;
-            btnAddCustomer.BorderRadius = 8;
-            btnAddCustomer.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            btnAddCustomer.BorderThickness = 0;
-
             // Split Container
             splitContainerMain.BackColor = CBorderLight;
             splitContainerMain.Panel1.BackColor = CCardBg;
@@ -64,6 +57,14 @@ namespace TheMatchaClubApp.Forms
             StyleFilterButton(btnFilterRegular, false);
             StyleFilterButton(btnFilterNew, false);
 
+            // Sort dropdown
+            cmbSort.BorderRadius = 6;
+            cmbSort.BorderColor = CBorderLight;
+            cmbSort.FillColor = CCardBg;
+            cmbSort.ForeColor = CTextBody;
+            cmbSort.Font = new Font("Segoe UI", 8F);
+            cmbSort.ItemHeight = 22;
+
             // Profile Pane
             lblProfileName.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblProfileName.ForeColor = CTextPrimary;
@@ -73,12 +74,6 @@ namespace TheMatchaClubApp.Forms
             
             lblProfilePhone.Font = new Font("Segoe UI", 10F);
             lblProfilePhone.ForeColor = CTextSecondary;
-            
-            chipStatus.FillColor = CGreenBg;
-            chipStatus.ForeColor = CGreen;
-            chipStatus.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            chipStatus.BorderColor = CGreen;
-            chipStatus.BorderThickness = 1;
 
             StyleOutlineButton(btnEmail);
             StyleOutlineButton(btnEditProfile);
@@ -87,9 +82,24 @@ namespace TheMatchaClubApp.Forms
             lblHistoryTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             lblHistoryTitle.ForeColor = CTextPrimary;
 
-            StyleOutlineButton(btnViewOrders);
-            btnViewOrders.Font = new Font("Segoe UI", 9F);
-            btnViewOrders.Size = new Size(130, 30);
+            // History filters
+            txtHistorySearch.BorderRadius = 6;
+            txtHistorySearch.FillColor = CCardBg;
+            txtHistorySearch.PlaceholderForeColor = CTextMuted;
+            txtHistorySearch.Font = new Font("Segoe UI", 8.5F);
+            txtHistorySearch.BorderColor = CBorderLight;
+
+            cmbDateFilter.BorderRadius = 6;
+            cmbDateFilter.BorderColor = CBorderLight;
+            cmbDateFilter.FillColor = CCardBg;
+            cmbDateFilter.ForeColor = CTextBody;
+            cmbDateFilter.Font = new Font("Segoe UI", 8F);
+            cmbDateFilter.ItemHeight = 20;
+
+            dtpCustomDate.BorderRadius = 6;
+            dtpCustomDate.FillColor = CCardBg;
+            dtpCustomDate.ForeColor = CTextBody;
+            dtpCustomDate.Font = new Font("Segoe UI", 8F);
 
             // DataGrid - Matcha Green Header
             dgvHistory.ThemeStyle.HeaderStyle.BackColor = CGreen;
@@ -121,15 +131,21 @@ namespace TheMatchaClubApp.Forms
             lblNotesTitle.ForeColor = CTextMuted;
 
             lblFavCatLabel.Font = new Font("Segoe UI", 9F);
-            lblFavCatLabel.ForeColor = CTextBody;
+            lblFavCatLabel.ForeColor = CTextSecondary;
             lblModLabel.Font = new Font("Segoe UI", 9F);
-            lblModLabel.ForeColor = CTextBody;
+            lblModLabel.ForeColor = CTextSecondary;
             lblTimeLabel.Font = new Font("Segoe UI", 9F);
-            lblTimeLabel.ForeColor = CTextBody;
+            lblTimeLabel.ForeColor = CTextSecondary;
 
-            StyleIntelligenceChip(lblFavCatValue);
-            StyleIntelligenceChip(lblModValue);
-            StyleIntelligenceChip(lblTimeValue);
+            lblFavCatValue.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblFavCatValue.ForeColor = CTextPrimary;
+            lblFavCatValue.BackColor = Color.Transparent;
+            lblModValue.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblModValue.ForeColor = CTextPrimary;
+            lblModValue.BackColor = Color.Transparent;
+            lblTimeValue.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblTimeValue.ForeColor = CTextPrimary;
+            lblTimeValue.BackColor = Color.Transparent;
 
             txtAdminNotes.BorderRadius = 6;
             txtAdminNotes.Font = new Font("Segoe UI", 9F);
@@ -184,14 +200,5 @@ namespace TheMatchaClubApp.Forms
             btn.Font = new Font("Segoe UI Semibold", 9F);
         }
 
-        private void StyleIntelligenceChip(Guna.UI2.WinForms.Guna2Chip chip)
-        {
-            chip.FillColor = CCardBg;
-            chip.ForeColor = CTextBody;
-            chip.BorderColor = CBorderLight;
-            chip.BorderThickness = 1;
-            chip.Font = new Font("Segoe UI Semibold", 8F);
-            chip.TextAlign = HorizontalAlignment.Left;
-        }
     }
 }

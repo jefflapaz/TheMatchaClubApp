@@ -11,6 +11,8 @@ namespace TheMatchaClubApp.Forms
     {
         private Customer? _currentCustomer;
         private string _currentFilter = "All";
+        private bool _notesEditMode = false;
+        private List<Order> _currentOrders = new();
 
         public CustomersView()
         {
@@ -53,6 +55,8 @@ namespace TheMatchaClubApp.Forms
             dgvHistory.Columns.Add(btnCol);
         }
 
+        private string _sortOrder = "az"; // default A-Z
+
         private void WireEvents()
         {
             txtSearch.TextChanged += (s, e) => LoadDirectory();
@@ -60,13 +64,33 @@ namespace TheMatchaClubApp.Forms
             btnFilterRegular.Click += (s, e) => { SetFilter("Regular"); LoadDirectory(); };
             btnFilterNew.Click += (s, e) => { SetFilter("New"); LoadDirectory(); };
             
+            cmbSort.SelectedIndexChanged += (s, e) =>
+            {
+                _sortOrder = cmbSort.SelectedIndex switch
+                {
+                    0 => "az",
+                    1 => "za",
+                    2 => "newest",
+                    3 => "oldest",
+                    _ => "az"
+                };
+                LoadDirectory();
+            };
+            
             dgvHistory.CellContentClick += DgvHistory_CellContentClick;
             btnSaveNote.Click += BtnSaveNote_Click;
-            btnAddCustomer.Click += BtnAddCustomer_Click;
             
-            btnViewOrders.Click += BtnViewOrders_Click;
             btnCalendarClose.Click += (s, e) => pnlCalendarPopup.Visible = false;
             
+            // History filter events
+            txtHistorySearch.TextChanged += (s, e) => FilterPurchaseHistory();
+            cmbDateFilter.SelectedIndexChanged += (s, e) =>
+            {
+                dtpCustomDate.Visible = cmbDateFilter.SelectedIndex == 4; // Custom Date
+                FilterPurchaseHistory();
+            };
+            dtpCustomDate.ValueChanged += (s, e) => FilterPurchaseHistory();
+
             flpCalendarDays.Scroll += FlpCalendarDays_Scroll;
             flpCalendarDays.MouseWheel += FlpCalendarDays_Scroll;
         }
@@ -79,6 +103,16 @@ namespace TheMatchaClubApp.Forms
             StyleFilterButton(btnFilterNew, filter == "New");
         }
 
+        /// <summary>
+        /// Dynamic classification: New = ≤1 order AND member for less than 30 days. Otherwise Regular.
+        /// </summary>
+        private string GetDynamicStatus(Customer c)
+        {
+            int orderCount = Program.DataService.Orders.Count(o => o.CustomerId == c.Id);
+            bool isRecent = (DateTime.Now - c.MemberSince).TotalDays <= 30;
+            return (orderCount <= 1 && isRecent) ? "New" : "Regular";
+        }
+
         private void LoadDirectory()
         {
             flpCustomers.SuspendLayout();
@@ -87,15 +121,19 @@ namespace TheMatchaClubApp.Forms
             string search = txtSearch.Text.Trim();
             
             var allCustomers = Program.DataService.Customers;
+
+            // Compute dynamic status for each customer
+            int regularCount = allCustomers.Count(c => GetDynamicStatus(c) == "Regular");
+            int newCount = allCustomers.Count(c => GetDynamicStatus(c) == "New");
             
             btnFilterAll.Text = $"All ({allCustomers.Count})";
-            btnFilterRegular.Text = $"Regular ({allCustomers.Count(c => c.Status == "Regular")})";
-            btnFilterNew.Text = $"New ({allCustomers.Count(c => c.Status == "New")})";
+            btnFilterRegular.Text = $"Regular ({regularCount})";
+            btnFilterNew.Text = $"New ({newCount})";
             
             var filtered = allCustomers.AsEnumerable();
             if (_currentFilter != "All")
             {
-                filtered = filtered.Where(c => string.Equals(c.Status, _currentFilter, StringComparison.OrdinalIgnoreCase));
+                filtered = filtered.Where(c => string.Equals(GetDynamicStatus(c), _currentFilter, StringComparison.OrdinalIgnoreCase));
             }
             
             if (!string.IsNullOrEmpty(search))
@@ -106,7 +144,16 @@ namespace TheMatchaClubApp.Forms
                     c.Email.Contains(search, StringComparison.OrdinalIgnoreCase));
             }
 
-            foreach (var c in filtered)
+            // Apply sorting
+            var sorted = _sortOrder switch
+            {
+                "za" => filtered.OrderByDescending(c => c.Name),
+                "newest" => filtered.OrderByDescending(c => c.MemberSince),
+                "oldest" => filtered.OrderBy(c => c.MemberSince),
+                _ => filtered.OrderBy(c => c.Name) // "az"
+            };
+
+            foreach (var c in sorted)
             {
                 var card = CreateCustomerCard(c);
                 flpCustomers.Controls.Add(card);
@@ -117,10 +164,11 @@ namespace TheMatchaClubApp.Forms
 
         private Panel CreateCustomerCard(Customer c)
         {
+            int cardWidth = Math.Max(flpCustomers.ClientSize.Width - 24, 200);
             var pnl = new Guna.UI2.WinForms.Guna2Panel
             {
-                Size = new Size(310, 80),
-                Margin = new Padding(0, 0, 0, 10),
+                Size = new Size(cardWidth, 68),
+                Margin = new Padding(0, 0, 0, 6),
                 BorderRadius = 8,
                 FillColor = Color.White,
                 BorderColor = ColorTranslator.FromHtml("#E5E7EB"),
@@ -141,8 +189,8 @@ namespace TheMatchaClubApp.Forms
 
             var pic = new Guna.UI2.WinForms.Guna2CirclePictureBox
             {
-                Size = new Size(40, 40),
-                Location = new Point(10, 20),
+                Size = new Size(36, 36),
+                Location = new Point(10, 16),
                 SizeMode = PictureBoxSizeMode.Zoom
             };
             if (!string.IsNullOrEmpty(c.ProfileImagePath) && System.IO.File.Exists(c.ProfileImagePath))
@@ -154,8 +202,8 @@ namespace TheMatchaClubApp.Forms
             var lblName = new Label
             {
                 Text = c.Name,
-                Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
-                Location = new Point(60, 15),
+                Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold),
+                Location = new Point(54, 12),
                 AutoSize = true,
                 ForeColor = ColorTranslator.FromHtml("#111827")
             };
@@ -164,8 +212,8 @@ namespace TheMatchaClubApp.Forms
             var lblEmail = new Label
             {
                 Text = c.Email,
-                Font = new Font("Segoe UI", 8F),
-                Location = new Point(60, 40),
+                Font = new Font("Segoe UI", 7.5F),
+                Location = new Point(54, 34),
                 AutoSize = true,
                 ForeColor = ColorTranslator.FromHtml("#6B7280")
             };
@@ -178,23 +226,23 @@ namespace TheMatchaClubApp.Forms
             {
                 Text = FormatCurrency(totalSpent),
                 Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold),
-                Location = new Point(220, 15),
+                Location = new Point(cardWidth - 100, 12),
                 AutoSize = true,
                 ForeColor = ColorTranslator.FromHtml("#111827")
             };
             pnl.Controls.Add(lblSpent);
 
-            var chip = new Guna.UI2.WinForms.Guna2Chip
+            string dynamicStatus = GetDynamicStatus(c);
+            var lblStatus = new Label
             {
-                Text = c.Status,
-                Location = new Point(220, 35),
-                Size = new Size(70, 20),
+                Text = dynamicStatus,
+                Location = new Point(cardWidth - 100, 34),
+                AutoSize = true,
                 Font = new Font("Segoe UI", 7F, FontStyle.Bold),
-                FillColor = c.Status == "Regular" ? ColorTranslator.FromHtml("#EFF6FF") : ColorTranslator.FromHtml("#FDF4FF"),
-                ForeColor = c.Status == "Regular" ? ColorTranslator.FromHtml("#3B82F6") : ColorTranslator.FromHtml("#D946EF"),
-                BorderThickness = 0
+                ForeColor = dynamicStatus == "Regular" ? ColorTranslator.FromHtml("#3B82F6") : ColorTranslator.FromHtml("#D946EF"),
+                BackColor = Color.Transparent
             };
-            pnl.Controls.Add(chip);
+            pnl.Controls.Add(lblStatus);
 
             BindClick(pnl);
             return pnl;
@@ -212,7 +260,6 @@ namespace TheMatchaClubApp.Forms
             lblProfileName.Text = c.Name;
             lblProfileEmail.Text = c.Email;
             lblProfilePhone.Text = c.Phone;
-            chipStatus.Text = c.Status;
             
             if (!string.IsNullOrEmpty(c.ProfileImagePath) && System.IO.File.Exists(c.ProfileImagePath))
                 picProfile.Image = Image.FromFile(c.ProfileImagePath);
@@ -220,6 +267,7 @@ namespace TheMatchaClubApp.Forms
                 picProfile.Image = GenerateInitialsImage(c.Name);
 
             var orders = Program.DataService.Orders.Where(o => o.CustomerId == c.Id).ToList();
+            _currentOrders = orders;
             int totalVisits = orders.Count;
             decimal lifetimeValue = orders.Sum(o => o.Total);
             decimal avgOrderValue = totalVisits > 0 ? lifetimeValue / totalVisits : 0;
@@ -230,23 +278,16 @@ namespace TheMatchaClubApp.Forms
             flpKPIs.Controls.Add(CreateKPICard("AVG. ORDER VALUE", FormatCurrency(avgOrderValue)));
             flpKPIs.Controls.Add(CreateKPICard("MEMBER SINCE", c.MemberSince.ToString("MMM yyyy")));
 
-            dgvHistory.Rows.Clear();
-            foreach (var o in orders.OrderByDescending(o => o.Timestamp))
-            {
-                var itemsStr = string.Join(", ", o.Items.Select(i => i.ProductName));
-                dgvHistory.Rows.Add(
-                    o.OrderId,
-                    o.Timestamp.ToString("yyyy-MM-dd hh:mm tt"),
-                    itemsStr,
-                    FormatCurrency(o.Total),
-                    "Completed"
-                );
-            }
+            // Reset filters and populate history
+            txtHistorySearch.Text = "";
+            cmbDateFilter.SelectedIndex = 0;
+            dtpCustomDate.Visible = false;
+            FilterPurchaseHistory();
 
             // Data Intelligence
-            string mostFreqCategory = "No History Found";
-            string typicalTime = "No History Found";
-            string modStyle = "No History Found";
+            string mostFreqCategory = "No History";
+            string favoriteItem = "No History";
+            string typicalTime = "No History";
             
             var allItems = orders.SelectMany(o => o.Items).ToList();
             if (allItems.Count > 0)
@@ -255,8 +296,12 @@ namespace TheMatchaClubApp.Forms
                     .GroupBy(i => i.CategoryName)
                     .OrderByDescending(g => g.Sum(i => i.Quantity))
                     .First().Key;
-                    
-                modStyle = "Oat Milk / No Sugar"; // Simulated default
+
+                // Favorite Item: most purchased product by total quantity
+                favoriteItem = allItems
+                    .GroupBy(i => i.ProductName)
+                    .OrderByDescending(g => g.Sum(i => i.Quantity))
+                    .First().Key;
             }
 
             if (orders.Count > 0)
@@ -271,23 +316,54 @@ namespace TheMatchaClubApp.Forms
             }
 
             lblFavCatValue.Text = mostFreqCategory;
-            lblModValue.Text = modStyle;
+            lblModValue.Text = favoriteItem;
             lblTimeValue.Text = typicalTime;
 
             txtAdminNotes.Text = c.AdminNotes;
+
+            // Set notes to read-only if there's existing content
+            if (!string.IsNullOrWhiteSpace(c.AdminNotes))
+            {
+                SetNotesReadOnly(true);
+            }
+            else
+            {
+                SetNotesReadOnly(false);
+            }
+        }
+
+        private void SetNotesReadOnly(bool readOnly)
+        {
+            _notesEditMode = !readOnly;
+            txtAdminNotes.ReadOnly = readOnly;
+
+            if (readOnly)
+            {
+                txtAdminNotes.FillColor = ColorTranslator.FromHtml("#F3F4F6");
+                txtAdminNotes.ForeColor = ColorTranslator.FromHtml("#6B7280");
+                btnSaveNote.Text = "Edit Note";
+                btnSaveNote.FillColor = ColorTranslator.FromHtml("#374151");
+            }
+            else
+            {
+                txtAdminNotes.FillColor = Color.White;
+                txtAdminNotes.ForeColor = ColorTranslator.FromHtml("#111827");
+                btnSaveNote.Text = "Save Note";
+                btnSaveNote.FillColor = ColorTranslator.FromHtml("#52B743");
+            }
         }
 
         private Panel CreateKPICard(string title, string value)
         {
             var pnl = new Guna.UI2.WinForms.Guna2ShadowPanel
             {
-                Size = new Size(160, 90),
-                Margin = new Padding(0, 0, 15, 0),
+                Size = new Size(140, 76),
+                Margin = new Padding(0, 0, 10, 0),
                 FillColor = Color.White,
-                ShadowColor = Color.Black,
-                ShadowDepth = 20,
-                ShadowShift = 2,
-                Radius = 6
+                ShadowColor = Color.FromArgb(30, 0, 0, 0),
+                ShadowDepth = 10,
+                ShadowShift = 1,
+                Radius = 8
             };
 
             var lblT = new Label 
@@ -295,15 +371,15 @@ namespace TheMatchaClubApp.Forms
                 Text = title, 
                 Font = new Font("Segoe UI", 7F, FontStyle.Bold), 
                 ForeColor = ColorTranslator.FromHtml("#9CA3AF"), 
-                Location = new Point(15, 15), 
+                Location = new Point(12, 12), 
                 AutoSize = true 
             };
             var lblV = new Label 
             { 
                 Text = value, 
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold), 
+                Font = new Font("Segoe UI", 13F, FontStyle.Bold), 
                 ForeColor = ColorTranslator.FromHtml("#111827"),
-                Location = new Point(15, 45), 
+                Location = new Point(12, 36), 
                 AutoSize = true 
             };
 
@@ -312,13 +388,7 @@ namespace TheMatchaClubApp.Forms
             return pnl;
         }
 
-        private void BtnViewOrders_Click(object? sender, EventArgs e)
-        {
-            if (_currentCustomer == null) return;
-            RenderCalendar(_currentCustomer);
-            pnlCalendarPopup.Visible = true;
-            pnlCalendarPopup.BringToFront();
-        }
+
 
         private void RenderCalendar(Customer c)
         {
@@ -464,17 +534,72 @@ namespace TheMatchaClubApp.Forms
 
         private async void BtnSaveNote_Click(object? sender, EventArgs e)
         {
-            if (_currentCustomer != null)
+            if (_currentCustomer == null) return;
+
+            if (_notesEditMode)
             {
+                // Currently in edit mode → Save and lock
                 _currentCustomer.AdminNotes = txtAdminNotes.Text;
                 await Program.DataService.SaveCustomersAsync();
-                MessageBox.Show("Notes saved successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                SetNotesReadOnly(true);
+            }
+            else
+            {
+                // Currently read-only → Switch to edit mode
+                SetNotesReadOnly(false);
+                txtAdminNotes.Focus();
             }
         }
 
-        private void BtnAddCustomer_Click(object? sender, EventArgs e)
+
+        private void FilterPurchaseHistory()
         {
-            MessageBox.Show("Add Customer dialog not implemented.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            if (_currentCustomer == null) return;
+
+            string search = txtHistorySearch.Text.ToLower();
+            var filtered = _currentOrders.AsEnumerable();
+
+            // Apply Search Filter
+            if (!string.IsNullOrEmpty(search))
+            {
+                filtered = filtered.Where(o => 
+                    o.OrderId.ToLower().Contains(search) || 
+                    o.Items.Any(i => i.ProductName.ToLower().Contains(search))
+                );
+            }
+
+            // Apply Date Filter
+            switch (cmbDateFilter.SelectedIndex)
+            {
+                case 1: // Today
+                    filtered = filtered.Where(o => o.Timestamp.Date == DateTime.Today);
+                    break;
+                case 2: // This Week
+                    var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                    filtered = filtered.Where(o => o.Timestamp.Date >= startOfWeek);
+                    break;
+                case 3: // This Month
+                    var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    filtered = filtered.Where(o => o.Timestamp.Date >= startOfMonth);
+                    break;
+                case 4: // Custom Date
+                    filtered = filtered.Where(o => o.Timestamp.Date == dtpCustomDate.Value.Date);
+                    break;
+            }
+
+            // Render to DGV
+            dgvHistory.Rows.Clear();
+            foreach (var o in filtered.OrderByDescending(o => o.Timestamp))
+            {
+                var itemsStr = string.Join(", ", o.Items.Select(i => i.ProductName));
+                dgvHistory.Rows.Add(
+                    o.OrderId,
+                    o.Timestamp.ToString("yyyy-MM-dd hh:mm tt"),
+                    itemsStr,
+                    FormatCurrency(o.Total),
+                    "Completed"
+                );
+            }
         }
 
         private string FormatCurrency(decimal amount)

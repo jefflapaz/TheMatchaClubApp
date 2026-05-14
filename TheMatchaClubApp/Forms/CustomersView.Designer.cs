@@ -12,7 +12,6 @@ namespace TheMatchaClubApp.Forms
             pnlTopHeader = new System.Windows.Forms.Panel();
             lblChevron = new System.Windows.Forms.Label();
             lblViewName = new System.Windows.Forms.Label();
-            btnAddCustomer = new Guna.UI2.WinForms.Guna2Button();
             
             splitContainerMain = new System.Windows.Forms.SplitContainer();
             pnlDirectory = new System.Windows.Forms.Panel();
@@ -29,7 +28,6 @@ namespace TheMatchaClubApp.Forms
             lblProfileName = new System.Windows.Forms.Label();
             lblProfileEmail = new System.Windows.Forms.Label();
             lblProfilePhone = new System.Windows.Forms.Label();
-            chipStatus = new Guna.UI2.WinForms.Guna2Chip();
             btnEmail = new Guna.UI2.WinForms.Guna2Button();
             btnEditProfile = new Guna.UI2.WinForms.Guna2Button();
             btnExport = new Guna.UI2.WinForms.Guna2Button();
@@ -38,7 +36,10 @@ namespace TheMatchaClubApp.Forms
             
             pnlHistoryHeader = new System.Windows.Forms.Panel();
             lblHistoryTitle = new System.Windows.Forms.Label();
-            btnViewOrders = new Guna.UI2.WinForms.Guna2Button();
+            pnlHistoryFilters = new System.Windows.Forms.Panel();
+            txtHistorySearch = new Guna.UI2.WinForms.Guna2TextBox();
+            cmbDateFilter = new Guna.UI2.WinForms.Guna2ComboBox();
+            dtpCustomDate = new Guna.UI2.WinForms.Guna2DateTimePicker();
             
             dgvHistory = new Guna.UI2.WinForms.Guna2DataGridView();
             
@@ -46,16 +47,19 @@ namespace TheMatchaClubApp.Forms
             pnlPreferences = new Guna.UI2.WinForms.Guna2Panel();
             lblPrefTitle = new System.Windows.Forms.Label();
             lblFavCatLabel = new System.Windows.Forms.Label();
-            lblFavCatValue = new Guna.UI2.WinForms.Guna2Chip();
+            lblFavCatValue = new System.Windows.Forms.Label();
             lblModLabel = new System.Windows.Forms.Label();
-            lblModValue = new Guna.UI2.WinForms.Guna2Chip();
+            lblModValue = new System.Windows.Forms.Label();
             lblTimeLabel = new System.Windows.Forms.Label();
-            lblTimeValue = new Guna.UI2.WinForms.Guna2Chip();
+            lblTimeValue = new System.Windows.Forms.Label();
+            cmbSort = new Guna.UI2.WinForms.Guna2ComboBox();
+            pnlSearchRow = new System.Windows.Forms.Panel();
             
             pnlAdminNotes = new Guna.UI2.WinForms.Guna2Panel();
             lblNotesTitle = new System.Windows.Forms.Label();
             txtAdminNotes = new Guna.UI2.WinForms.Guna2TextBox();
             btnSaveNote = new Guna.UI2.WinForms.Guna2Button();
+            pnlNotesBtnRow = new System.Windows.Forms.Panel();
             
             pnlCalendarPopup = new Guna.UI2.WinForms.Guna2Panel();
             flpCalendarDays = new System.Windows.Forms.FlowLayoutPanel();
@@ -83,7 +87,6 @@ namespace TheMatchaClubApp.Forms
             // Top Header
             pnlTopHeader.Controls.Add(lblChevron);
             pnlTopHeader.Controls.Add(lblViewName);
-            pnlTopHeader.Controls.Add(btnAddCustomer);
             pnlTopHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlTopHeader.Size = new System.Drawing.Size(1200, 64);
 
@@ -95,11 +98,6 @@ namespace TheMatchaClubApp.Forms
             lblViewName.Size = new System.Drawing.Size(120, 28);
             lblViewName.Text = "Customers";
 
-            btnAddCustomer.Location = new System.Drawing.Point(1050, 16);
-            btnAddCustomer.Size = new System.Drawing.Size(128, 32);
-            btnAddCustomer.Text = "+ Add Customer";
-            btnAddCustomer.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-
             // Split Container
             splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
             splitContainerMain.SplitterDistance = 350;
@@ -109,18 +107,32 @@ namespace TheMatchaClubApp.Forms
 
             // Directory Panel
             pnlDirectory.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlDirectory.Padding = new System.Windows.Forms.Padding(16);
+            pnlDirectory.Padding = new System.Windows.Forms.Padding(12);
             pnlDirectory.Controls.Add(flpCustomers);
             pnlDirectory.Controls.Add(pnlFilters);
-            pnlDirectory.Controls.Add(txtSearch);
+            pnlDirectory.Controls.Add(pnlSearchRow);
 
-            txtSearch.Dock = System.Windows.Forms.DockStyle.Top;
-            txtSearch.Height = 40;
+            // Search Row (search + sort dropdown side by side)
+            pnlSearchRow.Dock = System.Windows.Forms.DockStyle.Top;
+            pnlSearchRow.Height = 40;
+            pnlSearchRow.Padding = new System.Windows.Forms.Padding(0, 0, 0, 4);
+
+            txtSearch.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtSearch.Height = 36;
             txtSearch.PlaceholderText = "Search by name, email or phone...";
-            
+
+            cmbSort.Dock = System.Windows.Forms.DockStyle.Right;
+            cmbSort.Width = 100;
+            cmbSort.Items.AddRange(new object[] { "A \u2192 Z", "Z \u2192 A", "Newest", "Oldest" });
+            cmbSort.SelectedIndex = 0;
+            cmbSort.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+
+            pnlSearchRow.Controls.Add(txtSearch);
+            pnlSearchRow.Controls.Add(cmbSort);
+
             pnlFilters.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlFilters.Height = 50;
-            pnlFilters.Padding = new System.Windows.Forms.Padding(0, 10, 0, 10);
+            pnlFilters.Height = 36;
+            pnlFilters.Padding = new System.Windows.Forms.Padding(0, 6, 0, 6);
             pnlFilters.Controls.Add(btnFilterNew);
             pnlFilters.Controls.Add(btnFilterRegular);
             pnlFilters.Controls.Add(btnFilterAll);
@@ -132,12 +144,12 @@ namespace TheMatchaClubApp.Forms
             btnFilterRegular.Width = 100;
             btnFilterRegular.Dock = System.Windows.Forms.DockStyle.Left;
             btnFilterRegular.Text = "Regular";
-            btnFilterRegular.Margin = new System.Windows.Forms.Padding(10, 0, 0, 0);
+            btnFilterRegular.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
 
             btnFilterNew.Width = 80;
             btnFilterNew.Dock = System.Windows.Forms.DockStyle.Left;
             btnFilterNew.Text = "New";
-            btnFilterNew.Margin = new System.Windows.Forms.Padding(10, 0, 0, 0);
+            btnFilterNew.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
 
             flpCustomers.Dock = System.Windows.Forms.DockStyle.Fill;
             flpCustomers.AutoScroll = true;
@@ -146,7 +158,7 @@ namespace TheMatchaClubApp.Forms
 
             // Profile Panel
             pnlProfile.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlProfile.Padding = new System.Windows.Forms.Padding(32);
+            pnlProfile.Padding = new System.Windows.Forms.Padding(24, 24, 24, 16);
             pnlProfile.AutoScroll = true;
             pnlProfile.Controls.Add(pnlCalendarPopup); // Added here so it overlays
             pnlProfile.Controls.Add(pnlDataIntelligence);
@@ -160,7 +172,6 @@ namespace TheMatchaClubApp.Forms
             pnlProfileHeader.Height = 100;
             pnlProfileHeader.Controls.Add(picProfile);
             pnlProfileHeader.Controls.Add(lblProfileName);
-            pnlProfileHeader.Controls.Add(chipStatus);
             pnlProfileHeader.Controls.Add(lblProfileEmail);
             pnlProfileHeader.Controls.Add(lblProfilePhone);
             pnlProfileHeader.Controls.Add(btnExport);
@@ -173,9 +184,6 @@ namespace TheMatchaClubApp.Forms
 
             lblProfileName.Location = new System.Drawing.Point(100, 10);
             lblProfileName.AutoSize = true;
-
-            chipStatus.Location = new System.Drawing.Point(300, 10);
-            chipStatus.Size = new System.Drawing.Size(80, 24);
 
             lblProfileEmail.Location = new System.Drawing.Point(100, 45);
             lblProfileEmail.AutoSize = true;
@@ -202,28 +210,46 @@ namespace TheMatchaClubApp.Forms
 
             // KPIs
             flpKPIs.Dock = System.Windows.Forms.DockStyle.Top;
-            flpKPIs.Height = 120;
-            flpKPIs.Padding = new System.Windows.Forms.Padding(0, 20, 0, 20);
-            flpKPIs.WrapContents = false;
+            flpKPIs.Height = 110;
+            flpKPIs.Padding = new System.Windows.Forms.Padding(0, 10, 0, 6);
+            flpKPIs.WrapContents = true;
 
             // History Header
             pnlHistoryHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlHistoryHeader.Height = 40;
+            pnlHistoryHeader.Height = 80;
+            pnlHistoryHeader.Controls.Add(pnlHistoryFilters);
             pnlHistoryHeader.Controls.Add(lblHistoryTitle);
-            pnlHistoryHeader.Controls.Add(btnViewOrders);
 
-            lblHistoryTitle.Dock = System.Windows.Forms.DockStyle.Left;
+            lblHistoryTitle.Dock = System.Windows.Forms.DockStyle.Top;
+            lblHistoryTitle.Height = 30;
             lblHistoryTitle.Text = "Purchase History";
             lblHistoryTitle.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
-            lblHistoryTitle.AutoSize = true;
 
-            btnViewOrders.Dock = System.Windows.Forms.DockStyle.Right;
-            btnViewOrders.Width = 150;
-            btnViewOrders.Text = "View All Orders";
+            pnlHistoryFilters.Dock = System.Windows.Forms.DockStyle.Top;
+            pnlHistoryFilters.Height = 40;
+            pnlHistoryFilters.Padding = new System.Windows.Forms.Padding(0, 6, 0, 4);
+            pnlHistoryFilters.Controls.Add(txtHistorySearch);
+            pnlHistoryFilters.Controls.Add(dtpCustomDate);
+            pnlHistoryFilters.Controls.Add(cmbDateFilter);
+
+            txtHistorySearch.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtHistorySearch.Height = 32;
+            txtHistorySearch.PlaceholderText = "Search items or order ID...";
+
+            cmbDateFilter.Dock = System.Windows.Forms.DockStyle.Right;
+            cmbDateFilter.Width = 140;
+            cmbDateFilter.Items.AddRange(new object[] { "All Time", "Today", "This Week", "This Month", "Custom Date" });
+            cmbDateFilter.SelectedIndex = 0;
+            cmbDateFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+
+            dtpCustomDate.Dock = System.Windows.Forms.DockStyle.Right;
+            dtpCustomDate.Width = 150;
+            dtpCustomDate.Visible = false;
+            dtpCustomDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
 
             // History DataGrid
             dgvHistory.Dock = System.Windows.Forms.DockStyle.Top;
-            dgvHistory.Height = 250;
+            dgvHistory.Height = 200;
             dgvHistory.AllowUserToAddRows = false;
             dgvHistory.AllowUserToDeleteRows = false;
             dgvHistory.ReadOnly = true;
@@ -231,13 +257,13 @@ namespace TheMatchaClubApp.Forms
 
             // Data Intelligence
             pnlDataIntelligence.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlDataIntelligence.Height = 250;
-            pnlDataIntelligence.Padding = new System.Windows.Forms.Padding(0, 20, 0, 0);
+            pnlDataIntelligence.Height = 200;
+            pnlDataIntelligence.Padding = new System.Windows.Forms.Padding(0, 10, 0, 0);
             pnlDataIntelligence.Controls.Add(pnlAdminNotes);
             pnlDataIntelligence.Controls.Add(pnlPreferences);
 
             pnlPreferences.Dock = System.Windows.Forms.DockStyle.Left;
-            pnlPreferences.Width = 380;
+            pnlPreferences.Width = 320;
             pnlPreferences.Controls.Add(lblPrefTitle);
             pnlPreferences.Controls.Add(lblFavCatLabel);
             pnlPreferences.Controls.Add(lblFavCatValue);
@@ -246,46 +272,50 @@ namespace TheMatchaClubApp.Forms
             pnlPreferences.Controls.Add(lblTimeLabel);
             pnlPreferences.Controls.Add(lblTimeValue);
 
-            lblPrefTitle.Location = new System.Drawing.Point(20, 20);
-            lblPrefTitle.Text = "REGULAR PREFERENCES";
+            lblPrefTitle.Location = new System.Drawing.Point(20, 15);
+            lblPrefTitle.Text = "CUSTOMER INSIGHTS";
             lblPrefTitle.AutoSize = true;
 
-            lblFavCatLabel.Location = new System.Drawing.Point(20, 60);
+            lblFavCatLabel.Location = new System.Drawing.Point(20, 50);
             lblFavCatLabel.Text = "Favorite Category";
             lblFavCatLabel.AutoSize = true;
-            lblFavCatValue.Location = new System.Drawing.Point(150, 55);
-            lblFavCatValue.Size = new System.Drawing.Size(200, 30);
+            lblFavCatValue.Location = new System.Drawing.Point(160, 50);
+            lblFavCatValue.AutoSize = true;
 
-            lblModLabel.Location = new System.Drawing.Point(20, 110);
-            lblModLabel.Text = "Modification Style";
+            lblModLabel.Location = new System.Drawing.Point(20, 80);
+            lblModLabel.Text = "Favorite Item";
             lblModLabel.AutoSize = true;
-            lblModValue.Location = new System.Drawing.Point(150, 105);
-            lblModValue.Size = new System.Drawing.Size(200, 30);
+            lblModValue.Location = new System.Drawing.Point(160, 80);
+            lblModValue.AutoSize = true;
 
-            lblTimeLabel.Location = new System.Drawing.Point(20, 160);
+            lblTimeLabel.Location = new System.Drawing.Point(20, 110);
             lblTimeLabel.Text = "Typical Visit Time";
             lblTimeLabel.AutoSize = true;
-            lblTimeValue.Location = new System.Drawing.Point(150, 155);
-            lblTimeValue.Size = new System.Drawing.Size(200, 30);
+            lblTimeValue.Location = new System.Drawing.Point(160, 110);
+            lblTimeValue.AutoSize = true;
 
             pnlAdminNotes.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlAdminNotes.Controls.Add(lblNotesTitle);
+            pnlAdminNotes.Padding = new System.Windows.Forms.Padding(16, 12, 16, 12);
             pnlAdminNotes.Controls.Add(txtAdminNotes);
-            pnlAdminNotes.Controls.Add(btnSaveNote);
+            pnlAdminNotes.Controls.Add(pnlNotesBtnRow);
+            pnlAdminNotes.Controls.Add(lblNotesTitle);
 
-            lblNotesTitle.Location = new System.Drawing.Point(20, 20);
+            lblNotesTitle.Dock = System.Windows.Forms.DockStyle.Top;
+            lblNotesTitle.Height = 28;
             lblNotesTitle.Text = "ADMIN NOTES";
-            lblNotesTitle.AutoSize = true;
+            lblNotesTitle.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
 
-            txtAdminNotes.Location = new System.Drawing.Point(20, 50);
-            txtAdminNotes.Size = new System.Drawing.Size(350, 100);
-            txtAdminNotes.Multiline = true;
-            txtAdminNotes.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlNotesBtnRow.Dock = System.Windows.Forms.DockStyle.Bottom;
+            pnlNotesBtnRow.Height = 40;
+            pnlNotesBtnRow.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            pnlNotesBtnRow.Controls.Add(btnSaveNote);
 
-            btnSaveNote.Location = new System.Drawing.Point(270, 160);
-            btnSaveNote.Size = new System.Drawing.Size(100, 36);
+            btnSaveNote.Dock = System.Windows.Forms.DockStyle.Right;
+            btnSaveNote.Width = 100;
             btnSaveNote.Text = "Save Note";
-            btnSaveNote.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+
+            txtAdminNotes.Dock = System.Windows.Forms.DockStyle.Fill;
+            txtAdminNotes.Multiline = true;
 
             // Calendar Popup
             pnlCalendarPopup.Size = new System.Drawing.Size(320, 300);
@@ -338,7 +368,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Panel pnlTopHeader;
         private System.Windows.Forms.Label lblChevron;
         private System.Windows.Forms.Label lblViewName;
-        private Guna.UI2.WinForms.Guna2Button btnAddCustomer;
         
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.Panel pnlDirectory;
@@ -355,7 +384,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblProfileName;
         private System.Windows.Forms.Label lblProfileEmail;
         private System.Windows.Forms.Label lblProfilePhone;
-        private Guna.UI2.WinForms.Guna2Chip chipStatus;
         private Guna.UI2.WinForms.Guna2Button btnEmail;
         private Guna.UI2.WinForms.Guna2Button btnEditProfile;
         private Guna.UI2.WinForms.Guna2Button btnExport;
@@ -364,7 +392,10 @@ namespace TheMatchaClubApp.Forms
         
         private System.Windows.Forms.Panel pnlHistoryHeader;
         private System.Windows.Forms.Label lblHistoryTitle;
-        private Guna.UI2.WinForms.Guna2Button btnViewOrders;
+        private System.Windows.Forms.Panel pnlHistoryFilters;
+        private Guna.UI2.WinForms.Guna2TextBox txtHistorySearch;
+        private Guna.UI2.WinForms.Guna2ComboBox cmbDateFilter;
+        private Guna.UI2.WinForms.Guna2DateTimePicker dtpCustomDate;
         
         private Guna.UI2.WinForms.Guna2DataGridView dgvHistory;
         
@@ -372,16 +403,19 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2Panel pnlPreferences;
         private System.Windows.Forms.Label lblPrefTitle;
         private System.Windows.Forms.Label lblFavCatLabel;
-        private Guna.UI2.WinForms.Guna2Chip lblFavCatValue;
+        private System.Windows.Forms.Label lblFavCatValue;
         private System.Windows.Forms.Label lblModLabel;
-        private Guna.UI2.WinForms.Guna2Chip lblModValue;
+        private System.Windows.Forms.Label lblModValue;
         private System.Windows.Forms.Label lblTimeLabel;
-        private Guna.UI2.WinForms.Guna2Chip lblTimeValue;
+        private System.Windows.Forms.Label lblTimeValue;
+        private Guna.UI2.WinForms.Guna2ComboBox cmbSort;
+        private System.Windows.Forms.Panel pnlSearchRow;
         
         private Guna.UI2.WinForms.Guna2Panel pnlAdminNotes;
         private System.Windows.Forms.Label lblNotesTitle;
         private Guna.UI2.WinForms.Guna2TextBox txtAdminNotes;
         private Guna.UI2.WinForms.Guna2Button btnSaveNote;
+        private System.Windows.Forms.Panel pnlNotesBtnRow;
         
         private Guna.UI2.WinForms.Guna2Panel pnlCalendarPopup;
         private System.Windows.Forms.FlowLayoutPanel flpCalendarDays;
