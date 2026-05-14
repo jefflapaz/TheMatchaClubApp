@@ -21,8 +21,7 @@ namespace TheMatchaClub.Infrastructure.Data.Configurations
             builder.Property(o => o.Subtotal)
                 .HasColumnType("decimal(10,2)");
 
-            builder.Property(o => o.VatAmount)
-                .HasColumnType("decimal(10,2)");
+
 
             builder.Property(o => o.Total)
                 .HasColumnType("decimal(10,2)");

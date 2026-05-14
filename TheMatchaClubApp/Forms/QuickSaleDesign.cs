@@ -18,7 +18,7 @@ namespace TheMatchaClubApp.Forms
         private static readonly Color Green = ColorTranslator.FromHtml("#52B743");
         private static readonly Color GreenHover = ColorTranslator.FromHtml("#86CD77");
 
-        private Guna2Button[] _categoryButtons = Array.Empty<Guna2Button>();
+        private System.Collections.Generic.List<Guna2Button> _categoryButtons = new();
 
         private void InitializeDesign()
         {
@@ -41,6 +41,13 @@ namespace TheMatchaClubApp.Forms
             lblViewName.ForeColor = TextPrimary;
             lblViewName.BackColor = Color.Transparent;
 
+            txtSearch.BorderRadius = 8;
+            txtSearch.Font = new Font("Segoe UI", 9F);
+            txtSearch.BorderColor = BorderLight;
+            txtSearch.FocusedState.BorderColor = Green;
+            txtSearch.IconLeft = null; // No icon for simplicity unless we have one
+            txtSearch.TextOffset = new Point(4, 0);
+
             btnAlert.FillColor = Color.Transparent;
             btnAlert.ForeColor = TextSecondary;
             btnAlert.BorderThickness = 0;
@@ -55,26 +62,15 @@ namespace TheMatchaClubApp.Forms
                 e.Graphics.DrawLine(pen, 0, pnlCategoryRow.Height - 1, pnlCategoryRow.Width, pnlCategoryRow.Height - 1);
             };
 
-            string[] cats = { "All", "Matcha", "Tea", "Snacks", "Seasonal" };
-            _categoryButtons = new Guna2Button[cats.Length];
-            for (int i = 0; i < cats.Length; i++)
-            {
-                var btn = new Guna2Button
-                {
-                    Text = cats[i],
-                    Tag = cats[i],
-                    Size = new Size(80, 32),
-                    Margin = new Padding(4, 0, 4, 0),
-                    BorderRadius = 20,
-                    Font = new Font("Segoe UI", 8F, FontStyle.Bold),
-                    BorderThickness = 1,
-                    Cursor = Cursors.Hand
-                };
-                btn.Click += CategoryFilter_Click;
-                _categoryButtons[i] = btn;
-                flpCategories.Controls.Add(btn);
-            }
-            UpdateCategoryPills();
+            // Category arrow buttons
+            StyleCategoryArrow(btnCatLeft);
+            StyleCategoryArrow(btnCatRight);
+
+            // Scroll container
+            pnlCategoryScroll.BackColor = CardBg;
+            flpCategories.BackColor = CardBg;
+
+            // Category buttons are populated dynamically in QuickSaleView.cs -> PopulateCategories()
 
             // ── Product Grid ──
             pnlProductGrid.BackColor = Color.Transparent;
@@ -137,13 +133,6 @@ namespace TheMatchaClubApp.Forms
             lblSubtotalValue.ForeColor = TextSecondary;
             lblSubtotalValue.BackColor = Color.Transparent;
 
-            lblTax.Font = new Font("Segoe UI", 9F);
-            lblTax.ForeColor = TextSecondary;
-            lblTax.BackColor = Color.Transparent;
-            lblTaxValue.Font = new Font("Segoe UI", 9F);
-            lblTaxValue.ForeColor = TextSecondary;
-            lblTaxValue.BackColor = Color.Transparent;
-
             lblTotal.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTotal.ForeColor = TextPrimary;
             lblTotal.BackColor = Color.Transparent;
@@ -181,6 +170,17 @@ namespace TheMatchaClubApp.Forms
             btn.BorderThickness = 1;
             btn.Font = new Font("Segoe UI", 9F);
             btn.HoverState.FillColor = ColorTranslator.FromHtml("#F9FAFB");
+        }
+
+        private void StyleCategoryArrow(Guna2Button btn)
+        {
+            btn.FillColor = CardBg;
+            btn.ForeColor = TextSecondary;
+            btn.BorderThickness = 0;
+            btn.BorderRadius = 0;
+            btn.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btn.HoverState.FillColor = ColorTranslator.FromHtml("#F3F4F6");
+            btn.Cursor = Cursors.Hand;
         }
 
         private void UpdateCategoryPills()

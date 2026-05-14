@@ -33,10 +33,6 @@ namespace TheMatchaClubApp.Forms
                 e.Graphics.DrawLine(pen, 0, pnlGlobalSubHeader.Height - 1, pnlGlobalSubHeader.Width, pnlGlobalSubHeader.Height - 1);
             };
 
-            lblLowStock.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblLowStock.ForeColor = ColorTranslator.FromHtml("#EF4444");
-            lblLowStock.BackColor = Color.Transparent;
-
             lblTotalItems.Font = new Font("Segoe UI", 9F);
             lblTotalItems.ForeColor = ITextSecondary;
             lblTotalItems.BackColor = Color.Transparent;
@@ -76,7 +72,7 @@ namespace TheMatchaClubApp.Forms
             lblItemCount.ForeColor = ITextPrimary;
             lblItemCount.BackColor = Color.Transparent;
 
-            cmbSort.Items.AddRange(new object[] { "Newest", "Oldest" });
+            cmbSort.Items.AddRange(new object[] { "Newest", "Oldest", "A → Z", "Z → A" });
             cmbSort.StartIndex = 0;
             cmbSort.Font = new Font("Segoe UI", 9F);
             cmbSort.ForeColor = ITextPrimary;

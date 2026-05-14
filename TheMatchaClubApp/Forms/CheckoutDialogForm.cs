@@ -14,20 +14,29 @@ namespace TheMatchaClubApp.Forms
         public bool IsDineIn => _isDineIn;
         public string SelectedOrderType => _isDineIn ? "Dine-In" : "Take-Out";
         public Customer? SelectedCustomer { get; private set; }
+        public decimal CashReceived { get; private set; }
+        public decimal ChangeDue { get; private set; }
 
         private bool _isDineIn = true;
+        private decimal _totalAmount;
 
         // ── Constructor ──────────────────────────────────────────────
-        public CheckoutDialogForm()
+        public CheckoutDialogForm(decimal totalAmount)
         {
+            _totalAmount = totalAmount;
             InitializeComponent();
             InitializeDesign();
+
+            lblTotalValue.Text = totalAmount.ToString("C2");
+            btnConfirm.Enabled = false;
+            txtCash.Text = string.Empty;
 
             LoadCustomerList();
 
             // Wiring
             cboCustomer.SelectedIndexChanged += CboCustomer_SelectedIndexChanged;
             btnConfirm.Click += BtnConfirm_Click;
+            txtCash.TextChanged += TxtCash_TextChanged;
         }
 
         // ── Load Customers into ComboBox ─────────────────────────────
@@ -67,9 +76,30 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
+        // ── Cash Input ───────────────────────────────────────────────
+        private void TxtCash_TextChanged(object? sender, EventArgs e)
+        {
+            if (decimal.TryParse(txtCash.Text, out decimal cash))
+            {
+                decimal change = cash - _totalAmount;
+                lblChange.Text = change >= 0 ? change.ToString("C2") : "₱0.00";
+                btnConfirm.Enabled = cash >= _totalAmount;
+            }
+            else
+            {
+                lblChange.Text = "₱0.00";
+                btnConfirm.Enabled = false;
+            }
+        }
+
         // ── Confirm ──────────────────────────────────────────────────
         private void BtnConfirm_Click(object? sender, EventArgs e)
         {
+            if (!decimal.TryParse(txtCash.Text, out decimal cash) || cash < _totalAmount) return;
+
+            CashReceived = cash;
+            ChangeDue = cash - _totalAmount;
+
             int idx = cboCustomer.SelectedIndex;
 
             if (idx > 0)

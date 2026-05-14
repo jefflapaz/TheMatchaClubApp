@@ -96,14 +96,12 @@ namespace TheMatchaClubApp.Forms
         {
             var todayOrders = Program.DataService.Orders.Where(o => o.Timestamp.Date == DateTime.Today).ToList();
             decimal todayTotal = todayOrders.Sum(o => o.Total);
-            decimal todayVat = todayOrders.Sum(o => o.VatAmount);
 
             MessageBox.Show(
                 $"═══ Z-REPORT ═══\n" +
                 $"Date: {DateTime.Today:dd/MM/yyyy}\n" +
                 $"Transactions: {todayOrders.Count}\n" +
                 $"Total Sales: {todayTotal.ToString("C2")}\n" +
-                $"Total VAT: {todayVat.ToString("C2")}\n" +
                 $"────────────────\n" +
                 $"All transactions for today have been locked.",
                 "End of Day Closeout", MessageBoxButtons.OK, MessageBoxIcon.Information);

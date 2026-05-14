@@ -28,6 +28,20 @@ namespace TheMatchaClubApp.Forms
                 if (!IsDisposed) BeginInvoke(new Action(() => PopulateItems(_activeCategory)));
             };
 
+            Program.DataService.CategoriesChanged += (s, e) =>
+            {
+                if (!IsDisposed) BeginInvoke(new Action(() => 
+                {
+                    // If active category was deleted, reset to All Items
+                    if (_activeCategory != "All Items" && !Program.DataService.Categories.Contains(_activeCategory))
+                    {
+                        _activeCategory = "All Items";
+                        PopulateItems(_activeCategory);
+                    }
+                    PopulateCategories();
+                }));
+            };
+
             PopulateCategories();
             PopulateItems("All Items");
         }
@@ -39,15 +53,14 @@ namespace TheMatchaClubApp.Forms
 
             var categories = new List<string> { "All Items" };
             var customCats = Program.DataService.Categories
-                .Where(c => c != "All Items" && c != "Out of stock")
+                .Where(c => c != "All Items")
                 .Distinct()
                 .ToList();
             categories.AddRange(customCats);
-            categories.Add("Out of stock");
 
             foreach (var cat in categories)
             {
-                bool isProtected = cat == "All Items" || cat == "Out of stock";
+                bool isProtected = cat == "All Items";
                 var navItem = new CategoryNavItem(cat, isProtected);
                 
                 navItem.CategoryClicked += (s, e) => 
@@ -112,44 +125,41 @@ namespace TheMatchaClubApp.Forms
             var all = Program.DataService.Products.ToList();
             List<Product> filtered;
 
-            if (category == "Out of stock")
+            if (category == "All Items")
             {
-                filtered = all.Where(p => p.StockLevel == 0 || p.IsOutOfStock).ToList();
-            }
-            else if (category == "All Items")
-            {
-                filtered = all; // Show everything, out-of-stock will be dimmed
+                filtered = all;
             }
             else
             {
-                // Normal category: Exclude out-of-stock items
                 filtered = all.Where(p => 
-                    p.CategoryName.Equals(category, StringComparison.OrdinalIgnoreCase) && 
-                    p.StockLevel > 0 && 
-                    !p.IsOutOfStock
+                    p.CategoryName.Equals(category, StringComparison.OrdinalIgnoreCase)
                 ).ToList();
             }
 
             // Apply Sort
-            if (cmbSort.SelectedItem?.ToString() == "Oldest")
+            string sortOpt = cmbSort.SelectedItem?.ToString() ?? "Newest";
+            if (sortOpt == "Oldest")
             {
                 filtered = filtered.OrderBy(p => p.CreatedAt).ToList();
+            }
+            else if (sortOpt == "A → Z")
+            {
+                filtered = filtered.OrderBy(p => p.Name ?? "", StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            else if (sortOpt == "Z → A")
+            {
+                filtered = filtered.OrderByDescending(p => p.Name ?? "", StringComparer.OrdinalIgnoreCase).ToList();
             }
             else
             {
                 filtered = filtered.OrderByDescending(p => p.CreatedAt).ToList();
             }
 
-            foreach (var item in filtered)
+            foreach (var p in filtered)
             {
-                var card = new InventoryCard
-                {
-                    Product = item,
-                    Size = new Size(240, 310),
-                    Margin = new Padding(8)
-                };
-                card.EditClicked += (s, e) => ShowEditDialog(item);
-                card.DeleteClicked += (s, e) => SmartDelete(item);
+                var card = new ProductItemCard { Product = p };
+                card.EditClicked += (s, e) => ShowEditDialog(p);
+                card.DeleteClicked += (s, e) => SmartDelete(p);
                 flpItems.Controls.Add(card);
             }
 
@@ -208,8 +218,6 @@ namespace TheMatchaClubApp.Forms
             flpItems.Controls.Add(pnlEnd);
 
             lblItemCount.Text = $"{category} ({filtered.Count})";
-            int lowStockCount = filtered.Count(p => p.StockLevel <= 5);
-            lblLowStock.Text = lowStockCount > 0 ? $"⚠ {lowStockCount} Low Stock Items" : "";
             lblTotalItems.Text = $"Total: {all.Count} Items";
 
             flpItems.ResumeLayout();
@@ -219,41 +227,17 @@ namespace TheMatchaClubApp.Forms
         // ── Smart Delete ─────────────────────────────────────────────
         private async void SmartDelete(Product product)
         {
-            bool hasHistory = Program.DataService.Orders.Any(o => o.Items.Any(i => i.ProductId == product.Id));
+            // Hard delete confirmation
+            var result = MessageBox.Show(
+                $"Permanently delete '{product.Name}'?\nThis action cannot be undone.",
+                "Delete Product",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
 
-            if (hasHistory)
+            if (result == DialogResult.Yes)
             {
-                // Cannot hard-delete — offer "Move to Out of Stock"
-                var result = MessageBox.Show(
-                    $"'{product.Name}' has recorded sales in order history.\n\n" +
-                    "It cannot be permanently deleted to preserve historical data.\n" +
-                    "Would you like to move it to 'Out of Stock' instead?",
-                    "Smart Delete Guard",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-                if (result == DialogResult.Yes)
-                {
-                    product.IsOutOfStock = true;
-                    product.CategoryName = "Out of Stock";
-                    product.StockLevel = 0;
-                    await Program.DataService.SaveProductsAsync();
-                }
-            }
-            else
-            {
-                // Hard delete allowed
-                var result = MessageBox.Show(
-                    $"Permanently delete '{product.Name}'?\nThis action cannot be undone.",
-                    "Delete Product",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
-
-                if (result == DialogResult.Yes)
-                {
-                    Program.DataService.Products.Remove(product);
-                    await Program.DataService.SaveProductsAsync();
-                }
+                Program.DataService.Products.Remove(product);
+                await Program.DataService.SaveProductsAsync();
             }
         }
 
@@ -271,7 +255,7 @@ namespace TheMatchaClubApp.Forms
             using var dlg = new Form
             {
                 Text = isNew ? "Add Product" : "Edit Product",
-                Size = new Size(450, 560),
+                Size = new Size(450, 480),
                 StartPosition = FormStartPosition.CenterParent,
                 FormBorderStyle = FormBorderStyle.None,
                 BackColor = Color.White
@@ -296,7 +280,7 @@ namespace TheMatchaClubApp.Forms
             var lblCat = new Label { Text = "Category", Location = new Point(20, 130), AutoSize = true };
             var cmbCat = new Guna.UI2.WinForms.Guna2ComboBox { Location = new Point(20, 152), Size = new Size(360, 40), BorderColor = ColorTranslator.FromHtml("#52B743") };
             
-            var categories = Program.DataService.Categories.Where(c => c != "All Items" && c != "Out of Stock").Distinct().ToList();
+            var categories = Program.DataService.Categories.Where(c => c != "All Items").Distinct().ToList();
             cmbCat.Items.AddRange(categories.ToArray());
             if (!isNew && categories.Contains(product.CategoryName)) cmbCat.SelectedItem = product.CategoryName;
 
@@ -321,16 +305,13 @@ namespace TheMatchaClubApp.Forms
             };
 
             var lblPrice = new Label { Text = "Price (₱)", Location = new Point(20, 200), AutoSize = true };
-            var txtPrice = new Guna.UI2.WinForms.Guna2TextBox { Text = isNew ? "" : product.Price.ToString("F2"), Location = new Point(20, 222), Size = new Size(195, 40) };
-
-            var lblStock = new Label { Text = "Units/Stock", Location = new Point(235, 200), AutoSize = true };
-            var txtStock = new Guna.UI2.WinForms.Guna2TextBox { Text = isNew ? "" : product.StockLevel.ToString(), Location = new Point(235, 222), Size = new Size(195, 40) };
+            var txtPrice = new Guna.UI2.WinForms.Guna2TextBox { Text = isNew ? "" : product.Price.ToString("F2"), Location = new Point(20, 222), Size = new Size(410, 40) };
 
             var lblImage = new Label { Text = "Image", Location = new Point(20, 275), AutoSize = true };
             var picPreview = new PictureBox { Location = new Point(20, 297), Size = new Size(100, 100), SizeMode = PictureBoxSizeMode.Zoom, BorderStyle = BorderStyle.FixedSingle };
             picPreview.Image = ImageHelper.LoadOrPlaceholder(product.ImagePath, product.Name, picPreview.Width);
 
-            var txtImagePath = new Guna.UI2.WinForms.Guna2TextBox { Text = product.ImagePath, Location = new Point(130, 297), Size = new Size(200, 40), ReadOnly = true };
+            var txtImagePath = new Guna.UI2.WinForms.Guna2TextBox { Text = Program.DataService.GetFullImagePath(product.ImagePath), Location = new Point(130, 297), Size = new Size(200, 40), ReadOnly = true };
             var btnBrowse = new Guna.UI2.WinForms.Guna2Button { Text = "Browse...", Location = new Point(340, 297), Size = new Size(90, 40), FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151") };
             btnBrowse.Click += (s, e) =>
             {
@@ -342,10 +323,10 @@ namespace TheMatchaClubApp.Forms
                 }
             };
 
-            var btnCancel = new Guna.UI2.WinForms.Guna2Button { Text = "Cancel", Location = new Point(20, 480), Size = new Size(195, 45), FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 10F, FontStyle.Bold), BorderRadius = 8 };
+            var btnCancel = new Guna.UI2.WinForms.Guna2Button { Text = "Cancel", Location = new Point(20, 410), Size = new Size(195, 45), FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 10F, FontStyle.Bold), BorderRadius = 8 };
             btnCancel.Click += (s, e) => dlg.Close();
 
-            var btnSave = new Guna.UI2.WinForms.Guna2Button { Text = "Save", Location = new Point(235, 480), Size = new Size(195, 45), FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), BorderRadius = 8 };
+            var btnSave = new Guna.UI2.WinForms.Guna2Button { Text = "Save", Location = new Point(235, 410), Size = new Size(195, 45), FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), BorderRadius = 8 };
 
             btnSave.Click += async (s, e) =>
             {
@@ -358,14 +339,9 @@ namespace TheMatchaClubApp.Forms
                 product.Name = txtName.Text.Trim();
                 product.CategoryName = cmbCat.SelectedItem.ToString() ?? "";
                 if (decimal.TryParse(txtPrice.Text, out decimal price)) product.Price = price;
-                if (int.TryParse(txtStock.Text, out int stock)) 
-                {
-                    product.StockLevel = stock;
-                    if (stock > 0) product.IsOutOfStock = false;
-                }
 
-                // Copy image to local storage
-                if (!string.IsNullOrWhiteSpace(txtImagePath.Text) && txtImagePath.Text != product.ImagePath)
+                // Copy image to local storage if needed
+                if (!string.IsNullOrWhiteSpace(txtImagePath.Text))
                 {
                     product.ImagePath = Program.DataService.CopyImageToLocal(txtImagePath.Text);
                 }
@@ -376,7 +352,7 @@ namespace TheMatchaClubApp.Forms
                 dlg.Close();
             };
 
-            dlg.Controls.AddRange(new Control[] { pnlHead, lblName, txtName, lblCat, cmbCat, btnAddCat, lblPrice, txtPrice, lblStock, txtStock, lblImage, picPreview, txtImagePath, btnBrowse, btnCancel, btnSave });
+            dlg.Controls.AddRange(new Control[] { pnlHead, lblName, txtName, lblCat, cmbCat, btnAddCat, lblPrice, txtPrice, lblImage, picPreview, txtImagePath, btnBrowse, btnCancel, btnSave });
             dlg.ShowDialog();
         }
 

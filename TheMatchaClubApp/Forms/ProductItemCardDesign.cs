@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace TheMatchaClubApp.Forms
 {
-    public partial class InventoryCard
+    public partial class ProductItemCard
     {
         private static readonly Color CardGreen = ColorTranslator.FromHtml("#52B743");
         private static readonly Color CardBorder = ColorTranslator.FromHtml("#E5E7EB");
@@ -31,18 +31,6 @@ namespace TheMatchaClubApp.Forms
             picImage.BackColor = Color.FromArgb(249, 250, 251);
             picImage.Paint += PicImage_Paint;
 
-            // Stock badge
-            pnlStockBadge.BackColor = Color.Transparent;
-            pnlStockBadge.FillColor = CardGreen;
-            pnlStockBadge.BorderRadius = 11;
-            pnlStockBadge.BorderThickness = 0;
-            pnlStockBadge.ShadowDecoration.Enabled = false;
-            pnlStockBadge.BringToFront();
-
-            lblStockStatus.Font = new Font("Segoe UI", 7F, FontStyle.Bold);
-            lblStockStatus.ForeColor = Color.White;
-            lblStockStatus.BackColor = Color.Transparent;
-
             // Product ID
             lblProductId.Font = new Font("Segoe UI", 8F);
             lblProductId.ForeColor = CardTextMuted;
@@ -57,23 +45,6 @@ namespace TheMatchaClubApp.Forms
             lblName.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             lblName.ForeColor = CardTextPrimary;
             lblName.BackColor = Color.Transparent;
-
-            // Inventory label
-            lblInventoryLabel.Font = new Font("Segoe UI", 8F);
-            lblInventoryLabel.ForeColor = CardTextMuted;
-            lblInventoryLabel.BackColor = Color.Transparent;
-
-            // Stock count
-            lblStock.Font = new Font("Segoe UI", 8F);
-            lblStock.ForeColor = ColorTranslator.FromHtml("#EF4444"); // Default, gets updated in code
-            lblStock.BackColor = Color.Transparent;
-
-            // Progress bar
-            barStock.BorderRadius = 3;
-            barStock.FillColor = ColorTranslator.FromHtml("#F3F4F6");
-            barStock.ProgressColor = CardGreen;
-            barStock.ProgressColor2 = CardGreen;
-            barStock.BackColor = Color.Transparent;
 
             // Separator
             pnlSeparator.BackColor = CardBorder;

@@ -45,13 +45,130 @@ namespace TheMatchaClubApp.Forms
             btnCompleteSale.Click += BtnCompleteSale_Click;
             btnPrint.Click += BtnPrint_Click;
             btnEmail.Click += BtnEmail_Click;
+            txtSearch.TextChanged += (s, e) => PopulateProducts(_activeCategory);
 
             Program.DataService.ProductsChanged += (s, e) =>
             {
                 if (!IsDisposed) BeginInvoke(new Action(() => PopulateProducts(_activeCategory)));
             };
 
+            Program.DataService.CategoriesChanged += (s, e) =>
+            {
+                if (!IsDisposed) BeginInvoke(new Action(() => 
+                {
+                    if (_activeCategory != "All" && !Program.DataService.Categories.Contains(_activeCategory))
+                    {
+                        _activeCategory = "All";
+                        PopulateProducts(_activeCategory);
+                    }
+                    PopulateCategories();
+                }));
+            };
+
+            PopulateCategories();
             PopulateProducts("All");
+
+            // ── Category Arrow Navigation ──
+            btnCatLeft.Click += (s, e) => ScrollCategories(-150);
+            btnCatRight.Click += (s, e) => ScrollCategories(150);
+
+            // Mouse wheel horizontal scrolling on category area
+            pnlCategoryScroll.MouseWheel += (s, e) => ScrollCategories(-e.Delta);
+            flpCategories.MouseWheel += (s, e) =>
+            {
+                ScrollCategories(-e.Delta);
+                ((HandledMouseEventArgs)e).Handled = true;
+            };
+        }
+
+        private int _categoryScrollPos = 0;
+
+        private void ScrollCategories(int delta)
+        {
+            // Calculate the total content width vs visible width
+            int contentWidth = 0;
+            foreach (Control c in flpCategories.Controls)
+                contentWidth = Math.Max(contentWidth, c.Right + c.Margin.Right);
+            contentWidth += flpCategories.Padding.Right;
+
+            int visibleWidth = pnlCategoryScroll.ClientSize.Width;
+            int maxScroll = Math.Max(0, contentWidth - visibleWidth);
+
+            // Apply delta
+            _categoryScrollPos += delta;
+            _categoryScrollPos = Math.Max(0, Math.Min(_categoryScrollPos, maxScroll));
+
+            // Move the FlowLayoutPanel
+            flpCategories.Location = new Point(-_categoryScrollPos, 0);
+
+            UpdateCategoryArrows(maxScroll);
+        }
+
+        private void UpdateCategoryArrows(int maxScroll = -1)
+        {
+            if (maxScroll < 0)
+            {
+                int contentWidth = 0;
+                foreach (Control c in flpCategories.Controls)
+                    contentWidth = Math.Max(contentWidth, c.Right + c.Margin.Right);
+                contentWidth += flpCategories.Padding.Right;
+                int visibleWidth = pnlCategoryScroll.ClientSize.Width;
+                maxScroll = Math.Max(0, contentWidth - visibleWidth);
+            }
+
+            btnCatLeft.Enabled = _categoryScrollPos > 0;
+            btnCatRight.Enabled = _categoryScrollPos < maxScroll;
+
+            // Visual feedback for disabled state
+            btnCatLeft.ForeColor = btnCatLeft.Enabled
+                ? ColorTranslator.FromHtml("#6B7280")
+                : ColorTranslator.FromHtml("#D1D5DB");
+            btnCatRight.ForeColor = btnCatRight.Enabled
+                ? ColorTranslator.FromHtml("#6B7280")
+                : ColorTranslator.FromHtml("#D1D5DB");
+        }
+
+        private void PopulateCategories()
+        {
+            flpCategories.SuspendLayout();
+            flpCategories.Controls.Clear();
+            _categoryButtons.Clear();
+
+            var categories = new List<string> { "All" };
+            var customCats = Program.DataService.Categories
+                .Where(c => c != "All Items" && c != "All") // Normalize "All" vs "All Items"
+                .Distinct()
+                .ToList();
+            categories.AddRange(customCats);
+
+            foreach (var cat in categories)
+            {
+                int textWidth = TextRenderer.MeasureText(cat, new Font("Segoe UI", 8F, FontStyle.Bold)).Width;
+                int btnWidth = Math.Max(80, textWidth + 32); // 32px for padding
+
+                var btn = new Guna.UI2.WinForms.Guna2Button
+                {
+                    Text = cat,
+                    Tag = cat,
+                    Size = new Size(btnWidth, 32),
+                    Margin = new Padding(4, 0, 4, 0),
+                    BorderRadius = 20,
+                    Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                    BorderThickness = 1,
+                    Cursor = Cursors.Hand
+                };
+                btn.Click += CategoryFilter_Click;
+                _categoryButtons.Add(btn);
+                flpCategories.Controls.Add(btn);
+            }
+
+            UpdateCategoryPills();
+            flpCategories.ResumeLayout();
+
+            // Reset scroll and update arrows
+            _categoryScrollPos = 0;
+            flpCategories.Location = new Point(0, 0);
+            UpdateCategoryArrows();
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -69,13 +186,19 @@ namespace TheMatchaClubApp.Forms
                 ? all
                 : all.Where(p => p.CategoryName.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
 
+            string query = txtSearch.Text.Trim();
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                filtered = filtered.Where(p => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
             foreach (var product in filtered)
             {
                 var card = new ProductCard
                 {
                     ProductData = product,
-                    Size = new Size(160, 190),
-                    Margin = new Padding(8)
+                    Size = new Size(136, 170), // Denser grid
+                    Margin = new Padding(6)
                 };
                 card.ProductClicked += (s, p) => AddToCart(p);
                 flpProducts.Controls.Add(card);
@@ -89,8 +212,6 @@ namespace TheMatchaClubApp.Forms
 
         private void AddToCart(Product product)
         {
-            if (product.StockLevel <= 0 || product.IsOutOfStock) return;
-
             var existing = _cart.FirstOrDefault(c => c.Product.Id == product.Id);
             if (existing != null) existing.Qty++;
             else _cart.Add(new CartLine(product, 1));
@@ -128,69 +249,108 @@ namespace TheMatchaClubApp.Forms
             else
             {
                 int y = 4;
+                // Use the actual visible client width minus margin for each row
+                int rowWidth = Math.Max(300, pnlCartItems.ClientSize.Width - 8);
+
                 foreach (var line in _cart)
                 {
                     var linePanel = new Panel
                     {
-                        Location = new Point(0, y),
-                        Size = new Size(pnlCartItems.Width - 16, 44),
-                        BackColor = Color.Transparent,
-                        Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
+                        Location = new Point(4, y),
+                        Size = new Size(rowWidth, 52),
+                        BackColor = Color.Transparent
+                    };
+
+                    var capturedLine = line;
+
+                    // ── Quantity Controls: [-] N [+] ──
+                    var btnMinus = new Guna.UI2.WinForms.Guna2Button
+                    {
+                        Text = "-", Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                        Size = new Size(22, 22), Location = new Point(4, 15),
+                        BorderRadius = 4, FillColor = ColorTranslator.FromHtml("#E5E7EB"), ForeColor = Color.Black,
+                        Cursor = Cursors.Hand
+                    };
+                    btnMinus.Click += (s, e) => {
+                        if (capturedLine.Qty > 1) { capturedLine.Qty--; RefreshCartUI(); }
+                        else { _cart.Remove(capturedLine); RefreshCartUI(); }
                     };
 
                     var lblQty = new Label
                     {
-                        Text = $"x{line.Qty}", Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                        Text = capturedLine.Qty.ToString(), Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                         ForeColor = ColorTranslator.FromHtml("#111827"),
-                        Location = new Point(8, 4), Size = new Size(28, 20),
-                        BackColor = Color.Transparent
+                        Location = new Point(28, 16), Size = new Size(20, 20),
+                        TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.Transparent
                     };
 
+                    var btnPlus = new Guna.UI2.WinForms.Guna2Button
+                    {
+                        Text = "+", Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                        Size = new Size(22, 22), Location = new Point(50, 15),
+                        BorderRadius = 4, FillColor = ColorTranslator.FromHtml("#E5E7EB"), ForeColor = Color.Black,
+                        Cursor = Cursors.Hand
+                    };
+                    btnPlus.Click += (s, e) => { capturedLine.Qty++; RefreshCartUI(); };
+
+                    // ── Layout measurements ──
+                    int nameLeft = 80;
+                    int totalWidth = 80;    // right-aligned price column
+                    int removeWidth = 24;   // remove button
+                    int nameWidth = Math.Max(60, rowWidth - nameLeft - totalWidth - removeWidth - 4);
+
+                    // ── Product Name (with ellipsis for long names) ──
                     var lblItemName = new Label
                     {
-                        Text = line.Product.Name, Font = new Font("Segoe UI", 9F),
+                        Text = line.Product.Name, Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                         ForeColor = ColorTranslator.FromHtml("#374151"),
-                        Location = new Point(40, 4), Size = new Size(140, 20),
-                        BackColor = Color.Transparent
+                        Location = new Point(nameLeft, 6), Size = new Size(nameWidth, 20),
+                        BackColor = Color.Transparent, AutoEllipsis = true
                     };
 
+                    // ── Unit Price (below name) ──
                     var lblUnitPrice = new Label
                     {
                         Text = $"@ {line.Product.Price.ToString("C2")}",
-                        Font = new Font("Segoe UI", 8F),
+                        Font = new Font("Segoe UI", 7.5F),
                         ForeColor = ColorTranslator.FromHtml("#9CA3AF"),
-                        Location = new Point(40, 24), Size = new Size(100, 16),
+                        Location = new Point(nameLeft, 28), Size = new Size(nameWidth, 16),
                         BackColor = Color.Transparent
                     };
 
-                    // Redo (remove) button
+                    // ── Remove Button ──
+                    int removeX = rowWidth - totalWidth - removeWidth;
                     var btnRemove = new Label
                     {
                         Text = "✕", Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                         ForeColor = ColorTranslator.FromHtml("#EF4444"),
-                        Size = new Size(20, 20), Location = new Point(linePanel.Width - 90, 12),
-                        Cursor = Cursors.Hand, BackColor = Color.Transparent
+                        Size = new Size(removeWidth, 20), Location = new Point(removeX, 16),
+                        Cursor = Cursors.Hand, BackColor = Color.Transparent,
+                        TextAlign = ContentAlignment.MiddleCenter
                     };
-                    var capturedLine = line;
                     btnRemove.Click += (s, e) => { _cart.Remove(capturedLine); RefreshCartUI(); };
 
+                    // ── Line Total (right-aligned) ──
                     var lblLineTotal = new Label
                     {
                         Text = line.Total.ToString("C2"),
                         Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold),
                         ForeColor = ColorTranslator.FromHtml("#111827"),
                         TextAlign = ContentAlignment.MiddleRight,
-                        Dock = DockStyle.Right, Size = new Size(70, 44),
+                        Location = new Point(rowWidth - totalWidth, 0), Size = new Size(totalWidth, 52),
                         BackColor = Color.Transparent
                     };
 
+                    linePanel.Controls.Add(btnMinus);
                     linePanel.Controls.Add(lblQty);
+                    linePanel.Controls.Add(btnPlus);
                     linePanel.Controls.Add(lblItemName);
                     linePanel.Controls.Add(lblUnitPrice);
                     linePanel.Controls.Add(btnRemove);
                     linePanel.Controls.Add(lblLineTotal);
+
                     pnlCartItems.Controls.Add(linePanel);
-                    y += 52;
+                    y += 56;
                 }
 
                 btnCompleteSale.Enabled = true;
@@ -198,13 +358,9 @@ namespace TheMatchaClubApp.Forms
                 btnCompleteSale.ForeColor = Color.White;
             }
 
-            // 12% VAT calculation
-            decimal subtotal = _cart.Sum(c => c.Total);
-            decimal vat = subtotal * 0.12m;
-            decimal total = subtotal + vat;
+            decimal total = _cart.Sum(c => c.Total);
 
-            lblSubtotalValue.Text = subtotal.ToString("C2");
-            lblTaxValue.Text = vat.ToString("C2");
+            lblSubtotalValue.Text = total.ToString("C2");
             lblTotalValue.Text = total.ToString("C2");
             btnCompleteSale.Text = "₱ Complete Sale (Cash)";
 
@@ -219,25 +375,24 @@ namespace TheMatchaClubApp.Forms
         {
             if (_cart.Count == 0) return;
 
+            decimal total = _cart.Sum(c => c.Total);
+
             // ── Step 1: Show Checkout Dialog ──────────────────────────
-            using var dlg = new CheckoutDialogForm();
+            using var dlg = new CheckoutDialogForm(total);
             if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
 
             bool isDineIn = dlg.IsDineIn;
             string orderType = dlg.SelectedOrderType;
             var customer = dlg.SelectedCustomer;
+            decimal cashReceived = dlg.CashReceived;
+            decimal changeDue = dlg.ChangeDue;
 
             // ── Step 2: Build the Order ───────────────────────────────
-            decimal subtotal = _cart.Sum(c => c.Total);
-            decimal vat = subtotal * 0.12m;
-            decimal total = subtotal + vat;
-
             var order = new Order
             {
                 OrderId = $"ORD-{DateTime.Now:yyyyMMddHHmmss}",
                 Timestamp = DateTime.Now,
-                Subtotal = subtotal,
-                VatAmount = vat,
+                Subtotal = total,
                 Total = total,
                 IsDineIn = isDineIn,
                 OrderType = orderType,
@@ -254,20 +409,13 @@ namespace TheMatchaClubApp.Forms
                 }).ToList()
             };
 
-            // ── Step 3: Decrement Stock & Increment Sales ────────────
+            // ── Step 3: Increment Sales ────────────
             foreach (var line in _cart)
             {
                 var dbProduct = Program.DataService.Products.FirstOrDefault(p => p.Id == line.Product.Id);
                 if (dbProduct != null)
                 {
-                    dbProduct.StockLevel = Math.Max(0, dbProduct.StockLevel - line.Qty);
                     dbProduct.SalesCount += line.Qty;
-                    
-                    if (dbProduct.StockLevel == 0)
-                    {
-                        dbProduct.IsOutOfStock = true;
-                        dbProduct.CategoryName = "Out of Stock";
-                    }
                 }
             }
 
@@ -288,7 +436,8 @@ namespace TheMatchaClubApp.Forms
                 $"Customer: {order.CustomerName}\n" +
                 $"──────────────\n" +
                 $"Total: {total.ToString("C2")}\n" +
-                $"VAT (12%): {vat.ToString("C2")}\n\n" +
+                $"Cash: {cashReceived.ToString("C2")}\n" +
+                $"Change: {changeDue.ToString("C2")}\n\n" +
                 $"Use the Print or Email buttons for the receipt.");
 
             // ── Step 6: UI Reset ─────────────────────────────────────
@@ -369,8 +518,6 @@ namespace TheMatchaClubApp.Forms
             // ── Totals ───────────────────────────────────────────────
             g.DrawString("Subtotal:", bodyFont, grayBrush, x, y);
             g.DrawString(order.Subtotal.ToString("C2"), bodyFont, brush, x + 270, y); y += 18;
-            g.DrawString("VAT (12%):", bodyFont, grayBrush, x, y);
-            g.DrawString(order.VatAmount.ToString("C2"), bodyFont, brush, x + 270, y); y += 22;
             g.DrawString("TOTAL:", headerFont, brush, x, y);
             g.DrawString(order.Total.ToString("C2"), headerFont, brush, x + 260, y); y += 30;
 
@@ -656,7 +803,6 @@ namespace TheMatchaClubApp.Forms
   </table>
   <hr style='border:none;border-top:1px solid #E5E7EB;margin:0 0 12px'>
   <p style='margin:0 0 4px;color:#6B7280'>Subtotal: {order.Subtotal.ToString("C2")}</p>
-  <p style='margin:0 0 8px;color:#6B7280'>VAT (12%): {order.VatAmount.ToString("C2")}</p>
   <p style='margin:0 0 16px'><strong style='font-size:20px;color:#52B743'>TOTAL: {order.Total.ToString("C2")}</strong></p>
   <p style='text-align:center;color:#9CA3AF;font-size:12px'>Thank you for visiting {storeName}!</p>
 </div>";

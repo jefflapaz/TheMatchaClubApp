@@ -187,7 +187,6 @@ namespace TheMatchaClubApp.Forms
             lblReceiptCustomer.Text = "—";
             lblReceiptItems.Visible = false;
             lblReceiptSubtotal.Text = "₱0.00";
-            lblReceiptTax.Text = "₱0.00";
             lblReceiptTotal.Text = "₱0.00";
         }
 
@@ -251,10 +250,8 @@ namespace TheMatchaClubApp.Forms
             int totalsY = currentY + 20;
             lblReceiptSubtotalLabel.Top = totalsY;
             lblReceiptSubtotal.Top = totalsY;
-            lblReceiptTaxLabel.Top = totalsY + 20;
-            lblReceiptTax.Top = totalsY + 20;
-            lblReceiptTotalLabel.Top = totalsY + 50;
-            lblReceiptTotal.Top = totalsY + 50;
+            lblReceiptTotalLabel.Top = totalsY + 30;
+            lblReceiptTotal.Top = totalsY + 30;
             
             lblPaidVia.Top = totalsY + 95;
             lblPaidVia.Width = 288;
@@ -268,7 +265,6 @@ namespace TheMatchaClubApp.Forms
             btnEmailReceipt.Top = totalsY + 165;
 
             lblReceiptSubtotal.Text = order.Subtotal.ToString("C2");
-            lblReceiptTax.Text = order.VatAmount.ToString("C2");
             lblReceiptTotal.Text = order.Total.ToString("C2");
 
             pnlReceiptBody.Invalidate(); // trigger dashed line repaint
@@ -344,8 +340,6 @@ namespace TheMatchaClubApp.Forms
 
             g.DrawString("Subtotal:", bodyFont, grayBrush, x, y);
             g.DrawString(order.Subtotal.ToString("C2"), bodyFont, brush, x + 270, y); y += 18;
-            g.DrawString("VAT (12%):", bodyFont, grayBrush, x, y);
-            g.DrawString(order.VatAmount.ToString("C2"), bodyFont, brush, x + 270, y); y += 22;
             g.DrawString("TOTAL:", headerFont, brush, x, y);
             g.DrawString(order.Total.ToString("C2"), headerFont, brush, x + 260, y); y += 30;
 
@@ -576,7 +570,6 @@ namespace TheMatchaClubApp.Forms
   </table>
   <hr style='border:none;border-top:1px solid #E5E7EB;margin:0 0 12px'>
   <p style='margin:0 0 4px;color:#6B7280'>Subtotal: {order.Subtotal.ToString("C2")}</p>
-  <p style='margin:0 0 8px;color:#6B7280'>VAT (12%): {order.VatAmount.ToString("C2")}</p>
   <p style='margin:0 0 16px'><strong style='font-size:20px;color:#52B743'>TOTAL: {order.Total.ToString("C2")}</strong></p>
   <p style='text-align:center;color:#9CA3AF;font-size:12px'>Thank you for visiting {storeName}!</p>
 </div>";

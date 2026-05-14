@@ -73,6 +73,33 @@ namespace TheMatchaClubApp.Forms
             txtNewEmail.BorderColor = DlgBorder;
             txtNewEmail.FocusedState.BorderColor = DlgGreen;
 
+            // Payment section
+            lblTotalLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblTotalLabel.ForeColor = DlgMuted;
+            lblTotalLabel.BackColor = Color.Transparent;
+
+            lblTotalValue.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            lblTotalValue.ForeColor = DlgGreen;
+            lblTotalValue.BackColor = Color.Transparent;
+
+            lblCashLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblCashLabel.ForeColor = DlgMuted;
+            lblCashLabel.BackColor = Color.Transparent;
+
+            txtCash.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtCash.BorderRadius = 8;
+            txtCash.BorderColor = DlgBorder;
+            txtCash.FocusedState.BorderColor = DlgGreen;
+            txtCash.TextAlign = HorizontalAlignment.Right;
+
+            lblChangeLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblChangeLabel.ForeColor = DlgMuted;
+            lblChangeLabel.BackColor = Color.Transparent;
+
+            lblChange.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            lblChange.ForeColor = ColorTranslator.FromHtml("#EF4444");
+            lblChange.BackColor = Color.Transparent;
+
             // Confirm button
             btnConfirm.FillColor = DlgGreen;
             btnConfirm.HoverState.FillColor = DlgGreenHover;

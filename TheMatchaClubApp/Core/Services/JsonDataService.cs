@@ -60,6 +60,24 @@ namespace TheMatchaClubApp.Core.Services
         {
             await SaveAsync("products.json", Products);
             ProductsChanged?.Invoke(this, EventArgs.Empty);
+
+            // Auto-delete empty categories
+            bool changed = false;
+            for (int i = Categories.Count - 1; i >= 0; i--)
+            {
+                var cat = Categories[i];
+                if (cat == "All Items") continue; // Protected
+                
+                if (!Products.Any(p => string.Equals(p.CategoryName, cat, StringComparison.OrdinalIgnoreCase)))
+                {
+                    Categories.RemoveAt(i);
+                    changed = true;
+                }
+            }
+            if (changed)
+            {
+                await SaveCategoriesAsync();
+            }
         }
 
         public async Task SaveCategoriesAsync()
@@ -108,11 +126,27 @@ namespace TheMatchaClubApp.Core.Services
             if (string.IsNullOrWhiteSpace(sourcePath) || !File.Exists(sourcePath))
                 return string.Empty;
 
-            var imagesDir = Path.Combine(AppFolder, "Images");
+            // If it's already in our images folder, just return the name
+            var imagesDir = GetImagesFolder();
+            if (sourcePath.StartsWith(imagesDir, StringComparison.OrdinalIgnoreCase))
+                return Path.GetFileName(sourcePath);
+
             var destName = $"{Guid.NewGuid()}{Path.GetExtension(sourcePath)}";
             var destPath = Path.Combine(imagesDir, destName);
             File.Copy(sourcePath, destPath, true);
-            return destPath;
+            return destName;
+        }
+
+        public string GetFullImagePath(string imagePath)
+        {
+            if (string.IsNullOrWhiteSpace(imagePath)) return string.Empty;
+            
+            // If it's already an absolute path that exists, use it
+            if (Path.IsPathRooted(imagePath) && File.Exists(imagePath))
+                return imagePath;
+
+            // Otherwise, assume it's a filename in our images folder
+            return Path.Combine(GetImagesFolder(), imagePath);
         }
 
         public string GetImagesFolder() => Path.Combine(AppFolder, "Images");

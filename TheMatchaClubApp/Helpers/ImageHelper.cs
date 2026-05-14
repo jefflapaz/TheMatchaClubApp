@@ -115,11 +115,13 @@ namespace TheMatchaClubApp.Helpers
         public static Image LoadOrPlaceholder(string imagePath, string name, int width = 120, int height = 120, bool dim = false)
         {
             Image img;
-            if (!string.IsNullOrWhiteSpace(imagePath) && File.Exists(imagePath))
+            string fullPath = Program.DataService.GetFullImagePath(imagePath);
+
+            if (!string.IsNullOrWhiteSpace(fullPath) && File.Exists(fullPath))
             {
                 try
                 {
-                    using var fs = new FileStream(imagePath, FileMode.Open, FileAccess.Read);
+                    using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
                     img = CropToFit(Image.FromStream(fs), width, height);
                 }
                 catch 

@@ -6,6 +6,7 @@ namespace TheMatchaClubApp.Forms
 
         private void InitializeComponent()
         {
+            tlpMain = new System.Windows.Forms.TableLayoutPanel();
             pnlCartSidebar = new Guna.UI2.WinForms.Guna2Panel();
             pnlLeftArea = new System.Windows.Forms.Panel();
             pnlTopHeader = new System.Windows.Forms.Panel();
@@ -13,48 +14,68 @@ namespace TheMatchaClubApp.Forms
             lblViewName = new System.Windows.Forms.Label();
             btnAlert = new Guna.UI2.WinForms.Guna2Button();
             pnlCategoryRow = new System.Windows.Forms.Panel();
+            btnCatLeft = new Guna.UI2.WinForms.Guna2Button();
+            pnlCategoryScroll = new System.Windows.Forms.Panel();
             flpCategories = new System.Windows.Forms.FlowLayoutPanel();
+            btnCatRight = new Guna.UI2.WinForms.Guna2Button();
             pnlProductGrid = new Guna.UI2.WinForms.Guna2Panel();
             flpProducts = new System.Windows.Forms.FlowLayoutPanel();
             pnlCartHeader = new System.Windows.Forms.Panel();
             lblCurrentOrder = new System.Windows.Forms.Label();
             lblOrderMeta = new System.Windows.Forms.Label();
             btnEatIn = new Guna.UI2.WinForms.Guna2Button();
+            pnlCartItemsWrapper = new System.Windows.Forms.Panel();
             pnlCartItems = new System.Windows.Forms.Panel();
             pnlCartTotals = new System.Windows.Forms.Panel();
             lblSubtotal = new System.Windows.Forms.Label();
             lblSubtotalValue = new System.Windows.Forms.Label();
-            lblTax = new System.Windows.Forms.Label();
-            lblTaxValue = new System.Windows.Forms.Label();
             lblTotal = new System.Windows.Forms.Label();
             lblTotalValue = new System.Windows.Forms.Label();
             btnPrint = new Guna.UI2.WinForms.Guna2Button();
             btnEmail = new Guna.UI2.WinForms.Guna2Button();
             btnCompleteSale = new Guna.UI2.WinForms.Guna2Button();
             lblCashNote = new System.Windows.Forms.Label();
+            txtSearch = new Guna.UI2.WinForms.Guna2TextBox();
             SuspendLayout();
 
+            // tlpMain
+            tlpMain.ColumnCount = 2;
+            tlpMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            tlpMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 400F));
+            tlpMain.Controls.Add(pnlLeftArea, 0, 0);
+            tlpMain.Controls.Add(pnlCartSidebar, 1, 0);
+            tlpMain.Dock = System.Windows.Forms.DockStyle.Fill;
+            tlpMain.Location = new System.Drawing.Point(0, 0);
+            tlpMain.Margin = new System.Windows.Forms.Padding(0);
+            tlpMain.Name = "tlpMain";
+            tlpMain.RowCount = 1;
+            tlpMain.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            tlpMain.Size = new System.Drawing.Size(1004, 600);
+
             // pnlCartSidebar
-            pnlCartSidebar.Controls.Add(pnlCartItems);
-            pnlCartSidebar.Controls.Add(pnlCartTotals);
-            pnlCartSidebar.Controls.Add(pnlCartHeader);
-            pnlCartSidebar.Dock = System.Windows.Forms.DockStyle.Right;
+            pnlCartSidebar.Controls.Add(pnlCartItemsWrapper); // Index 0: Fills remaining middle space
+            pnlCartSidebar.Controls.Add(pnlCartTotals);       // Index 1: Claims bottom 200px
+            pnlCartSidebar.Controls.Add(pnlCartHeader);       // Index 2: Claims top 64px
+            pnlCartSidebar.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlCartSidebar.Name = "pnlCartSidebar";
-            pnlCartSidebar.Size = new System.Drawing.Size(320, 600);
+            pnlCartSidebar.Size = new System.Drawing.Size(400, 600);
+            pnlCartSidebar.Margin = new System.Windows.Forms.Padding(0);
 
             // pnlLeftArea
-            pnlLeftArea.Controls.Add(pnlProductGrid);
-            pnlLeftArea.Controls.Add(pnlCategoryRow);
-            pnlLeftArea.Controls.Add(pnlTopHeader);
+            pnlLeftArea.Controls.Add(pnlProductGrid);  // Index 0: Fills the remaining space below
+            pnlLeftArea.Controls.Add(pnlCategoryRow);  // Index 1: Claims next 76px
+            pnlLeftArea.Controls.Add(pnlTopHeader);    // Index 2: Claims top 64px
             pnlLeftArea.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlLeftArea.Name = "pnlLeftArea";
+            pnlLeftArea.Margin = new System.Windows.Forms.Padding(0);
 
             // pnlTopHeader
             pnlTopHeader.Controls.Add(lblChevron);
             pnlTopHeader.Controls.Add(lblViewName);
+            pnlTopHeader.Controls.Add(txtSearch);
             pnlTopHeader.Controls.Add(btnAlert);
             pnlTopHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlTopHeader.Size = new System.Drawing.Size(684, 64);
+            pnlTopHeader.Size = new System.Drawing.Size(604, 64);
 
             lblChevron.Location = new System.Drawing.Point(16, 20);
             lblChevron.Size = new System.Drawing.Size(16, 24);
@@ -64,30 +85,58 @@ namespace TheMatchaClubApp.Forms
             lblViewName.Size = new System.Drawing.Size(120, 28);
             lblViewName.Text = "Quick Sale";
 
-            btnAlert.Location = new System.Drawing.Point(600, 16);
+            txtSearch.Location = new System.Drawing.Point(160, 14);
+            txtSearch.Size = new System.Drawing.Size(240, 36);
+            txtSearch.PlaceholderText = "Search products...";
+
+            btnAlert.Location = new System.Drawing.Point(556, 16);
             btnAlert.Size = new System.Drawing.Size(32, 32);
             btnAlert.Text = "\u26A0";
             btnAlert.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
 
             // pnlCategoryRow
-            pnlCategoryRow.Controls.Add(flpCategories);
+            pnlCategoryRow.Controls.Add(pnlCategoryScroll); // Fill center
+            pnlCategoryRow.Controls.Add(btnCatRight);        // Right arrow
+            pnlCategoryRow.Controls.Add(btnCatLeft);         // Left arrow
             pnlCategoryRow.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlCategoryRow.Size = new System.Drawing.Size(684, 48);
+            pnlCategoryRow.Size = new System.Drawing.Size(604, 56);
 
-            flpCategories.Dock = System.Windows.Forms.DockStyle.Fill;
+            // Left arrow button
+            btnCatLeft.Dock = System.Windows.Forms.DockStyle.Left;
+            btnCatLeft.Size = new System.Drawing.Size(32, 56);
+            btnCatLeft.Text = "\u25C0";
+            btnCatLeft.Name = "btnCatLeft";
+
+            // Right arrow button
+            btnCatRight.Dock = System.Windows.Forms.DockStyle.Right;
+            btnCatRight.Size = new System.Drawing.Size(32, 56);
+            btnCatRight.Text = "\u25B6";
+            btnCatRight.Name = "btnCatRight";
+
+            // Scroll container (clips the FlowLayoutPanel)
+            pnlCategoryScroll.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlCategoryScroll.Controls.Add(flpCategories);
+            pnlCategoryScroll.Name = "pnlCategoryScroll";
+
+            // Category FlowLayoutPanel — positioned absolutely inside scroll container
+            flpCategories.Location = new System.Drawing.Point(0, 0);
+            flpCategories.Size = new System.Drawing.Size(5000, 56);
             flpCategories.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             flpCategories.WrapContents = false;
-            flpCategories.AutoScroll = false;
-            flpCategories.Padding = new System.Windows.Forms.Padding(12, 8, 0, 0);
+            flpCategories.AutoSize = true;
+            flpCategories.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowOnly;
+            flpCategories.Padding = new System.Windows.Forms.Padding(4, 12, 4, 12);
 
             // pnlProductGrid
             pnlProductGrid.Controls.Add(flpProducts);
             pnlProductGrid.Dock = System.Windows.Forms.DockStyle.Fill;
 
-            flpProducts.Dock = System.Windows.Forms.DockStyle.Fill;
+            flpProducts.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            flpProducts.Location = new System.Drawing.Point(0, 0);
+            flpProducts.Size = new System.Drawing.Size(624, 500); // 20px wider than parent (604)
             flpProducts.WrapContents = true;
             flpProducts.AutoScroll = true;
-            flpProducts.Padding = new System.Windows.Forms.Padding(12);
+            flpProducts.Padding = new System.Windows.Forms.Padding(12, 12, 20, 12);
 
             // Cart header
             pnlCartHeader.Controls.Add(lblCurrentOrder);
@@ -108,17 +157,20 @@ namespace TheMatchaClubApp.Forms
             btnEatIn.Size = new System.Drawing.Size(72, 32);
             btnEatIn.Text = "Eat-In";
 
-            // Cart items
+            // Cart items wrapper
+            pnlCartItemsWrapper.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlCartItemsWrapper.Controls.Add(pnlCartItems);
+            pnlCartItemsWrapper.Name = "pnlCartItemsWrapper";
+
+            // Cart items — fills wrapper exactly, vertical scroll only
             pnlCartItems.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlCartItems.AutoScroll = true;
 
             // Cart totals
             pnlCartTotals.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlCartTotals.Size = new System.Drawing.Size(320, 220);
+            pnlCartTotals.Size = new System.Drawing.Size(400, 200);
             pnlCartTotals.Controls.Add(lblSubtotal);
             pnlCartTotals.Controls.Add(lblSubtotalValue);
-            pnlCartTotals.Controls.Add(lblTax);
-            pnlCartTotals.Controls.Add(lblTaxValue);
             pnlCartTotals.Controls.Add(lblTotal);
             pnlCartTotals.Controls.Add(lblTotalValue);
             pnlCartTotals.Controls.Add(btnPrint);
@@ -129,53 +181,45 @@ namespace TheMatchaClubApp.Forms
             lblSubtotal.Location = new System.Drawing.Point(16, 8);
             lblSubtotal.Size = new System.Drawing.Size(80, 18);
             lblSubtotal.Text = "Subtotal";
-            lblSubtotalValue.Location = new System.Drawing.Point(200, 8);
+            lblSubtotalValue.Location = new System.Drawing.Point(280, 8);
             lblSubtotalValue.Size = new System.Drawing.Size(100, 18);
             lblSubtotalValue.Text = "$0.00";
             lblSubtotalValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
-            lblTax.Location = new System.Drawing.Point(16, 30);
-            lblTax.Size = new System.Drawing.Size(100, 18);
-            lblTax.Text = "Sales Tax (8%)";
-            lblTaxValue.Location = new System.Drawing.Point(200, 30);
-            lblTaxValue.Size = new System.Drawing.Size(100, 18);
-            lblTaxValue.Text = "$0.00";
-            lblTaxValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-
-            lblTotal.Location = new System.Drawing.Point(16, 60);
+            lblTotal.Location = new System.Drawing.Point(16, 36);
             lblTotal.Size = new System.Drawing.Size(80, 24);
             lblTotal.Text = "Total";
-            lblTotalValue.Location = new System.Drawing.Point(180, 60);
+            lblTotalValue.Location = new System.Drawing.Point(260, 36);
             lblTotalValue.Size = new System.Drawing.Size(120, 24);
             lblTotalValue.Text = "$0.00";
             lblTotalValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
-            btnPrint.Location = new System.Drawing.Point(16, 96);
-            btnPrint.Size = new System.Drawing.Size(140, 36);
+            btnPrint.Location = new System.Drawing.Point(16, 72);
+            btnPrint.Size = new System.Drawing.Size(180, 36);
             btnPrint.Text = "\U0001F5A8 Print";
-            btnEmail.Location = new System.Drawing.Point(164, 96);
-            btnEmail.Size = new System.Drawing.Size(140, 36);
+            btnEmail.Location = new System.Drawing.Point(204, 72);
+            btnEmail.Size = new System.Drawing.Size(180, 36);
             btnEmail.Text = "\u2709 Email";
 
-            btnCompleteSale.Location = new System.Drawing.Point(16, 142);
-            btnCompleteSale.Size = new System.Drawing.Size(288, 52);
+            btnCompleteSale.Location = new System.Drawing.Point(16, 118);
+            btnCompleteSale.Size = new System.Drawing.Size(368, 52);
             btnCompleteSale.Text = "$ Complete Sale (Cash)";
 
-            lblCashNote.Location = new System.Drawing.Point(16, 198);
-            lblCashNote.Size = new System.Drawing.Size(288, 16);
+            lblCashNote.Location = new System.Drawing.Point(16, 174);
+            lblCashNote.Size = new System.Drawing.Size(368, 16);
             lblCashNote.Text = "Cash-only payments supported";
             lblCashNote.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
             // QuickSaleView
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            Controls.Add(pnlLeftArea);
-            Controls.Add(pnlCartSidebar);
+            Controls.Add(tlpMain);
             Name = "QuickSaleView";
             Size = new System.Drawing.Size(1004, 600);
             ResumeLayout(false);
         }
 
+        private System.Windows.Forms.TableLayoutPanel tlpMain;
         private Guna.UI2.WinForms.Guna2Panel pnlCartSidebar;
         private System.Windows.Forms.Panel pnlLeftArea;
         private System.Windows.Forms.Panel pnlTopHeader;
@@ -183,24 +227,27 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblViewName;
         private Guna.UI2.WinForms.Guna2Button btnAlert;
         private System.Windows.Forms.Panel pnlCategoryRow;
+        private Guna.UI2.WinForms.Guna2Button btnCatLeft;
+        private System.Windows.Forms.Panel pnlCategoryScroll;
         private System.Windows.Forms.FlowLayoutPanel flpCategories;
+        private Guna.UI2.WinForms.Guna2Button btnCatRight;
         private Guna.UI2.WinForms.Guna2Panel pnlProductGrid;
         private System.Windows.Forms.FlowLayoutPanel flpProducts;
         private System.Windows.Forms.Panel pnlCartHeader;
         private System.Windows.Forms.Label lblCurrentOrder;
         private System.Windows.Forms.Label lblOrderMeta;
         private Guna.UI2.WinForms.Guna2Button btnEatIn;
+        private System.Windows.Forms.Panel pnlCartItemsWrapper;
         private System.Windows.Forms.Panel pnlCartItems;
         private System.Windows.Forms.Panel pnlCartTotals;
         private System.Windows.Forms.Label lblSubtotal;
         private System.Windows.Forms.Label lblSubtotalValue;
-        private System.Windows.Forms.Label lblTax;
-        private System.Windows.Forms.Label lblTaxValue;
         private System.Windows.Forms.Label lblTotal;
         private System.Windows.Forms.Label lblTotalValue;
         private Guna.UI2.WinForms.Guna2Button btnPrint;
         private Guna.UI2.WinForms.Guna2Button btnEmail;
         private Guna.UI2.WinForms.Guna2Button btnCompleteSale;
         private System.Windows.Forms.Label lblCashNote;
+        private Guna.UI2.WinForms.Guna2TextBox txtSearch;
     }
 }

@@ -8,7 +8,6 @@ namespace TheMatchaClubApp.Core.Models
         public string OrderId { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; } = DateTime.Now;
         public decimal Subtotal { get; set; }
-        public decimal VatAmount { get; set; }
         public decimal Total { get; set; }
         public bool IsDineIn { get; set; }
         public string OrderType { get; set; } = "Dine-In"; // "Dine-In" or "Take-Out"

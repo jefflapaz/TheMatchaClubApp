@@ -458,7 +458,6 @@ namespace TheMatchaClubApp.Forms
                 $"{items}\n" +
                 $"───────────────────\n" +
                 $"Subtotal: {FormatCurrency(order.Subtotal)}\n" +
-                $"VAT 12%:  {FormatCurrency(order.VatAmount)}\n" +
                 $"TOTAL:    {FormatCurrency(order.Total)}",
                 "Receipt", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

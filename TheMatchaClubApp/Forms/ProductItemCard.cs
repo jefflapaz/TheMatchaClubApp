@@ -7,13 +7,13 @@ using TheMatchaClubApp.Helpers;
 
 namespace TheMatchaClubApp.Forms
 {
-    public partial class ProductCard : UserControl
+    public partial class ProductItemCard : UserControl
     {
         private Product? _product;
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [Browsable(false)]
-        public Product? ProductData
+        public Product? Product
         {
             get => _product;
             set
@@ -23,9 +23,10 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
-        public event EventHandler<Product>? ProductClicked;
+        public event EventHandler? EditClicked;
+        public event EventHandler? DeleteClicked;
 
-        public ProductCard()
+        public ProductItemCard()
         {
             SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
@@ -40,26 +41,35 @@ namespace TheMatchaClubApp.Forms
         private void BindData()
         {
             if (_product == null) return;
-            lblName.Text = _product.Name;
-            lblCategory.Text = _product.CategoryName;
+            lblProductId.Text = _product.Id.ToString()[..8].ToUpper();
             lblPrice.Text = _product.Price.ToString("C2");
+            lblName.Text = _product.Name;
 
-            // Load image or generate placeholder (Async)
+            lblProductId.ForeColor = ColorTranslator.FromHtml("#9CA3AF");
+            lblPrice.ForeColor = ColorTranslator.FromHtml("#111827");
+            lblName.ForeColor = ColorTranslator.FromHtml("#111827");
+
+            // Async Image Load
             picImage.Image = null;
             string path = _product.ImagePath;
             string name = _product.Name;
-            int w = picImage.Width > 0 ? picImage.Width : 200;
-            int h = picImage.Height > 0 ? picImage.Height : 140;
+
+            // Ensure we have dimensions. If not yet laid out, use designer defaults.
+            int w = picImage.Width > 0 ? picImage.Width : 240;
+            int h = picImage.Height > 0 ? picImage.Height : 150;
 
             System.Threading.Tasks.Task.Run(() =>
             {
                 var img = ImageHelper.LoadOrPlaceholder(path, name, w, h, false);
+                
+                // Use a safe way to update the UI
                 if (this.IsHandleCreated)
                 {
                     this.BeginInvoke(new Action(() => { picImage.Image = img; }));
                 }
                 else
                 {
+                    // Handle not created yet, wait for it
                     this.HandleCreated += (s, e) =>
                     {
                         this.BeginInvoke(new Action(() => { picImage.Image = img; }));
@@ -68,20 +78,9 @@ namespace TheMatchaClubApp.Forms
             });
         }
 
-        protected override void OnMouseClick(MouseEventArgs e)
-        {
-            base.OnMouseClick(e);
-            if (_product != null)
-                ProductClicked?.Invoke(this, _product);
-        }
-
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _hoverTimer?.Dispose();
-                components?.Dispose();
-            }
+            if (disposing) components?.Dispose();
             base.Dispose(disposing);
         }
     }

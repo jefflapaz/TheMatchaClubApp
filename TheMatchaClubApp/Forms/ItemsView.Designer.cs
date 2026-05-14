@@ -7,7 +7,6 @@ namespace TheMatchaClubApp.Forms
         private void InitializeComponent()
         {
             pnlGlobalSubHeader = new System.Windows.Forms.Panel();
-            lblLowStock = new System.Windows.Forms.Label();
             lblTotalItems = new System.Windows.Forms.Label();
             btnAddItem = new Guna.UI2.WinForms.Guna2Button();
             
@@ -33,7 +32,6 @@ namespace TheMatchaClubApp.Forms
             SuspendLayout();
 
             // pnlGlobalSubHeader
-            pnlGlobalSubHeader.Controls.Add(lblLowStock);
             pnlGlobalSubHeader.Controls.Add(lblTotalItems);
             pnlGlobalSubHeader.Controls.Add(btnAddItem);
             pnlGlobalSubHeader.Dock = System.Windows.Forms.DockStyle.Top;
@@ -42,13 +40,7 @@ namespace TheMatchaClubApp.Forms
             pnlGlobalSubHeader.Size = new System.Drawing.Size(1004, 56);
             pnlGlobalSubHeader.TabIndex = 0;
 
-            // lblLowStock
-            lblLowStock.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            lblLowStock.Location = new System.Drawing.Point(620, 18);
-            lblLowStock.Name = "lblLowStock";
-            lblLowStock.Size = new System.Drawing.Size(140, 20);
-            lblLowStock.Text = "↻ 2 Low Stock items";
-            lblLowStock.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+
 
             // lblTotalItems
             lblTotalItems.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
@@ -94,7 +86,9 @@ namespace TheMatchaClubApp.Forms
             flpCategoryButtons.Location = new System.Drawing.Point(12, 48);
             flpCategoryButtons.Name = "flpCategoryButtons";
             flpCategoryButtons.Padding = new System.Windows.Forms.Padding(4);
-            flpCategoryButtons.Size = new System.Drawing.Size(196, 300);
+            flpCategoryButtons.Size = new System.Drawing.Size(208, 484);
+            flpCategoryButtons.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            flpCategoryButtons.AutoScroll = true;
             flpCategoryButtons.WrapContents = false;
 
             // pnlRightArea
@@ -169,7 +163,6 @@ namespace TheMatchaClubApp.Forms
         }
 
         private System.Windows.Forms.Panel pnlGlobalSubHeader;
-        private System.Windows.Forms.Label lblLowStock;
         private System.Windows.Forms.Label lblTotalItems;
         private Guna.UI2.WinForms.Guna2Button btnAddItem;
         
