@@ -54,24 +54,36 @@ namespace TheMatchaClubApp.Forms
             lblCustomerLabel.ForeColor = DlgMuted;
             lblCustomerLabel.BackColor = Color.Transparent;
 
-            cboCustomer.Font = new Font("Segoe UI", 10F);
-            cboCustomer.BorderRadius = 8;
-            cboCustomer.BorderColor = DlgBorder;
-            cboCustomer.FocusedState.BorderColor = DlgGreen;
+            // Searchable customer input
+            txtCustomerSearch.Font = new Font("Segoe UI", 10F);
+            txtCustomerSearch.BorderRadius = 8;
+            txtCustomerSearch.BorderColor = DlgBorder;
+            txtCustomerSearch.FocusedState.BorderColor = DlgGreen;
+            txtCustomerSearch.TextOffset = new Point(4, 0);
 
-            lblNewNameLabel.Font = new Font("Segoe UI", 8F);
-            lblNewNameLabel.ForeColor = DlgMuted;
-            lblNewNameLabel.BackColor = Color.Transparent;
+            // Suggestion panel styling
+            pnlSuggestions.BackColor = Color.White;
+            pnlSuggestions.BorderStyle = BorderStyle.None;
+            pnlSuggestions.Paint += (s, e) =>
+            {
+                using var pen = new Pen(DlgBorder, 1);
+                var rect = new Rectangle(0, 0, pnlSuggestions.Width - 1, pnlSuggestions.Height - 1);
+                e.Graphics.DrawRectangle(pen, rect);
+            };
 
-            txtNewName.Font = new Font("Segoe UI", 10F);
-            txtNewName.BorderRadius = 8;
-            txtNewName.BorderColor = DlgBorder;
-            txtNewName.FocusedState.BorderColor = DlgGreen;
+            lstSuggestions.Font = new Font("Segoe UI", 9.5F);
+            lstSuggestions.ForeColor = DlgText;
+            lstSuggestions.BackColor = Color.White;
 
-            txtNewEmail.Font = new Font("Segoe UI", 10F);
-            txtNewEmail.BorderRadius = 8;
-            txtNewEmail.BorderColor = DlgBorder;
-            txtNewEmail.FocusedState.BorderColor = DlgGreen;
+            // New customer fields
+            lblNewCustomerLabel.Font = new Font("Segoe UI", 8F);
+            lblNewCustomerLabel.ForeColor = DlgMuted;
+            lblNewCustomerLabel.BackColor = Color.Transparent;
+
+            StyleTextField(txtFirstName);
+            StyleTextField(txtLastName);
+            StyleTextField(txtPhone);
+            StyleTextField(txtNewEmail);
 
             // Payment section
             lblTotalLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
@@ -100,6 +112,11 @@ namespace TheMatchaClubApp.Forms
             lblChange.ForeColor = ColorTranslator.FromHtml("#EF4444");
             lblChange.BackColor = Color.Transparent;
 
+            // Validation error label
+            lblValidation.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            lblValidation.ForeColor = ColorTranslator.FromHtml("#EF4444");
+            lblValidation.BackColor = Color.Transparent;
+
             // Confirm button
             btnConfirm.FillColor = DlgGreen;
             btnConfirm.HoverState.FillColor = DlgGreenHover;
@@ -107,6 +124,14 @@ namespace TheMatchaClubApp.Forms
             btnConfirm.BorderRadius = 10;
             btnConfirm.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnConfirm.BorderThickness = 0;
+        }
+
+        private void StyleTextField(Guna.UI2.WinForms.Guna2TextBox txt)
+        {
+            txt.Font = new Font("Segoe UI", 10F);
+            txt.BorderRadius = 8;
+            txt.BorderColor = DlgBorder;
+            txt.FocusedState.BorderColor = DlgGreen;
         }
 
         private void StyleTypeButton(Guna.UI2.WinForms.Guna2Button btn, bool active)

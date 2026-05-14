@@ -10,29 +10,28 @@ namespace TheMatchaClubApp.Forms
             lblTitle = new System.Windows.Forms.Label();
             btnClose = new Guna.UI2.WinForms.Guna2Button();
 
-            // Order Type section
             lblOrderTypeLabel = new System.Windows.Forms.Label();
             pnlOrderType = new System.Windows.Forms.FlowLayoutPanel();
             btnDineIn = new Guna.UI2.WinForms.Guna2Button();
             btnTakeOut = new Guna.UI2.WinForms.Guna2Button();
 
-            // Customer section
             lblCustomerLabel = new System.Windows.Forms.Label();
-            cboCustomer = new Guna.UI2.WinForms.Guna2ComboBox();
-            lblNewNameLabel = new System.Windows.Forms.Label();
-            txtNewName = new Guna.UI2.WinForms.Guna2TextBox();
-            lblNewEmailLabel = new System.Windows.Forms.Label();
+            txtCustomerSearch = new Guna.UI2.WinForms.Guna2TextBox();
+            pnlSuggestions = new System.Windows.Forms.Panel();
+            lstSuggestions = new System.Windows.Forms.ListBox();
+            lblNewCustomerLabel = new System.Windows.Forms.Label();
+            txtFirstName = new Guna.UI2.WinForms.Guna2TextBox();
+            txtLastName = new Guna.UI2.WinForms.Guna2TextBox();
+            txtPhone = new Guna.UI2.WinForms.Guna2TextBox();
             txtNewEmail = new Guna.UI2.WinForms.Guna2TextBox();
+            lblValidation = new System.Windows.Forms.Label();
 
-            // Payment section
             lblTotalLabel = new System.Windows.Forms.Label();
             lblTotalValue = new System.Windows.Forms.Label();
             lblCashLabel = new System.Windows.Forms.Label();
             txtCash = new Guna.UI2.WinForms.Guna2TextBox();
             lblChangeLabel = new System.Windows.Forms.Label();
             lblChange = new System.Windows.Forms.Label();
-
-            // Confirm button
             btnConfirm = new Guna.UI2.WinForms.Guna2Button();
 
             SuspendLayout();
@@ -58,7 +57,7 @@ namespace TheMatchaClubApp.Forms
             lblOrderTypeLabel.Text = "ORDER TYPE";
 
             pnlOrderType.Location = new System.Drawing.Point(20, 84);
-            pnlOrderType.Size = new System.Drawing.Size(380, 48);
+            pnlOrderType.Size = new System.Drawing.Size(380, 44);
             pnlOrderType.FlowDirection = System.Windows.Forms.FlowDirection.LeftToRight;
             pnlOrderType.Controls.Add(btnDineIn);
             pnlOrderType.Controls.Add(btnTakeOut);
@@ -70,76 +69,103 @@ namespace TheMatchaClubApp.Forms
             btnTakeOut.Size = new System.Drawing.Size(180, 40);
             btnTakeOut.Text = "📦  Take-Out";
 
-            // ── Customer ──────────────────────────────────────────────
-            lblCustomerLabel.Location = new System.Drawing.Point(20, 145);
+            // ── Customer Search ───────────────────────────────────────
+            lblCustomerLabel.Location = new System.Drawing.Point(20, 140);
             lblCustomerLabel.Size = new System.Drawing.Size(200, 20);
-            lblCustomerLabel.Text = "LINK CUSTOMER";
+            lblCustomerLabel.Text = "CUSTOMER";
 
-            cboCustomer.Location = new System.Drawing.Point(20, 170);
-            cboCustomer.Size = new System.Drawing.Size(380, 42);
+            txtCustomerSearch.Location = new System.Drawing.Point(20, 163);
+            txtCustomerSearch.Size = new System.Drawing.Size(380, 40);
+            txtCustomerSearch.PlaceholderText = "Enter Customer Name";
 
-            lblNewNameLabel.Location = new System.Drawing.Point(20, 225);
-            lblNewNameLabel.Size = new System.Drawing.Size(180, 20);
-            lblNewNameLabel.Text = "Or enter new customer:";
+            // Suggestion overlay
+            pnlSuggestions.Location = new System.Drawing.Point(20, 203);
+            pnlSuggestions.Size = new System.Drawing.Size(380, 0);
+            pnlSuggestions.Visible = false;
+            pnlSuggestions.Controls.Add(lstSuggestions);
 
-            txtNewName.Location = new System.Drawing.Point(20, 248);
-            txtNewName.Size = new System.Drawing.Size(185, 42);
-            txtNewName.PlaceholderText = "Customer Name";
+            lstSuggestions.Dock = System.Windows.Forms.DockStyle.Fill;
+            lstSuggestions.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            lstSuggestions.ItemHeight = 30;
+            lstSuggestions.IntegralHeight = false;
 
-            lblNewEmailLabel.Location = new System.Drawing.Point(215, 225);
-            lblNewEmailLabel.Size = new System.Drawing.Size(180, 20);
-            lblNewEmailLabel.Text = "";
+            // ── New Customer Fields ───────────────────────────────────
+            lblNewCustomerLabel.Location = new System.Drawing.Point(20, 212);
+            lblNewCustomerLabel.Size = new System.Drawing.Size(250, 18);
+            lblNewCustomerLabel.Text = "New customer details:";
 
-            txtNewEmail.Location = new System.Drawing.Point(215, 248);
-            txtNewEmail.Size = new System.Drawing.Size(185, 42);
+            txtFirstName.Location = new System.Drawing.Point(20, 233);
+            txtFirstName.Size = new System.Drawing.Size(185, 38);
+            txtFirstName.PlaceholderText = "First Name";
+
+            txtLastName.Location = new System.Drawing.Point(215, 233);
+            txtLastName.Size = new System.Drawing.Size(185, 38);
+            txtLastName.PlaceholderText = "Last Name";
+
+            txtPhone.Location = new System.Drawing.Point(20, 278);
+            txtPhone.Size = new System.Drawing.Size(185, 38);
+            txtPhone.PlaceholderText = "Phone (optional)";
+
+            txtNewEmail.Location = new System.Drawing.Point(215, 278);
+            txtNewEmail.Size = new System.Drawing.Size(185, 38);
             txtNewEmail.PlaceholderText = "Email (optional)";
 
             // ── Payment ───────────────────────────────────────────────
-            lblTotalLabel.Location = new System.Drawing.Point(20, 310);
+            lblTotalLabel.Location = new System.Drawing.Point(20, 332);
             lblTotalLabel.Size = new System.Drawing.Size(120, 20);
             lblTotalLabel.Text = "TOTAL DUE:";
 
-            lblTotalValue.Location = new System.Drawing.Point(140, 310);
+            lblTotalValue.Location = new System.Drawing.Point(140, 328);
             lblTotalValue.Size = new System.Drawing.Size(260, 32);
-            lblTotalValue.Text = "₱0.00";
+            lblTotalValue.Text = "\u20B10.00";
 
-            lblCashLabel.Location = new System.Drawing.Point(20, 355);
+            lblCashLabel.Location = new System.Drawing.Point(20, 374);
             lblCashLabel.Size = new System.Drawing.Size(120, 20);
             lblCashLabel.Text = "CASH IN:";
 
-            txtCash.Location = new System.Drawing.Point(140, 350);
+            txtCash.Location = new System.Drawing.Point(140, 368);
             txtCash.Size = new System.Drawing.Size(260, 42);
             txtCash.PlaceholderText = "Enter amount...";
 
-            lblChangeLabel.Location = new System.Drawing.Point(20, 410);
+            lblChangeLabel.Location = new System.Drawing.Point(20, 426);
             lblChangeLabel.Size = new System.Drawing.Size(120, 20);
             lblChangeLabel.Text = "CHANGE:";
 
-            lblChange.Location = new System.Drawing.Point(140, 410);
+            lblChange.Location = new System.Drawing.Point(140, 423);
             lblChange.Size = new System.Drawing.Size(260, 32);
-            lblChange.Text = "₱0.00";
+            lblChange.Text = "\u20B10.00";
+
+            // ── Validation Error ──────────────────────────────────────
+            lblValidation.Location = new System.Drawing.Point(20, 452);
+            lblValidation.Size = new System.Drawing.Size(380, 18);
+            lblValidation.Text = "";
+            lblValidation.Visible = false;
+            lblValidation.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
             // ── Confirm ───────────────────────────────────────────────
-            btnConfirm.Location = new System.Drawing.Point(20, 460);
+            btnConfirm.Location = new System.Drawing.Point(20, 472);
             btnConfirm.Size = new System.Drawing.Size(380, 50);
-            btnConfirm.Text = "✓  Confirm & Complete Sale";
+            btnConfirm.Text = "\u2713  Confirm & Complete Sale";
 
             // ── Form ──────────────────────────────────────────────────
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(420, 530);
-            Controls.Add(lblTotalLabel);
-            Controls.Add(lblTotalValue);
-            Controls.Add(lblCashLabel);
-            Controls.Add(txtCash);
-            Controls.Add(lblChangeLabel);
-            Controls.Add(lblChange);
+            ClientSize = new System.Drawing.Size(420, 545);
+            Controls.Add(pnlSuggestions);
+            Controls.Add(lblValidation);
             Controls.Add(btnConfirm);
+            Controls.Add(lblChange);
+            Controls.Add(lblChangeLabel);
+            Controls.Add(txtCash);
+            Controls.Add(lblCashLabel);
+            Controls.Add(lblTotalValue);
+            Controls.Add(lblTotalLabel);
             Controls.Add(txtNewEmail);
-            Controls.Add(lblNewEmailLabel);
-            Controls.Add(txtNewName);
-            Controls.Add(lblNewNameLabel);
-            Controls.Add(cboCustomer);
+            Controls.Add(txtPhone);
+            Controls.Add(txtLastName);
+            Controls.Add(txtFirstName);
+            Controls.Add(lblNewCustomerLabel);
+            Controls.Add(txtCustomerSearch);
             Controls.Add(lblCustomerLabel);
             Controls.Add(pnlOrderType);
             Controls.Add(lblOrderTypeLabel);
@@ -160,11 +186,15 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2Button btnDineIn;
         private Guna.UI2.WinForms.Guna2Button btnTakeOut;
         private System.Windows.Forms.Label lblCustomerLabel;
-        private Guna.UI2.WinForms.Guna2ComboBox cboCustomer;
-        private System.Windows.Forms.Label lblNewNameLabel;
-        private Guna.UI2.WinForms.Guna2TextBox txtNewName;
-        private System.Windows.Forms.Label lblNewEmailLabel;
+        private Guna.UI2.WinForms.Guna2TextBox txtCustomerSearch;
+        private System.Windows.Forms.Panel pnlSuggestions;
+        private System.Windows.Forms.ListBox lstSuggestions;
+        private System.Windows.Forms.Label lblNewCustomerLabel;
+        private Guna.UI2.WinForms.Guna2TextBox txtFirstName;
+        private Guna.UI2.WinForms.Guna2TextBox txtLastName;
+        private Guna.UI2.WinForms.Guna2TextBox txtPhone;
         private Guna.UI2.WinForms.Guna2TextBox txtNewEmail;
+        private System.Windows.Forms.Label lblValidation;
         private Guna.UI2.WinForms.Guna2Button btnConfirm;
         private System.Windows.Forms.Label lblTotalLabel;
         public System.Windows.Forms.Label lblTotalValue;

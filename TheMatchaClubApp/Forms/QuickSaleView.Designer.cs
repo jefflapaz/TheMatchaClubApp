@@ -23,7 +23,6 @@ namespace TheMatchaClubApp.Forms
             pnlCartHeader = new System.Windows.Forms.Panel();
             lblCurrentOrder = new System.Windows.Forms.Label();
             lblOrderMeta = new System.Windows.Forms.Label();
-            btnEatIn = new Guna.UI2.WinForms.Guna2Button();
             pnlCartItemsWrapper = new System.Windows.Forms.Panel();
             pnlCartItems = new System.Windows.Forms.Panel();
             pnlCartTotals = new System.Windows.Forms.Panel();
@@ -31,8 +30,6 @@ namespace TheMatchaClubApp.Forms
             lblSubtotalValue = new System.Windows.Forms.Label();
             lblTotal = new System.Windows.Forms.Label();
             lblTotalValue = new System.Windows.Forms.Label();
-            btnPrint = new Guna.UI2.WinForms.Guna2Button();
-            btnEmail = new Guna.UI2.WinForms.Guna2Button();
             btnCompleteSale = new Guna.UI2.WinForms.Guna2Button();
             lblCashNote = new System.Windows.Forms.Label();
             txtSearch = new Guna.UI2.WinForms.Guna2TextBox();
@@ -141,7 +138,6 @@ namespace TheMatchaClubApp.Forms
             // Cart header
             pnlCartHeader.Controls.Add(lblCurrentOrder);
             pnlCartHeader.Controls.Add(lblOrderMeta);
-            pnlCartHeader.Controls.Add(btnEatIn);
             pnlCartHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlCartHeader.Size = new System.Drawing.Size(320, 64);
 
@@ -152,10 +148,6 @@ namespace TheMatchaClubApp.Forms
             lblOrderMeta.Location = new System.Drawing.Point(16, 34);
             lblOrderMeta.Size = new System.Drawing.Size(180, 18);
             lblOrderMeta.Text = "Order #1025 \u2022 Cashier: Admin";
-
-            btnEatIn.Location = new System.Drawing.Point(230, 16);
-            btnEatIn.Size = new System.Drawing.Size(72, 32);
-            btnEatIn.Text = "Eat-In";
 
             // Cart items wrapper
             pnlCartItemsWrapper.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -168,13 +160,11 @@ namespace TheMatchaClubApp.Forms
 
             // Cart totals
             pnlCartTotals.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlCartTotals.Size = new System.Drawing.Size(400, 200);
+            pnlCartTotals.Size = new System.Drawing.Size(400, 150);
             pnlCartTotals.Controls.Add(lblSubtotal);
             pnlCartTotals.Controls.Add(lblSubtotalValue);
             pnlCartTotals.Controls.Add(lblTotal);
             pnlCartTotals.Controls.Add(lblTotalValue);
-            pnlCartTotals.Controls.Add(btnPrint);
-            pnlCartTotals.Controls.Add(btnEmail);
             pnlCartTotals.Controls.Add(btnCompleteSale);
             pnlCartTotals.Controls.Add(lblCashNote);
 
@@ -194,18 +184,11 @@ namespace TheMatchaClubApp.Forms
             lblTotalValue.Text = "$0.00";
             lblTotalValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
-            btnPrint.Location = new System.Drawing.Point(16, 72);
-            btnPrint.Size = new System.Drawing.Size(180, 36);
-            btnPrint.Text = "\U0001F5A8 Print";
-            btnEmail.Location = new System.Drawing.Point(204, 72);
-            btnEmail.Size = new System.Drawing.Size(180, 36);
-            btnEmail.Text = "\u2709 Email";
-
-            btnCompleteSale.Location = new System.Drawing.Point(16, 118);
+            btnCompleteSale.Location = new System.Drawing.Point(16, 72);
             btnCompleteSale.Size = new System.Drawing.Size(368, 52);
             btnCompleteSale.Text = "$ Complete Sale (Cash)";
 
-            lblCashNote.Location = new System.Drawing.Point(16, 174);
+            lblCashNote.Location = new System.Drawing.Point(16, 128);
             lblCashNote.Size = new System.Drawing.Size(368, 16);
             lblCashNote.Text = "Cash-only payments supported";
             lblCashNote.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -236,7 +219,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Panel pnlCartHeader;
         private System.Windows.Forms.Label lblCurrentOrder;
         private System.Windows.Forms.Label lblOrderMeta;
-        private Guna.UI2.WinForms.Guna2Button btnEatIn;
         private System.Windows.Forms.Panel pnlCartItemsWrapper;
         private System.Windows.Forms.Panel pnlCartItems;
         private System.Windows.Forms.Panel pnlCartTotals;
@@ -244,8 +226,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblSubtotalValue;
         private System.Windows.Forms.Label lblTotal;
         private System.Windows.Forms.Label lblTotalValue;
-        private Guna.UI2.WinForms.Guna2Button btnPrint;
-        private Guna.UI2.WinForms.Guna2Button btnEmail;
         private Guna.UI2.WinForms.Guna2Button btnCompleteSale;
         private System.Windows.Forms.Label lblCashNote;
         private Guna.UI2.WinForms.Guna2TextBox txtSearch;

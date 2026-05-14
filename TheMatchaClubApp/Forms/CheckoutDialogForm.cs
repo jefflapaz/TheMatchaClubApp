@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using TheMatchaClubApp.Core.Models;
@@ -6,7 +7,7 @@ using TheMatchaClubApp.Core.Models;
 namespace TheMatchaClubApp.Forms
 {
     /// <summary>
-    /// Checkout sub-form: select Dine-In/Take-Out and link/create a Customer.
+    /// Checkout sub-form: select Dine-In/Take-Out, search/create Customer, and process cash payment.
     /// </summary>
     public partial class CheckoutDialogForm : Form
     {
@@ -19,6 +20,8 @@ namespace TheMatchaClubApp.Forms
 
         private bool _isDineIn = true;
         private decimal _totalAmount;
+        private Customer? _selectedExistingCustomer;
+        private bool _suppressSearch;
 
         // ── Constructor ──────────────────────────────────────────────
         public CheckoutDialogForm(decimal totalAmount)
@@ -31,52 +34,144 @@ namespace TheMatchaClubApp.Forms
             btnConfirm.Enabled = false;
             txtCash.Text = string.Empty;
 
-            LoadCustomerList();
-
             // Wiring
-            cboCustomer.SelectedIndexChanged += CboCustomer_SelectedIndexChanged;
             btnConfirm.Click += BtnConfirm_Click;
             txtCash.TextChanged += TxtCash_TextChanged;
+
+            // Customer search autocomplete
+            txtCustomerSearch.TextChanged += TxtCustomerSearch_TextChanged;
+            lstSuggestions.Click += LstSuggestions_Click;
+            lstSuggestions.MouseMove += LstSuggestions_MouseMove;
+
+            // Hide suggestions when focusing other fields
+            txtCash.GotFocus += (s, e) => HideSuggestions();
+            txtFirstName.GotFocus += (s, e) => HideSuggestions();
+            txtLastName.GotFocus += (s, e) => HideSuggestions();
+            txtPhone.GotFocus += (s, e) => HideSuggestions();
+            txtNewEmail.GotFocus += (s, e) => HideSuggestions();
+
+            // Clear validation errors when user modifies customer fields
+            txtCustomerSearch.TextChanged += (s, e) => ClearValidation();
+            txtFirstName.TextChanged += (s, e) => ClearValidation();
+            txtLastName.TextChanged += (s, e) => ClearValidation();
         }
 
-        // ── Load Customers into ComboBox ─────────────────────────────
-        private void LoadCustomerList()
-        {
-            cboCustomer.Items.Clear();
-            cboCustomer.Items.Add("— No Customer (Walk-In) —");
+        // ══════════════════════════════════════════════════════════════
+        //  CUSTOMER SEARCH & AUTOCOMPLETE
+        // ══════════════════════════════════════════════════════════════
 
-            foreach (var c in Program.DataService.Customers)
+        private void TxtCustomerSearch_TextChanged(object? sender, EventArgs e)
+        {
+            if (_suppressSearch) return;
+
+            // Clear previous selection if user starts typing again
+            if (_selectedExistingCustomer != null)
             {
-                cboCustomer.Items.Add($"{c.Name} ({c.Phone})");
+                _selectedExistingCustomer = null;
+                SetNewCustomerFieldsEnabled(true);
+                txtFirstName.Text = "";
+                txtLastName.Text = "";
+                txtPhone.Text = "";
+                txtNewEmail.Text = "";
             }
 
-            cboCustomer.SelectedIndex = 0;
-        }
-
-        // ── Auto-fill when existing customer selected ────────────────
-        private void CboCustomer_SelectedIndexChanged(object? sender, EventArgs e)
-        {
-            int idx = cboCustomer.SelectedIndex;
-            if (idx <= 0)
+            string query = txtCustomerSearch.Text.Trim();
+            if (query.Length < 1)
             {
-                // Walk-in or none selected — enable new customer fields
-                txtNewName.Enabled = true;
-                txtNewEmail.Enabled = true;
+                HideSuggestions();
                 return;
             }
 
-            // Existing customer selected — auto-fill name/email
-            var customer = Program.DataService.Customers.ElementAtOrDefault(idx - 1);
-            if (customer != null)
+            var matches = Program.DataService.Customers
+                .Where(c => c.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                          || (!string.IsNullOrEmpty(c.Phone) && c.Phone.Contains(query, StringComparison.OrdinalIgnoreCase)))
+                .OrderBy(c => c.Name)
+                .Take(5)
+                .ToList();
+
+            if (matches.Count == 0)
             {
-                txtNewName.Text = customer.Name;
-                txtNewEmail.Text = customer.Email;
-                txtNewName.Enabled = false;
-                txtNewEmail.Enabled = false;
+                HideSuggestions();
+                return;
             }
+
+            ShowSuggestions(matches);
         }
 
-        // ── Cash Input ───────────────────────────────────────────────
+        private void ShowSuggestions(List<Customer> matches)
+        {
+            lstSuggestions.Items.Clear();
+            lstSuggestions.Tag = matches;
+
+            foreach (var c in matches)
+            {
+                string display = string.IsNullOrWhiteSpace(c.Phone)
+                    ? c.Name
+                    : $"{c.Name}  •  {c.Phone}";
+                lstSuggestions.Items.Add(display);
+            }
+
+            int totalHeight = Math.Min(matches.Count, 5) * lstSuggestions.ItemHeight + 4;
+            pnlSuggestions.Size = new System.Drawing.Size(380, totalHeight);
+            pnlSuggestions.Visible = true;
+            pnlSuggestions.BringToFront();
+        }
+
+        private void HideSuggestions()
+        {
+            pnlSuggestions.Visible = false;
+        }
+
+        private void LstSuggestions_Click(object? sender, EventArgs e)
+        {
+            if (lstSuggestions.SelectedIndex < 0) return;
+            if (lstSuggestions.Tag is not List<Customer> customers) return;
+
+            SelectExistingCustomer(customers[lstSuggestions.SelectedIndex]);
+        }
+
+        private void LstSuggestions_MouseMove(object? sender, MouseEventArgs e)
+        {
+            int idx = lstSuggestions.IndexFromPoint(e.Location);
+            if (idx >= 0 && idx != lstSuggestions.SelectedIndex)
+                lstSuggestions.SelectedIndex = idx;
+        }
+
+        private void SelectExistingCustomer(Customer customer)
+        {
+            _selectedExistingCustomer = customer;
+
+            _suppressSearch = true;
+            txtCustomerSearch.Text = customer.Name;
+            _suppressSearch = false;
+
+            // Parse first/last name from Name field
+            var parts = customer.Name.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            txtFirstName.Text = parts.Length > 0 ? parts[0] : "";
+            txtLastName.Text = parts.Length > 1 ? parts[1] : "";
+            txtPhone.Text = customer.Phone;
+            txtNewEmail.Text = customer.Email;
+
+            SetNewCustomerFieldsEnabled(false);
+            HideSuggestions();
+        }
+
+        private void SetNewCustomerFieldsEnabled(bool enabled)
+        {
+            txtFirstName.Enabled = enabled;
+            txtLastName.Enabled = enabled;
+            txtPhone.Enabled = enabled;
+            txtNewEmail.Enabled = enabled;
+
+            lblNewCustomerLabel.Text = enabled
+                ? "New customer details:"
+                : "Linked customer details:";
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  CASH INPUT
+        // ══════════════════════════════════════════════════════════════
+
         private void TxtCash_TextChanged(object? sender, EventArgs e)
         {
             if (decimal.TryParse(txtCash.Text, out decimal cash))
@@ -92,38 +187,64 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
-        // ── Confirm ──────────────────────────────────────────────────
-        private void BtnConfirm_Click(object? sender, EventArgs e)
+        // ══════════════════════════════════════════════════════════════
+        //  CONFIRM & COMPLETE
+        // ══════════════════════════════════════════════════════════════
+
+        private void ClearValidation()
         {
+            lblValidation.Text = "";
+            lblValidation.Visible = false;
+        }
+
+        private void ShowValidationError(string message)
+        {
+            lblValidation.Text = message;
+            lblValidation.Visible = true;
+        }
+
+        private async void BtnConfirm_Click(object? sender, EventArgs e)
+        {
+            ClearValidation();
+
             if (!decimal.TryParse(txtCash.Text, out decimal cash) || cash < _totalAmount) return;
 
             CashReceived = cash;
             ChangeDue = cash - _totalAmount;
 
-            int idx = cboCustomer.SelectedIndex;
-
-            if (idx > 0)
+            // ── Path A: Existing customer selected from autocomplete ──
+            if (_selectedExistingCustomer != null)
             {
-                // Existing customer
-                SelectedCustomer = Program.DataService.Customers.ElementAtOrDefault(idx - 1);
+                SelectedCustomer = _selectedExistingCustomer;
             }
-            else if (!string.IsNullOrWhiteSpace(txtNewName.Text))
+            // ── Path B: New customer via dedicated fields ──
+            else if (!string.IsNullOrWhiteSpace(txtFirstName.Text) || !string.IsNullOrWhiteSpace(txtLastName.Text))
             {
-                // New customer — create and persist
+                string firstName = txtFirstName.Text.Trim();
+                string lastName = txtLastName.Text.Trim();
+                string fullName = $"{firstName} {lastName}".Trim();
+
                 var newCust = new Customer
                 {
-                    Name = txtNewName.Text.Trim(),
+                    Name = fullName,
+                    Phone = txtPhone.Text.Trim(),
                     Email = txtNewEmail.Text.Trim(),
                     MemberSince = DateTime.Now
                 };
                 Program.DataService.Customers.Add(newCust);
-                _ = Program.DataService.SaveCustomersAsync(); // fire-and-forget
+                await Program.DataService.SaveCustomersAsync();
                 SelectedCustomer = newCust;
             }
+            // ── Path C: Walk-in (everything empty) ──
+            else if (string.IsNullOrWhiteSpace(txtCustomerSearch.Text))
+            {
+                SelectedCustomer = null;
+            }
+            // ── Invalid: search text present but no selection or fields filled ──
             else
             {
-                // Walk-in — no customer linked
-                SelectedCustomer = null;
+                ShowValidationError("The customer has not yet registered yet.");
+                return;
             }
 
             this.DialogResult = DialogResult.OK;

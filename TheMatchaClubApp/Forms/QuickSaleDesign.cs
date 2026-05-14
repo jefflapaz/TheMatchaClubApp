@@ -106,13 +106,6 @@ namespace TheMatchaClubApp.Forms
             lblOrderMeta.ForeColor = TextSecondary;
             lblOrderMeta.BackColor = Color.Transparent;
 
-            btnEatIn.FillColor = Color.White;
-            btnEatIn.ForeColor = TextPrimary;
-            btnEatIn.BorderColor = BorderLight;
-            btnEatIn.BorderRadius = 8;
-            btnEatIn.BorderThickness = 1;
-            btnEatIn.Font = new Font("Segoe UI Semibold", 8F, FontStyle.Bold);
-
             // Cart items
             pnlCartItems.BackColor = CardBg;
 
@@ -139,10 +132,6 @@ namespace TheMatchaClubApp.Forms
             lblTotalValue.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             lblTotalValue.ForeColor = Green;
             lblTotalValue.BackColor = Color.Transparent;
-
-            // Print / Email buttons
-            StyleActionButton(btnPrint);
-            StyleActionButton(btnEmail);
 
             // Complete sale button
             btnCompleteSale.BorderRadius = 12;
