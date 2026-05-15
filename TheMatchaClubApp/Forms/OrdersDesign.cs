@@ -59,11 +59,22 @@ namespace TheMatchaClubApp.Forms
 
             StyleFilterPill(btnFilterAll, true);
             StyleFilterPill(btnFilterDineIn, false);
-            StyleFilterPill(btnFilterTakeaway, false);
+            StyleFilterPill(btnFilterTakeOut, false);
+            
+            cmbDateFilter.BorderRadius = 6;
+            cmbDateFilter.BorderColor = OBorderLight;
+            cmbDateFilter.FillColor = OCardBg;
+            cmbDateFilter.ForeColor = OTextPrimary;
+            cmbDateFilter.Font = new Font("Segoe UI", 9F);
+            cmbDateFilter.ItemHeight = 22;
 
-            lblDateDisplay.Font = new Font("Segoe UI", 8F);
-            lblDateDisplay.ForeColor = OTextSecondary;
-            lblDateDisplay.BackColor = Color.Transparent;
+            dtpCustomDate.BorderRadius = 6;
+            dtpCustomDate.FillColor = OCardBg;
+            dtpCustomDate.BorderColor = OBorderLight;
+            dtpCustomDate.BorderThickness = 1;
+            dtpCustomDate.Font = new Font("Segoe UI", 9F);
+            dtpCustomDate.ForeColor = OTextPrimary;
+            dtpCustomDate.Format = DateTimePickerFormat.Short;
 
             btnExport.FillColor = OCardBg;
             btnExport.ForeColor = OTextSecondary;
@@ -169,29 +180,34 @@ namespace TheMatchaClubApp.Forms
             lblThankYou.ForeColor = OTextMuted;
             lblThankYou.BackColor = Color.Transparent;
 
-            // Reprint / Email buttons
-            btnReprint.FillColor = OGreen;
-            btnReprint.ForeColor = Color.White;
-            btnReprint.BorderRadius = 8;
-            btnReprint.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            btnReprint.BorderThickness = 0;
+            // Export PDF / Email buttons
+            btnExportPDF.FillColor = OGreen;
+            btnExportPDF.ForeColor = Color.White;
+            btnExportPDF.BorderRadius = 8;
+            btnExportPDF.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnExportPDF.BorderThickness = 0;
+            btnExportPDF.HoverState.FillColor = ColorTranslator.FromHtml("#45A037");
 
             btnEmailReceipt.FillColor = OCardBg;
-            btnEmailReceipt.ForeColor = OTextSecondary;
+            btnEmailReceipt.ForeColor = OTextPrimary;
             btnEmailReceipt.BorderColor = OBorderLight;
             btnEmailReceipt.BorderRadius = 8;
             btnEmailReceipt.BorderThickness = 1;
-            btnEmailReceipt.Font = new Font("Segoe UI", 9F);
+            btnEmailReceipt.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnEmailReceipt.HoverState.FillColor = Color.FromArgb(249, 250, 251);
         }
 
         private void StyleFilterPill(Guna.UI2.WinForms.Guna2Button btn, bool active)
         {
-            btn.BorderRadius = 8;
-            btn.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            btn.BorderThickness = active ? 0 : 1;
-            btn.FillColor = active ? Color.FromArgb(243, 244, 246) : OCardBg;
-            btn.ForeColor = active ? OTextPrimary : OTextSecondary;
-            btn.BorderColor = OBorderLight;
+            btn.BorderRadius = 15; 
+            btn.Font = new Font("Segoe UI Semibold", 8.5F, FontStyle.Bold);
+            btn.BorderThickness = 1;
+            btn.FillColor = active ? OGreen : Color.White;
+            btn.ForeColor = active ? Color.White : OTextSecondary;
+            btn.BorderColor = active ? OGreen : OBorderLight;
+            
+            btn.HoverState.FillColor = active ? OGreen : Color.FromArgb(243, 244, 246);
+            btn.HoverState.BorderColor = active ? OGreen : OTextSecondary;
         }
 
         private void StyleReceiptLabel(Label lbl)

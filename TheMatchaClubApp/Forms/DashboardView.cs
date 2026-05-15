@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -9,151 +10,312 @@ namespace TheMatchaClubApp.Forms
 {
     public partial class DashboardView : UserControl
     {
-        // ════════════════════════════════════════════════════════════════
-        //  PUBLIC DATA PROPERTIES — MainShell pushes data via these
-        // ════════════════════════════════════════════════════════════════
+        // ── Data fields (accessed by paint handlers in partial classes) ──
+        internal Dictionary<int, decimal>? _hourlySalesData;
+        internal List<(string Name, int Units, decimal Revenue)>? _topProducts;
+        internal List<Order>? _recentOrders;
+        internal string? _sessionDurationText;
+        internal decimal _todaySalesTotal;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string TotalSales
-        {
-            get => lblCard1Value.Text;
-            set => lblCard1Value.Text = value;
-        }
+        // ── Navigation Events ───────────────────────────────────────
+        public event EventHandler? NewSaleClicked;
+        public event EventHandler? ViewReportsClicked;
+        public event EventHandler? AddProductClicked;
 
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string OrderCount
-        {
-            get => lblCard2Value.Text;
-            set => lblCard2Value.Text = value;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string AverageOrderValue
-        {
-            get => lblCard3Value.Text;
-            set => lblCard3Value.Text = value;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [Browsable(false)]
-        public string CashOnHand
-        {
-            get => lblCard4Value.Text;
-            set => lblCard4Value.Text = value;
-        }
-
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        [Category("Design")]
-        [Description("The main chart panel placeholder.")]
-        public Guna.UI2.WinForms.Guna2Panel PnlChart
-        {
-            get => pnlChart;
-        }
-
-        // ════════════════════════════════════════════════════════════════
-        //  EVENTS
-        // ════════════════════════════════════════════════════════════════
-
-        /// <summary>Raised when the user clicks "+ New Order".</summary>
-        public event EventHandler? NewOrderClicked;
-
-        // ════════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════════
         //  CONSTRUCTOR
-        // ════════════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════════
         public DashboardView()
         {
-            SetStyle(
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.UserPaint |
-                ControlStyles.OptimizedDoubleBuffer,
-                true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer, true);
             DoubleBuffered = true;
 
             InitializeComponent();
             InitializeDesign();
-
-            // Wire New Order click → public event
-            btnNewOrder.Click += (s, e) => NewOrderClicked?.Invoke(this, EventArgs.Empty);
-
-            // Live data updates
-            Program.DataService.OrdersChanged += (s, e) =>
-            {
-                if (!IsDisposed) BeginInvoke(new Action(LoadDashboardData));
-            };
+            WireEvents();
             LoadDashboardData();
         }
 
-        // ════════════════════════════════════════════════════════════════
-        //  LIVE KPI CALCULATION
-        // ════════════════════════════════════════════════════════════════
+        private void WireEvents()
+        {
+            // Quick action buttons
+            btnQuickNewSale.Click += (s, e) => NewSaleClicked?.Invoke(this, EventArgs.Empty);
+            btnQuickOpenSession.Click += (s, e) => HandleOpenSession();
+            btnQuickCloseSession.Click += (s, e) => HandleCloseSession();
+            btnQuickReports.Click += (s, e) => ViewReportsClicked?.Invoke(this, EventArgs.Empty);
+            btnQuickAddProduct.Click += (s, e) => AddProductClicked?.Invoke(this, EventArgs.Empty);
+
+            // Empty state action button
+            btnEmptyAction.Click += (s, e) =>
+            {
+                if (btnEmptyAction.Text.Contains("Reports"))
+                    ViewReportsClicked?.Invoke(this, EventArgs.Empty);
+                else if (!Program.SessionService.HasActiveSession())
+                    HandleOpenSession();
+                else
+                    NewSaleClicked?.Invoke(this, EventArgs.Empty);
+            };
+
+            // Real-time data subscriptions
+            Program.DataService.OrdersChanged += OnDataChanged;
+            Program.DataService.ProductsChanged += OnDataChanged;
+            Program.DataService.SessionsChanged += OnDataChanged;
+            Program.DataService.DataLoaded += OnDataChanged;
+            Program.SessionService.SessionOpened += OnDataChanged;
+            Program.SessionService.SessionClosed += OnDataChanged;
+
+            // Session duration timer
+            tmrSessionDuration.Tick += (s, e) => UpdateSessionDuration();
+            tmrSessionDuration.Start();
+        }
+
+        private void OnDataChanged(object? s, EventArgs e)
+        {
+            if (!IsDisposed && IsHandleCreated)
+                BeginInvoke(new Action(LoadDashboardData));
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  LIVE DATA LOADING
+        // ══════════════════════════════════════════════════════════════
         private void LoadDashboardData()
         {
+            var session = Program.SessionService.GetActiveSession();
             var todayOrders = Program.DataService.Orders
                 .Where(o => o.Timestamp.Date == DateTime.Today).ToList();
 
-            decimal todaySales = todayOrders.Sum(o => o.Total);
-            int todayCount = todayOrders.Count;
-            decimal avgOrder = todayCount > 0 ? todaySales / todayCount : 0m;
+            // If there's an active session, filter to session orders
+            List<Order> relevantOrders;
+            if (session != null)
+                relevantOrders = todayOrders.Where(o => o.SessionId == session.SessionId).ToList();
+            else
+                relevantOrders = todayOrders;
 
-            TotalSales = todaySales.ToString("C2");
-            OrderCount = todayCount.ToString();
-            AverageOrderValue = avgOrder.ToString("C2");
-            CashOnHand = (todaySales + 200m).ToString("C2"); // ₱200 drawer float
+            // ── KPI Calculations ──────────────────────────────────
+            decimal totalSales = relevantOrders.Sum(o => o.Total);
+            int orderCount = relevantOrders.Count;
+            decimal avgOrder = orderCount > 0 ? totalSales / orderCount : 0m;
+            int unitsSold = relevantOrders.SelectMany(o => o.Items).Sum(i => i.Quantity);
+            _todaySalesTotal = totalSales;
 
-            lblDate.Text = "📅 " + DateTime.Today.ToString("d");
+            decimal cashOnHand = session != null
+                ? session.StartingCash + totalSales
+                : totalSales;
 
-            // Top Selling Products in chart panel
-            PopulateTopSelling();
-        }
+            // Best seller
+            string bestSeller = "—";
+            var topItem = relevantOrders.SelectMany(o => o.Items)
+                .GroupBy(i => i.ProductName)
+                .OrderByDescending(g => g.Sum(i => i.Quantity))
+                .FirstOrDefault();
+            if (topItem != null) bestSeller = topItem.Key;
 
-        private void PopulateTopSelling()
-        {
-            // Use the chart panel area for top selling items
-            lblChartMessage.Text = "";
-            // Remove any existing top-selling controls but keep lblChartMessage
-            for (int i = pnlChart.Controls.Count - 1; i >= 0; i--)
+            // Peak hour
+            string peakHour = "—";
+            if (relevantOrders.Count > 0)
             {
-                if (pnlChart.Controls[i] != lblChartMessage)
-                    pnlChart.Controls.RemoveAt(i);
+                var hourGroup = relevantOrders.GroupBy(o => o.Timestamp.Hour)
+                    .OrderByDescending(g => g.Sum(o => o.Total)).First();
+                int h = hourGroup.Key;
+                peakHour = h > 12 ? $"{h - 12}:00 PM" : h == 12 ? "12:00 PM" : h == 0 ? "12:00 AM" : $"{h}:00 AM";
             }
 
-            var topProducts = Program.DataService.Products
-                .OrderByDescending(p => p.SalesCount)
+            // ── Update KPI Labels ─────────────────────────────────
+            lblCard1Value.Text = $"₱{totalSales:#,##0.00}";
+            lblCard2Value.Text = orderCount.ToString();
+            lblCard3Value.Text = $"₱{avgOrder:#,##0.00}";
+            lblCard4Value.Text = $"₱{cashOnHand:#,##0.00}";
+            lblCard5Value.Text = unitsSold.ToString();
+            lblCard6Value.Text = bestSeller.Length > 14 ? bestSeller[..14] + "…" : bestSeller;
+            UpdateSessionDuration(); // Card 7
+            lblCard8Value.Text = peakHour;
+
+            lblDate.Text = "📅 " + DateTime.Today.ToString("M/d/yyyy");
+
+            // ── Build Chart Data ──────────────────────────────────
+            _hourlySalesData = new Dictionary<int, decimal>();
+            for (int h = 0; h < 24; h++) _hourlySalesData[h] = 0;
+            foreach (var o in relevantOrders)
+                _hourlySalesData[o.Timestamp.Hour] += o.Total;
+
+            // ── Top Products ──────────────────────────────────────
+            _topProducts = relevantOrders.SelectMany(o => o.Items)
+                .GroupBy(i => i.ProductName)
+                .Select(g => (Name: g.Key, Units: g.Sum(i => i.Quantity), Revenue: g.Sum(i => i.LineTotal)))
+                .OrderByDescending(x => x.Units)
                 .Take(5).ToList();
 
-            if (topProducts.Count == 0)
+            // ── Recent Transactions ───────────────────────────────
+            _recentOrders = relevantOrders
+                .OrderByDescending(o => o.Timestamp)
+                .Take(5).ToList();
+
+            // ── Update Visibility ─────────────────────────────────
+            UpdateEmptyState(session, relevantOrders.Count);
+            UpdateQuickActionStates(session);
+            UpdateStoreStatus(session);
+
+            // Repaint analytics
+            pnlHourlySales.Invalidate();
+            pnlTopProducts.Invalidate();
+            pnlRecentTx.Invalidate();
+            pnlSessionStatus.Invalidate();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  EMPTY STATE LOGIC
+        // ══════════════════════════════════════════════════════════════
+        private void UpdateEmptyState(BusinessSession? session, int orderCount)
+        {
+            bool showEmpty;
+
+            if (session == null)
             {
-                lblChartMessage.Text = "No sales data yet. Complete a sale to see analytics.";
+                // Check if there was a closed session today
+                var closedToday = Program.DataService.Sessions
+                    .Any(s => s.IsClosed && s.OpenedAt.Date == DateTime.Today);
+
+                if (closedToday)
+                {
+                    lblEmptyIcon.Text = "✅";
+                    lblEmptyMessage.Text = "Store session closed. View reports for summary.";
+                    btnEmptyAction.Text = "View Reports";
+                }
+                else
+                {
+                    lblEmptyIcon.Text = "🔒";
+                    lblEmptyMessage.Text = "Open a store session to begin operations.";
+                    btnEmptyAction.Text = "Open Session";
+                }
+                showEmpty = true;
+            }
+            else if (orderCount == 0)
+            {
+                lblEmptyIcon.Text = "⏳";
+                lblEmptyMessage.Text = "Session is open. Waiting for first transaction…";
+                btnEmptyAction.Text = "New Sale";
+                showEmpty = true;
+            }
+            else
+            {
+                showEmpty = false;
+            }
+
+            pnlEmptyState.Visible = showEmpty;
+            pnlHourlySales.Visible = !showEmpty;
+            pnlTopProducts.Visible = !showEmpty;
+            pnlRecentTx.Visible = !showEmpty;
+            // Session status always visible
+        }
+
+        private void UpdateQuickActionStates(BusinessSession? session)
+        {
+            btnQuickOpenSession.Enabled = session == null;
+            btnQuickCloseSession.Enabled = session != null;
+        }
+
+        private void UpdateStoreStatus(BusinessSession? session)
+        {
+            if (session != null)
+            {
+                lblStoreStatus.Text = "   STORE OPEN";
+                lblStoreStatus.ForeColor = Green;
+                pnlStoreStatus.FillColor = GreenBg;
+                pnlStoreStatus.BorderColor = GreenBorder;
+            }
+            else
+            {
+                lblStoreStatus.Text = "   CLOSED";
+                lblStoreStatus.ForeColor = Rose;
+                pnlStoreStatus.FillColor = RoseBg;
+                pnlStoreStatus.BorderColor = Rose;
+            }
+            pnlStoreStatus.Invalidate();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  SESSION MANAGEMENT
+        // ══════════════════════════════════════════════════════════════
+        private async void HandleOpenSession()
+        {
+            if (Program.SessionService.HasActiveSession())
+            {
+                MessageBox.Show("A session is already active.", "Session Open", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            var headerLbl = new Label
+            string cashierName = Program.CurrentUser?.FullName ?? "Admin";
+            string? input = ShowInputDialog("Enter starting cash amount:", "Open Store Session", "200.00");
+            if (string.IsNullOrWhiteSpace(input)) return;
+            if (!decimal.TryParse(input, out decimal startingCash) || startingCash < 0)
             {
-                Text = "🏆 Top Selling Products",
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                Location = new Point(20, 10), AutoSize = true
-            };
-            pnlChart.Controls.Add(headerLbl);
-
-            int y = 45;
-            int rank = 1;
-            foreach (var p in topProducts)
-            {
-                var row = new Label
-                {
-                    Text = $"#{rank}  {p.Name}  —  {p.SalesCount} sold  ({p.CategoryName})",
-                    Font = new Font("Segoe UI", 10F),
-                    Location = new Point(30, y),
-                    AutoSize = true,
-                    ForeColor = rank <= 3 ? ColorTranslator.FromHtml("#52B743") : ColorTranslator.FromHtml("#374151")
-                };
-                pnlChart.Controls.Add(row);
-                y += 30;
-                rank++;
+                MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
+
+            try { await Program.SessionService.OpenSessionAsync(cashierName, startingCash); }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        }
+
+        private async void HandleCloseSession()
+        {
+            if (!Program.SessionService.HasActiveSession())
+            {
+                MessageBox.Show("No active session to close.", "No Session", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string? input = ShowInputDialog("Enter actual cash counted in register:", "Close Store Session", "0.00");
+            if (string.IsNullOrWhiteSpace(input)) return;
+            if (!decimal.TryParse(input, out decimal actualCash) || actualCash < 0)
+            {
+                MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var session = await Program.SessionService.CloseSessionAsync(actualCash, Program.CurrentUser?.FullName);
+                decimal diff = session.ActualCash - session.ExpectedCash;
+                string status = diff >= 0 ? $"Over: +₱{diff:#,##0.00}" : $"Short: -₱{Math.Abs(diff):#,##0.00}";
+                MessageBox.Show(
+                    $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}\n{status}",
+                    "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        }
+
+        private static string? ShowInputDialog(string prompt, string title, string defaultValue)
+        {
+            using var form = new Form { Text = title, Width = 360, Height = 180, FormBorderStyle = FormBorderStyle.FixedDialog, StartPosition = FormStartPosition.CenterParent, MaximizeBox = false, MinimizeBox = false };
+            var lbl = new Label { Text = prompt, Left = 16, Top = 16, Width = 310, AutoSize = true };
+            var txt = new TextBox { Text = defaultValue, Left = 16, Top = 44, Width = 310 };
+            var ok = new Button { Text = "OK", DialogResult = DialogResult.OK, Left = 170, Top = 90, Width = 75 };
+            var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 251, Top = 90, Width = 75 };
+            form.Controls.AddRange(new Control[] { lbl, txt, ok, cancel });
+            form.AcceptButton = ok;
+            form.CancelButton = cancel;
+            return form.ShowDialog() == DialogResult.OK ? txt.Text : null;
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  SESSION DURATION TIMER
+        // ══════════════════════════════════════════════════════════════
+        private void UpdateSessionDuration()
+        {
+            var session = Program.SessionService.GetActiveSession();
+            if (session != null)
+            {
+                var elapsed = DateTime.Now - session.OpenedAt;
+                _sessionDurationText = $"{(int)elapsed.TotalHours}h {elapsed.Minutes:D2}m";
+                lblCard7Value.Text = _sessionDurationText;
+            }
+            else
+            {
+                _sessionDurationText = null;
+                lblCard7Value.Text = "—";
+            }
+            pnlSessionStatus.Invalidate();
         }
     }
 }

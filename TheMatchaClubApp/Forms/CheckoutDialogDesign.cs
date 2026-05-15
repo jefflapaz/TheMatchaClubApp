@@ -35,6 +35,8 @@ namespace TheMatchaClubApp.Forms
             btnClose.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             btnClose.HoverState.FillColor = ColorTranslator.FromHtml("#FEE2E2");
             btnClose.HoverState.ForeColor = ColorTranslator.FromHtml("#EF4444");
+            btnClose.Cursor = Cursors.Hand;
+            btnClose.Text = "✕";
             btnClose.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
 
             // Order Type Labels

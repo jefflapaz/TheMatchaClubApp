@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.Linq;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
 
@@ -17,321 +18,393 @@ namespace TheMatchaClubApp.Forms
         private static readonly Color RTextMuted = ColorTranslator.FromHtml("#9CA3AF");
         private static readonly Color RGreen = ColorTranslator.FromHtml("#52B743");
         private static readonly Color RGreenBg = ColorTranslator.FromHtml("#F2FAEF");
-        private static readonly Color RRedBg = ColorTranslator.FromHtml("#FEF2F2");
-        private static readonly Color RRed = ColorTranslator.FromHtml("#EF4444");
+
+        private static readonly Color[] ChartColors = {
+            ColorTranslator.FromHtml("#52B743"), ColorTranslator.FromHtml("#3B82F6"),
+            ColorTranslator.FromHtml("#F59E0B"), ColorTranslator.FromHtml("#EF4444"),
+            ColorTranslator.FromHtml("#8B5CF6"), ColorTranslator.FromHtml("#EC4899"),
+            ColorTranslator.FromHtml("#06B6D4"), ColorTranslator.FromHtml("#84CC16")
+        };
 
         private void InitializeDesign()
         {
             this.BackColor = RBg;
             this.Dock = DockStyle.Fill;
 
-            // Top section
-            pnlTopSection.BackColor = RBg;
-            lblTitle.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold);
+            // Tab bar
+            pnlTabBar.BackColor = RCard;
+            StyleTabBtn(btnTabOverview, true);
+            StyleTabBtn(btnTabSales, false);
+            StyleTabBtn(btnTabHistory, false);
+
+            // Session header
+            pnlSessionHeader.BackColor = RBg;
+            lblTitle.Font = new Font("Segoe UI Semibold", 13F, FontStyle.Bold);
             lblTitle.ForeColor = RTextPrimary;
             lblTitle.BackColor = Color.Transparent;
-            lblSubTitle.Font = new Font("Segoe UI", 9F);
-            lblSubTitle.ForeColor = RTextSecondary;
-            lblSubTitle.BackColor = Color.Transparent;
+            lblTitle.TextAlign = ContentAlignment.MiddleLeft;
+            lblSelectedSession.Font = new Font("Segoe UI", 9F);
+            lblSelectedSession.ForeColor = RTextSecondary;
+            lblSelectedSession.BackColor = Color.Transparent;
+            lblSelectedSession.TextAlign = ContentAlignment.MiddleLeft;
 
-            // Filter tabs
-            pnlFilterTabs.BackColor = Color.Transparent;
-            StyleFilterBtn(btnToday, true);
-            StyleFilterBtn(btnYesterday, false);
-            StyleFilterBtn(btnThisWeek, false);
-            StyleFilterBtn(btnCustomDate, false);
+            btnSessionCalendar.BorderRadius = 8;
+            btnSessionCalendar.FillColor = RGreenBg;
+            btnSessionCalendar.ForeColor = RGreen;
+            btnSessionCalendar.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnSessionCalendar.BorderThickness = 1;
+            btnSessionCalendar.BorderColor = RBorder;
 
-            btnExportCsv.FillColor = RCard;
-            btnExportCsv.ForeColor = RTextSecondary;
-            btnExportCsv.BorderColor = RBorder;
-            btnExportCsv.BorderRadius = 8;
-            btnExportCsv.BorderThickness = 1;
-            btnExportCsv.Font = new Font("Segoe UI", 8F);
+            // Export buttons
+            pnlExportButtons.BackColor = Color.Transparent;
+            StyleExportBtn(btnExportCsv);
+            StyleExportBtn(btnExportPdf);
 
-            // KPI cards
-            pnlKpiRow.BackColor = RBg;
-            CreateKpiCards();
+            // KPI row
+            pnlKpiRow.BackColor = Color.Transparent;
 
-            // Table card
-            pnlTableCard.BackColor = Color.Transparent;
-            pnlTableCard.FillColor = RCard;
-            pnlTableCard.BorderRadius = 16;
-            pnlTableCard.BorderColor = ColorTranslator.FromHtml("#F3F4F6");
-            pnlTableCard.BorderThickness = 1;
-            pnlTableCard.ShadowDecoration.Enabled = false;
-            pnlTableCard.Padding = new Padding(0, 0, 0, 0);
+            // Charts
+            StyleChartPanel(pnlDoughnutChart, lblDoughnutTitle);
+            StyleChartPanel(pnlBarChart, lblBarChartTitle);
+            pnlChartsRow.BackColor = Color.Transparent;
+            pnlDoughnutChart.Paint += PnlDoughnutChart_Paint;
+            pnlBarChart.Paint += PnlBarChart_Paint;
 
-            lblTableHeader.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            // Insights row
+            pnlInsightsRow.BackColor = Color.Transparent;
+
+            // Top items
+            StyleCardPanel(pnlTableCard);
+            lblTableHeader.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             lblTableHeader.ForeColor = RTextPrimary;
             lblTableHeader.BackColor = Color.Transparent;
+            StyleDgv(dgvTopItems);
 
-            lblViewAll.Font = new Font("Segoe UI", 9F);
-            lblViewAll.ForeColor = RGreen;
-            lblViewAll.BackColor = Color.Transparent;
-            lblViewAll.Cursor = Cursors.Hand;
+            // Recent tx
+            StyleCardPanel(pnlRecentTx);
+            lblRecentTxTitle.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblRecentTxTitle.ForeColor = RTextPrimary;
+            lblRecentTxTitle.BackColor = Color.Transparent;
+            StyleDgv(dgvRecentTx);
 
-            pnlTableInner.BackColor = Color.Transparent;
-            pnlTableInner.Paint += PnlTableInner_Paint;
+            // Sales Summary page
+            pnlSalesHeader.BackColor = RBg;
+            lblSalesTitle.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
+            lblSalesTitle.ForeColor = RTextPrimary;
+            lblSalesTitle.BackColor = Color.Transparent;
+            lblSalesTitle.TextAlign = ContentAlignment.MiddleLeft;
+            txtSalesSearch.BorderRadius = 8;
+            txtSalesSearch.BorderColor = RBorder;
+            txtSalesSearch.FocusedState.BorderColor = RGreen;
+            txtSalesSearch.Font = new Font("Segoe UI", 9F);
+            StyleDgv(dgvAllSales);
 
-            // ── Closeout sidebar ──
-            pnlCloseoutSidebar.BackColor = Color.Transparent;
+            // History page
+            pnlHistoryCharts.BackColor = Color.Transparent;
+            StyleChartPanel(pnlRevenueChart, lblRevenueChartTitle);
+            StyleChartPanel(pnlTxChart, lblTxChartTitle);
+            pnlRevenueChart.Paint += PnlRevenueChart_Paint;
+            pnlTxChart.Paint += PnlTxChart_Paint;
+            StyleCardPanel(pnlHistoryTableCard);
+            lblHistoryTableTitle.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblHistoryTableTitle.ForeColor = RTextPrimary;
+            lblHistoryTableTitle.BackColor = Color.Transparent;
+            StyleDgv(dgvSessionHistory);
+
+            // Sidebar
             pnlCloseoutSidebar.FillColor = RCard;
-            pnlCloseoutSidebar.BorderThickness = 0;
+            pnlCloseoutSidebar.BorderColor = RBorder;
+            pnlCloseoutSidebar.BorderThickness = 1;
             pnlCloseoutSidebar.ShadowDecoration.Enabled = false;
-            pnlCloseoutSidebar.Paint += (s, e) =>
-            {
-                using var pen = new Pen(RBorder, 1);
-                e.Graphics.DrawLine(pen, 0, 0, 0, pnlCloseoutSidebar.Height);
-            };
-
-            pnlCloseoutHeader.BackColor = RCard;
-            pnlCloseoutHeader.Paint += (s, e) =>
-            {
-                var g = e.Graphics;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                // Orange dot
-                using var dotBrush = new SolidBrush(ColorTranslator.FromHtml("#F59E0B"));
-                g.FillEllipse(dotBrush, 16, 22, 8, 8);
-                using var pen = new Pen(ColorTranslator.FromHtml("#F3F4F6"), 1);
-                g.DrawLine(pen, 0, pnlCloseoutHeader.Height - 1, pnlCloseoutHeader.Width, pnlCloseoutHeader.Height - 1);
-            };
-
-            lblCloseoutTitle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            lblCloseoutTitle.ForeColor = RTextPrimary;
+            pnlCloseoutHeader.BackColor = RGreenBg;
+            lblCloseoutTitle.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblCloseoutTitle.ForeColor = RGreen;
             lblCloseoutTitle.BackColor = Color.Transparent;
 
-            lblExpectedCash.Font = new Font("Segoe UI", 9F);
-            lblExpectedCash.ForeColor = RTextSecondary;
-            lblExpectedCash.BackColor = Color.Transparent;
-            lblExpectedCashValue.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblExpectedCashValue.ForeColor = RTextPrimary;
-            lblExpectedCashValue.BackColor = Color.Transparent;
-
-            lblDrawerFund.Font = new Font("Segoe UI", 9F);
-            lblDrawerFund.ForeColor = RTextSecondary;
-            lblDrawerFund.BackColor = Color.Transparent;
-            lblDrawerFundValue.Font = new Font("Segoe UI", 9F);
-            lblDrawerFundValue.ForeColor = RTextPrimary;
-            lblDrawerFundValue.BackColor = Color.Transparent;
+            foreach (var lbl in new[] { lblExpectedCash, lblDrawerFund, lblTxCountLabel, lblBestSellerLabel, lblOverShortLabel })
+            { lbl.Font = new Font("Segoe UI", 8.5F); lbl.ForeColor = RTextSecondary; lbl.BackColor = Color.Transparent; }
+            foreach (var lbl in new[] { lblExpectedCashValue, lblDrawerFundValue, lblTxCountValue, lblBestSellerValue, lblOverShortValue })
+            { lbl.Font = new Font("Segoe UI", 9F, FontStyle.Bold); lbl.ForeColor = RTextPrimary; lbl.BackColor = Color.Transparent; }
 
             lblActualCashLabel.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblActualCashLabel.ForeColor = RTextMuted;
             lblActualCashLabel.BackColor = Color.Transparent;
-
             txtActualCash.BorderRadius = 8;
             txtActualCash.BorderColor = RBorder;
             txtActualCash.FocusedState.BorderColor = RGreen;
-            txtActualCash.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            txtActualCash.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
             txtActualCash.ForeColor = RTextPrimary;
 
-            pnlInfoBox.BackColor = Color.Transparent;
-            pnlInfoBox.FillColor = ColorTranslator.FromHtml("#EFF6FF");
-            pnlInfoBox.BorderColor = ColorTranslator.FromHtml("#DBEAFE");
-            pnlInfoBox.BorderRadius = 12;
-            pnlInfoBox.BorderThickness = 1;
+            pnlInfoBox.FillColor = ColorTranslator.FromHtml("#FFF9E6");
+            pnlInfoBox.BorderRadius = 8;
+            pnlInfoBox.BorderThickness = 0;
             pnlInfoBox.ShadowDecoration.Enabled = false;
-            lblInfoText.Font = new Font("Segoe UI", 8F);
-            lblInfoText.ForeColor = ColorTranslator.FromHtml("#2563EB");
+            lblInfoText.Font = new Font("Segoe UI", 7.5F);
+            lblInfoText.ForeColor = ColorTranslator.FromHtml("#B45309");
             lblInfoText.BackColor = Color.Transparent;
 
-            btnCloseDay.FillColor = ColorTranslator.FromHtml("#98D88A");
-            btnCloseDay.HoverState.FillColor = ColorTranslator.FromHtml("#86CD77");
+            btnCloseDay.FillColor = RGreen;
+            btnCloseDay.HoverState.FillColor = ColorTranslator.FromHtml("#46A037");
             btnCloseDay.ForeColor = Color.White;
-            btnCloseDay.BorderRadius = 12;
-            btnCloseDay.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnCloseDay.BorderRadius = 8;
+            btnCloseDay.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnCloseDay.BorderThickness = 0;
 
-            // Nav cards
-            StyleNavCard(pnlNavTaxes, lblNavTaxes);
-            StyleNavCard(pnlNavPrevReports, lblNavPrevReports);
+            btnPrintReport.FillColor = Color.White;
+            btnPrintReport.HoverState.FillColor = ColorTranslator.FromHtml("#F9FAFB");
+            btnPrintReport.ForeColor = RGreen;
+            btnPrintReport.BorderColor = RGreen;
+            btnPrintReport.BorderThickness = 1;
+            btnPrintReport.BorderRadius = 8;
+            btnPrintReport.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+
+            btnOpenStore.FillColor = ColorTranslator.FromHtml("#3B82F6");
+            btnOpenStore.HoverState.FillColor = ColorTranslator.FromHtml("#2563EB");
+            btnOpenStore.ForeColor = Color.White;
+            btnOpenStore.BorderRadius = 10;
+            btnOpenStore.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnOpenStore.BorderThickness = 0;
+
+            lblSessionStatus.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblSessionStatus.ForeColor = RTextMuted;
+            lblSessionStatus.BackColor = Color.Transparent;
+            lblSessionTime.Font = new Font("Segoe UI", 7.5F);
+            lblSessionTime.ForeColor = RTextSecondary;
+            lblSessionTime.BackColor = Color.Transparent;
         }
 
-        private void StyleFilterBtn(Guna2Button btn, bool active)
+        private void StyleTabBtn(Guna2Button btn, bool active)
         {
             btn.BorderRadius = 8;
-            btn.Font = new Font("Segoe UI", 8F, active ? FontStyle.Bold : FontStyle.Regular);
-            btn.FillColor = active ? RCard : Color.Transparent;
-            btn.ForeColor = active ? RTextPrimary : RTextSecondary;
-            btn.BorderThickness = active ? 1 : 0;
-            btn.BorderColor = RBorder;
+            btn.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btn.BorderThickness = active ? 2 : 0;
+            btn.BorderColor = RGreen;
+            btn.FillColor = active ? RGreenBg : Color.Transparent;
+            btn.ForeColor = active ? RGreen : RTextSecondary;
         }
 
-        private void StyleNavCard(Guna2Panel pnl, Label lbl)
+        private void StyleExportBtn(Guna2Button btn)
         {
-            pnl.BackColor = Color.Transparent;
+            btn.BorderRadius = 8;
+            btn.FillColor = ColorTranslator.FromHtml("#F3F4F6");
+            btn.ForeColor = RTextSecondary;
+            btn.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btn.BorderThickness = 0;
+        }
+
+        private void StyleChartPanel(Guna2Panel pnl, Label lbl)
+        {
             pnl.FillColor = RCard;
             pnl.BorderRadius = 12;
             pnl.BorderColor = RBorder;
             pnl.BorderThickness = 1;
             pnl.ShadowDecoration.Enabled = false;
-            pnl.Cursor = Cursors.Hand;
             lbl.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             lbl.ForeColor = RTextPrimary;
             lbl.BackColor = Color.Transparent;
-            lbl.TextAlign = ContentAlignment.MiddleLeft;
         }
 
-        private void CreateKpiCards()
+        private void StyleCardPanel(Guna2Panel pnl)
         {
-            var kpis = new[]
-            {
-                ("Total Sales", "$3,429.50", "\u2191 12.5%", true),
-                ("Total Orders", "142", "\u2191 8.2%", true),
-                ("Avg Order Value", "$24.15", "\u2193 2.1%", false),
-                ("Net Profit", "$1,842.10", "\u2191 14.3%", true)
-            };
-
-            foreach (var (title, value, badge, isUp) in kpis)
-            {
-                var card = new Guna2Panel
-                {
-                    Size = new Size(148, 80),
-                    Margin = new Padding(4),
-                    BackColor = Color.Transparent,
-                    FillColor = RCard,
-                    BorderRadius = 12,
-                    BorderColor = ColorTranslator.FromHtml("#F3F4F6"),
-                    BorderThickness = 1
-                };
-                card.ShadowDecoration.Enabled = false;
-
-                var lblT = new Label
-                {
-                    Text = title,
-                    Font = new Font("Segoe UI", 8F),
-                    ForeColor = RTextSecondary,
-                    BackColor = Color.Transparent,
-                    Location = new Point(12, 10),
-                    Size = new Size(120, 16)
-                };
-
-                var lblV = new Label
-                {
-                    Text = value,
-                    Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                    ForeColor = RTextPrimary,
-                    BackColor = Color.Transparent,
-                    Location = new Point(12, 28),
-                    Size = new Size(120, 24),
-                    AutoSize = true
-                };
-
-                var badgePanel = new Guna2Panel
-                {
-                    Size = new Size(64, 18),
-                    Location = new Point(12, 56),
-                    BackColor = Color.Transparent,
-                    FillColor = isUp ? RGreenBg : RRedBg,
-                    BorderRadius = 9,
-                    BorderThickness = 0
-                };
-                badgePanel.ShadowDecoration.Enabled = false;
-
-                var lblB = new Label
-                {
-                    Text = badge,
-                    Font = new Font("Segoe UI", 7F, FontStyle.Bold),
-                    ForeColor = isUp ? RGreen : RRed,
-                    BackColor = Color.Transparent,
-                    Dock = DockStyle.Fill,
-                    TextAlign = ContentAlignment.MiddleCenter
-                };
-                badgePanel.Controls.Add(lblB);
-
-                card.Controls.Add(lblT);
-                card.Controls.Add(lblV);
-                card.Controls.Add(badgePanel);
-                pnlKpiRow.Controls.Add(card);
-            }
+            pnl.FillColor = Color.Transparent;
+            pnl.BorderRadius = 0;
+            pnl.BorderThickness = 0;
+            pnl.ShadowDecoration.Enabled = false;
         }
 
-        private void PnlTableInner_Paint(object? sender, PaintEventArgs e)
+        private void StyleDgv(Guna2DataGridView dgv)
         {
+            dgv.ThemeStyle.HeaderStyle.BackColor = ColorTranslator.FromHtml("#F9FAFB");
+            dgv.ThemeStyle.HeaderStyle.ForeColor = RTextSecondary;
+            dgv.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            dgv.ThemeStyle.RowsStyle.BackColor = Color.White;
+            dgv.ThemeStyle.RowsStyle.ForeColor = RTextPrimary;
+            dgv.ThemeStyle.RowsStyle.Font = new Font("Segoe UI", 9F);
+            dgv.ThemeStyle.AlternatingRowsStyle.BackColor = ColorTranslator.FromHtml("#F9FAFB");
+            dgv.ThemeStyle.AlternatingRowsStyle.ForeColor = RTextPrimary;
+            dgv.ThemeStyle.RowsStyle.SelectionBackColor = RGreenBg;
+            dgv.ThemeStyle.RowsStyle.SelectionForeColor = RTextPrimary;
+            dgv.BorderStyle = BorderStyle.None;
+            dgv.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgv.GridColor = ColorTranslator.FromHtml("#F3F4F6");
+            dgv.RowTemplate.Height = 42;
+        }
+
+        // ═══ CHART PAINT HANDLERS ═══
+        private void PnlDoughnutChart_Paint(object? sender, PaintEventArgs e)
+        {
+            if (_categoryData == null || _categoryData.Count == 0) return;
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            int w = pnlTableInner.Width;
-            int headerH = 36;
-            int rowH = 44;
+            var pnl = (Control)sender!;
+            int titleSpace = 36; // Space reserved for the top label
 
-            string[] headers = { "PRODUCT NAME", "CATEGORY", "UNITS", "REVENUE", "EST. PROFIT" };
-            int[] colW = { 200, 100, 70, 100, 100 };
+            // Calculate dynamic circle bounds to support DPI scaling and resizing
+            int drawWidth = pnl.Width - 140; // Reserve 140px on the right for the legend
+            int drawHeight = pnl.Height - titleSpace - 16; // Reserve padding
 
-            // Header
-            using var hBg = new SolidBrush(ColorTranslator.FromHtml("#F9FAFB"));
-            g.FillRectangle(hBg, 0, 0, w, headerH);
-            using var bPen = new Pen(RBorder, 1);
-            g.DrawLine(bPen, 0, headerH - 1, w, headerH - 1);
+            // Ensure perfect circle by taking the smallest dimension
+            int diameter = Math.Min(drawWidth, drawHeight);
+            int r = diameter / 2;
+            int inner = (int)(r * 0.55); // Inner hole is 55% of radius
 
-            using var hFont = new Font("Segoe UI", 7.5F, FontStyle.Bold);
-            using var hBrush = new SolidBrush(RTextMuted);
-            int hx = 24;
-            for (int i = 0; i < headers.Length; i++)
+            // Center coordinates
+            int cx = (drawWidth / 2) + 16;
+            int cy = titleSpace + r + 4;
+
+            float total = (float)_categoryData.Values.Sum(v => (float)v);
+            if (total == 0) return;
+            float startAngle = -90;
+            int ci = 0;
+            foreach (var kv in _categoryData)
             {
-                g.DrawString(headers[i], hFont, hBrush, hx, (headerH - 14) / 2);
-                hx += colW[i];
+                float sweep = (float)kv.Value / total * 360f;
+                using var brush = new SolidBrush(ChartColors[ci % ChartColors.Length]);
+                g.FillPie(brush, cx - r, cy - r, r * 2, r * 2, startAngle, sweep);
+                startAngle += sweep;
+                ci++;
             }
+            using var centerBrush = new SolidBrush(RCard);
+            g.FillEllipse(centerBrush, cx - inner, cy - inner, inner * 2, inner * 2);
 
-            // Rows
-            var rows = new[]
+            // Responsive Legend vertically centered
+            int legendX = cx + r + 24;
+            int itemHeight = 32;
+            int ly = cy - ((_categoryData.Count * itemHeight) / 2); // Center block vertically
+            
+            ci = 0;
+            foreach (var kv in _categoryData)
             {
-                ("Ceremonial Matcha Latte", "Drinks", "58", "$493.00", "$312.00"),
-                ("Hojicha Roast Tea", "Drinks", "42", "$231.00", "$189.00"),
-                ("Matcha Mochi Donut", "Pastry", "35", "$157.50", "$98.00"),
-                ("Iced Strawberry Matcha", "Drinks", "31", "$217.00", "$145.00"),
-                ("Matcha White Choc Cookie", "Pastry", "28", "$112.00", "$72.50")
-            };
-
-            using var rFont = new Font("Segoe UI", 9F);
-            using var rFontBold = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-            using var pillFont = new Font("Segoe UI", 7F);
-            using var tPrim = new SolidBrush(RTextPrimary);
-            using var tBody = new SolidBrush(ColorTranslator.FromHtml("#374151"));
-            using var tGray = new SolidBrush(RTextSecondary);
-            using var tGreen = new SolidBrush(RGreen);
-            using var pillBg = new SolidBrush(ColorTranslator.FromHtml("#F3F4F6"));
-
-            for (int r = 0; r < rows.Length; r++)
-            {
-                var (name, cat, units, rev, profit) = rows[r];
-                int ry = headerH + r * rowH;
-                int rx = 24;
-                int ty = ry + (rowH - 18) / 2;
-
-                g.DrawLine(bPen, 0, ry + rowH - 1, w, ry + rowH - 1);
-
-                g.DrawString(name, rFontBold, tPrim, rx, ty);
-                rx += colW[0];
-
-                // Category pill
-                var catSz = g.MeasureString(cat, pillFont);
-                var pillRect = new Rectangle(rx, ty - 1, (int)catSz.Width + 12, 20);
-                using var pillPath = CreateRoundedRectPath(pillRect, 6);
-                g.FillPath(pillBg, pillPath);
-                g.DrawString(cat, pillFont, tGray, rx + 6, ty + 1);
-                rx += colW[1];
-
-                g.DrawString(units, rFont, tBody, rx, ty);
-                rx += colW[2];
-
-                g.DrawString(rev, rFont, tBody, rx, ty);
-                rx += colW[3];
-
-                g.DrawString(profit, rFontBold, tGreen, rx, ty);
+                using var lb = new SolidBrush(ChartColors[ci % ChartColors.Length]);
+                g.FillRectangle(lb, legendX, ly + 2, 12, 12);
+                using var tf = new Font("Segoe UI", 7.5F);
+                g.DrawString($"{kv.Key}\n{kv.Value:₱#,##0}", tf, Brushes.Gray, legendX + 18, ly - 2);
+                ly += itemHeight;
+                ci++;
             }
         }
 
-        private static GraphicsPath CreateRoundedRectPath(Rectangle rect, int radius)
+        private void PnlBarChart_Paint(object? sender, PaintEventArgs e)
         {
-            var path = new GraphicsPath();
-            int d = radius * 2;
-            path.AddArc(rect.X, rect.Y, d, d, 180, 90);
-            path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
-            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
-            path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            if (_hourlySalesData == null || _hourlySalesData.Count == 0) return;
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+
+            var pnl = (Control)sender!;
+            int left = 50, top = 36, right = pnl.Width - 20, bottom = pnl.Height - 30;
+            int chartW = right - left, chartH = bottom - top;
+
+            // Only show hours with data or business hours (6-22)
+            var activeHours = _hourlySalesData.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToList();
+            int minH = activeHours.Count > 0 ? Math.Max(0, activeHours.Min() - 1) : 6;
+            int maxH = activeHours.Count > 0 ? Math.Min(23, activeHours.Max() + 1) : 22;
+            int hourCount = maxH - minH + 1;
+            if (hourCount <= 0) return;
+
+            decimal maxVal = _hourlySalesData.Values.Max();
+            if (maxVal == 0) maxVal = 100;
+
+            // Grid
+            using var gridPen = new Pen(RBorder, 1);
+            for (int i = 0; i <= 4; i++)
+            {
+                int y = bottom - (int)(chartH * i / 4.0);
+                g.DrawLine(gridPen, left, y, right, y);
+                decimal val = maxVal * i / 4;
+                using var f = new Font("Segoe UI", 7F);
+                g.DrawString($"₱{val:#,##0}", f, Brushes.Gray, 2, y - 6);
+            }
+
+            // Bars
+            float barW = Math.Min(30, (float)chartW / hourCount * 0.7f);
+            float gap = (float)chartW / hourCount;
+            for (int h = minH; h <= maxH; h++)
+            {
+                decimal val = _hourlySalesData.ContainsKey(h) ? _hourlySalesData[h] : 0;
+                float barH = maxVal > 0 ? (float)((double)val / (double)maxVal * chartH) : 0;
+                float x = left + (h - minH) * gap + (gap - barW) / 2;
+                float y = bottom - barH;
+
+                using var brush = new LinearGradientBrush(new RectangleF(x, y, barW, Math.Max(barH, 1)), RGreen, ColorTranslator.FromHtml("#86CD77"), 90F);
+                if (barH > 2) g.FillRoundedRectangle(brush, x, y, barW, barH, 4);
+
+                using var lf = new Font("Segoe UI", 7F);
+                string label = h > 12 ? $"{h - 12}pm" : h == 12 ? "12pm" : h == 0 ? "12am" : $"{h}am";
+                var sz = g.MeasureString(label, lf);
+                g.DrawString(label, lf, Brushes.Gray, x + barW / 2 - sz.Width / 2, bottom + 2);
+            }
+        }
+
+        private void PnlRevenueChart_Paint(object? sender, PaintEventArgs e)
+        {
+            PaintHistoryBar(e.Graphics, (Control)sender!, _historyRevenue, "₱");
+        }
+
+        private void PnlTxChart_Paint(object? sender, PaintEventArgs e)
+        {
+            PaintHistoryBar(e.Graphics, (Control)sender!, _historyTxCounts, "");
+        }
+
+        private void PaintHistoryBar(Graphics g, Control pnl, List<(string Label, decimal Value)>? data, string prefix)
+        {
+            if (data == null || data.Count == 0) return;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+
+            int left = 50, top = 36, right = pnl.Width - 16, bottom = pnl.Height - 28;
+            int chartW = right - left, chartH = bottom - top;
+            decimal maxVal = data.Max(d => d.Value);
+            if (maxVal == 0) maxVal = 1;
+
+            float barW = Math.Min(28, (float)chartW / data.Count * 0.65f);
+            float gap = (float)chartW / data.Count;
+
+            using var gridPen = new Pen(RBorder, 1);
+            for (int i = 0; i <= 3; i++)
+            {
+                int y = bottom - (int)(chartH * i / 3.0);
+                g.DrawLine(gridPen, left, y, right, y);
+                decimal val = maxVal * i / 3;
+                using var f = new Font("Segoe UI", 7F);
+                g.DrawString($"{prefix}{val:#,##0}", f, Brushes.Gray, 2, y - 6);
+            }
+
+            for (int i = 0; i < data.Count; i++)
+            {
+                float barH = maxVal > 0 ? (float)((double)data[i].Value / (double)maxVal * chartH) : 0;
+                float x = left + i * gap + (gap - barW) / 2;
+                float y = bottom - barH;
+
+                var color = ChartColors[i % ChartColors.Length];
+                using var brush = new SolidBrush(color);
+                if (barH > 2) g.FillRoundedRectangle(brush, x, y, barW, barH, 4);
+
+                using var lf = new Font("Segoe UI", 6.5F);
+                var sz = g.MeasureString(data[i].Label, lf);
+                g.DrawString(data[i].Label, lf, Brushes.Gray, x + barW / 2 - sz.Width / 2, bottom + 2);
+            }
+        }
+    }
+
+    // Extension for rounded rectangle
+    public static class GraphicsExtensions
+    {
+        public static void FillRoundedRectangle(this Graphics g, Brush brush, float x, float y, float w, float h, int r)
+        {
+            if (h < r * 2) r = (int)(h / 2);
+            if (w < r * 2) r = (int)(w / 2);
+            if (r < 1) { g.FillRectangle(brush, x, y, w, h); return; }
+            using var path = new GraphicsPath();
+            path.AddArc(x, y, r * 2, r * 2, 180, 90);
+            path.AddArc(x + w - r * 2, y, r * 2, r * 2, 270, 90);
+            path.AddLine(x + w, y + r, x + w, y + h);
+            path.AddLine(x + w, y + h, x, y + h);
+            path.AddLine(x, y + h, x, y + r);
             path.CloseFigure();
-            return path;
+            g.FillPath(brush, path);
         }
     }
 }

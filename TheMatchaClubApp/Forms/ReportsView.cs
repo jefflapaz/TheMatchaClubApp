@@ -1,116 +1,486 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using TheMatchaClubApp.Core;
 using TheMatchaClubApp.Core.Models;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
 
 namespace TheMatchaClubApp.Forms
 {
     public partial class ReportsView : UserControl
     {
+        private BusinessSession? _selectedSession;
+        private Dictionary<string, decimal> _categoryData = new();
+        private Dictionary<int, decimal> _hourlySalesData = new();
+        private List<(string Label, decimal Value)>? _historyRevenue;
+        private List<(string Label, decimal Value)>? _historyTxCounts;
+
         public ReportsView()
         {
-            SetStyle(
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.UserPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw, true);
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             DoubleBuffered = true;
 
             InitializeComponent();
+            SetupColumns();
             InitializeDesign();
+            WireEvents();
 
-            Program.DataService.OrdersChanged += (s, e) =>
-            {
-                if (!IsDisposed) BeginInvoke(new Action(LoadData));
-            };
+            _selectedSession = Program.SessionService.GetLatestSession();
+            LoadAllPages();
+            UpdateSessionUI();
+        }
+
+        private void SetupColumns()
+        {
+            dgvTopItems.Columns.AddRange(
+                new DataGridViewTextBoxColumn { HeaderText = "Product", FillWeight = 35 },
+                new DataGridViewTextBoxColumn { HeaderText = "Category", FillWeight = 20 },
+                new DataGridViewTextBoxColumn { HeaderText = "Units Sold", FillWeight = 20, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter } },
+                new DataGridViewTextBoxColumn { HeaderText = "Revenue", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } }
+            );
+            dgvRecentTx.Columns.AddRange(
+                new DataGridViewTextBoxColumn { HeaderText = "Order ID", FillWeight = 25 },
+                new DataGridViewTextBoxColumn { HeaderText = "Customer", FillWeight = 25 },
+                new DataGridViewTextBoxColumn { HeaderText = "Amount", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } },
+                new DataGridViewTextBoxColumn { HeaderText = "Time", FillWeight = 25 }
+            );
+            dgvAllSales.Columns.AddRange(
+                new DataGridViewTextBoxColumn { HeaderText = "Product", FillWeight = 35 },
+                new DataGridViewTextBoxColumn { HeaderText = "Category", FillWeight = 20 },
+                new DataGridViewTextBoxColumn { HeaderText = "Units Sold", FillWeight = 20, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter } },
+                new DataGridViewTextBoxColumn { HeaderText = "Revenue", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } }
+            );
+            dgvSessionHistory.Columns.AddRange(
+                new DataGridViewTextBoxColumn { HeaderText = "Date", FillWeight = 14 },
+                new DataGridViewTextBoxColumn { HeaderText = "Time", FillWeight = 14 },
+                new DataGridViewTextBoxColumn { HeaderText = "Duration", FillWeight = 10 },
+                new DataGridViewTextBoxColumn { HeaderText = "Tx", FillWeight = 8, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter } },
+                new DataGridViewTextBoxColumn { HeaderText = "Units", FillWeight = 8, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter } },
+                new DataGridViewTextBoxColumn { HeaderText = "Revenue", FillWeight = 14, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } },
+                new DataGridViewTextBoxColumn { HeaderText = "Opened By", FillWeight = 14 },
+                new DataGridViewTextBoxColumn { HeaderText = "Status", FillWeight = 10 }
+            );
+        }
+
+        private void WireEvents()
+        {
+            btnTabOverview.Click += (s, e) => ShowPage("overview");
+            btnTabSales.Click += (s, e) => ShowPage("sales");
+            btnTabHistory.Click += (s, e) => ShowPage("history");
+            btnSessionCalendar.Click += BtnSessionCalendar_Click;
             btnCloseDay.Click += BtnCloseDay_Click;
-            LoadData();
+            btnOpenStore.Click += BtnOpenStore_Click;
+            btnExportCsv.Click += BtnExportCsv_Click;
+            btnExportPdf.Click += BtnExportPdf_Click;
+            btnPrintReport.Click += BtnExportPdf_Click;
+            txtActualCash.TextChanged += (s, e) => UpdateOverShort();
+            txtSalesSearch.TextChanged += (s, e) => FilterSalesDgv();
+
+            Program.DataService.OrdersChanged += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { LoadAllPages(); UpdateSessionUI(); })); };
+            Program.DataService.DataLoaded += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { _selectedSession = Program.SessionService.GetLatestSession(); LoadAllPages(); UpdateSessionUI(); })); };
+            Program.SessionService.SessionOpened += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { _selectedSession = Program.SessionService.GetActiveSession(); LoadAllPages(); UpdateSessionUI(); })); };
+            Program.SessionService.SessionClosed += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { LoadAllPages(); UpdateSessionUI(); })); };
+
+            dgvSessionHistory.CellDoubleClick += DgvSessionHistory_CellDoubleClick;
         }
 
-        // ── Live KPI Calculation ─────────────────────────────────────
-        private void LoadData()
+        // ── Tab Navigation ─────────────────────────────────────
+        private void ShowPage(string page)
         {
-            var orders = Program.DataService.Orders;
-
-            decimal totalSales = orders.Sum(o => o.Total);
-            int totalOrders = orders.Count;
-            decimal avgOrder = totalOrders > 0 ? totalSales / totalOrders : 0;
-            decimal netProfit = totalSales * 0.65m; // 65% margin estimate
-
-            pnlKpiRow.Controls.Clear();
-            pnlKpiRow.Controls.Add(CreateKpiCard("Total Sales", totalSales.ToString("C2"), "+12.5%"));
-            pnlKpiRow.Controls.Add(CreateKpiCard("Total Orders", totalOrders.ToString(), "+8.2%"));
-            pnlKpiRow.Controls.Add(CreateKpiCard("Avg. Order Value", avgOrder.ToString("C2"), "-2.1%"));
-            pnlKpiRow.Controls.Add(CreateKpiCard("Net Profit", netProfit.ToString("C2"), "+14.3%"));
-
-            lblExpectedCashValue.Text = (totalSales + 200m).ToString("C2");
-
-            PopulateTopItems();
+            pnlPageOverview.Visible = page == "overview";
+            pnlPageSales.Visible = page == "sales";
+            pnlPageHistory.Visible = page == "history";
+            StyleTabBtn(btnTabOverview, page == "overview");
+            StyleTabBtn(btnTabSales, page == "sales");
+            StyleTabBtn(btnTabHistory, page == "history");
+            lblTitle.Text = page switch { "sales" => "Sales Summary", "history" => "Previous Reports", _ => "Performance Overview" };
         }
 
-        // ── Top Performing Items ─────────────────────────────────────
-        private void PopulateTopItems()
+        // ── Session Calendar ───────────────────────────────────
+        private void BtnSessionCalendar_Click(object? sender, EventArgs e)
         {
-            pnlTableInner.Controls.Clear();
-            var topItems = Program.DataService.Products
-                .OrderByDescending(p => p.SalesCount)
-                .Take(5).ToList();
-
-            int y = 0;
-            foreach (var item in topItems)
+            var sessionDates = Program.SessionService.GetSessionDates();
+            using var dlg = new Form
             {
-                var row = new Panel { Size = new Size(600, 40), Location = new Point(10, y) };
-                row.Controls.Add(new Label { Text = item.Name, Location = new Point(10, 10), AutoSize = true, Font = new Font("Segoe UI", 10F, FontStyle.Bold) });
-                row.Controls.Add(new Label { Text = item.CategoryName, Location = new Point(250, 10), AutoSize = true, ForeColor = Color.Gray });
-                row.Controls.Add(new Label { Text = $"{item.SalesCount} Units", Location = new Point(350, 10), AutoSize = true });
-                row.Controls.Add(new Label { Text = (item.SalesCount * item.Price).ToString("C2"), Location = new Point(480, 10), AutoSize = true, Font = new Font("Segoe UI", 10F, FontStyle.Bold) });
-                pnlTableInner.Controls.Add(row);
-                y += 45;
+                Text = "Select Session Date", Size = new Size(320, 320),
+                StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false, MinimizeBox = false, BackColor = Color.White
+            };
+            
+            var lblH = new Label { Text = "Operating Dates", Font = new Font("Segoe UI", 12F, FontStyle.Bold), Location = new Point(20, 15), AutoSize = true, ForeColor = ColorTranslator.FromHtml("#111827") };
+            var lblS = new Label { Text = "Bold dates have recorded sessions.", Font = new Font("Segoe UI", 8.5F), Location = new Point(20, 42), AutoSize = true, ForeColor = ColorTranslator.FromHtml("#6B7280") };
+            
+            var cal = new MonthCalendar { MaxSelectionCount = 1, Location = new Point(20, 75) };
+            cal.BoldedDates = sessionDates.ToArray();
+            
+            cal.DateSelected += (s, ev) =>
+            {
+                var session = Program.SessionService.GetSessionByDate(ev.Start.Date);
+                if (session != null) { _selectedSession = session; dlg.Close(); }
+                else lblS.Text = "No session found on this date."; 
+            };
+            
+            dlg.Controls.AddRange(new Control[] { lblH, lblS, cal });
+            dlg.ShowDialog(this.FindForm());
+            LoadAllPages();
+        }
+
+        // ── Load All Pages ─────────────────────────────────────
+        private List<Order> _selectedSessionOrders = new();
+
+        private void LoadAllPages()
+        {
+            if (_selectedSession != null)
+            {
+                lblSelectedSession.Text = $"{_selectedSession.OpenedAt:MMM dd, yyyy} \u2022 {(_selectedSession.IsClosed ? "Closed" : "Active")}";
+                // Cache orders for the selected session once
+                _selectedSessionOrders = Program.SessionService.GetSessionOrders(_selectedSession.SessionId);
+            }
+            else
+            {
+                lblSelectedSession.Text = "No sessions yet";
+                _selectedSessionOrders = new List<Order>();
+            }
+
+            LoadOverviewPage();
+            LoadSalesSummaryPage();
+            LoadHistoryPage();
+        }
+
+        // ── OVERVIEW PAGE ──────────────────────────────────────
+        private void LoadOverviewPage()
+        {
+            if (_selectedSession == null) { pnlKpiRow.Controls.Clear(); pnlInsightsRow.Controls.Clear(); dgvTopItems.Rows.Clear(); dgvRecentTx.Rows.Clear(); return; }
+
+            var sid = _selectedSession.SessionId;
+            var orders = _selectedSessionOrders;
+            
+            // Use frozen totals if session is closed to ensure historical integrity
+            decimal revenue = _selectedSession.IsClosed ? _selectedSession.TotalRevenue : orders.Sum(o => o.Total);
+            int txCount = _selectedSession.IsClosed ? _selectedSession.TotalTransactions : orders.Count;
+            int units = _selectedSession.IsClosed ? _selectedSession.TotalUnitsSold : orders.SelectMany(o => o.Items).Sum(i => i.Quantity);
+            decimal avgOrder = txCount > 0 ? revenue / txCount : 0;
+
+            // KPIs
+            pnlKpiRow.Controls.Clear();
+            pnlKpiRow.Controls.Add(CreateKpiCard("Total Revenue", Fmt(revenue)));
+            pnlKpiRow.Controls.Add(CreateKpiCard("Transactions", txCount.ToString()));
+            pnlKpiRow.Controls.Add(CreateKpiCard("Units Sold", units.ToString()));
+            pnlKpiRow.Controls.Add(CreateKpiCard("Avg. Order", Fmt(avgOrder)));
+
+            // Charts
+            _categoryData = Program.SessionService.GetCategorySalesData(sid);
+            _hourlySalesData = Program.SessionService.GetHourlySalesData(sid);
+            pnlDoughnutChart.Invalidate();
+            pnlBarChart.Invalidate();
+
+            // Insight cards
+            pnlInsightsRow.Controls.Clear();
+            var topItem = Program.SessionService.GetTopItems(sid, 1).FirstOrDefault();
+            pnlInsightsRow.Controls.Add(CreateInsightCard("\U0001F3C6 Best Seller", topItem.Name ?? "\u2014"));
+
+            var hourly = _hourlySalesData.Where(h => h.Value > 0).OrderByDescending(h => h.Value).FirstOrDefault();
+            string peakHour = hourly.Value > 0 ? (hourly.Key > 12 ? $"{hourly.Key - 12}:00 PM" : hourly.Key == 12 ? "12:00 PM" : $"{hourly.Key}:00 AM") : "\u2014";
+            pnlInsightsRow.Controls.Add(CreateInsightCard("\u23F0 Peak Hour", peakHour));
+
+            var topCat = _categoryData.OrderByDescending(c => c.Value).FirstOrDefault();
+            pnlInsightsRow.Controls.Add(CreateInsightCard("\U0001F4CA Top Category", topCat.Key ?? "\u2014"));
+
+            var largest = orders.OrderByDescending(o => o.Total).FirstOrDefault();
+            pnlInsightsRow.Controls.Add(CreateInsightCard("\U0001F4B0 Largest Order", largest != null ? Fmt(largest.Total) : "\u2014"));
+
+            // Top 5
+            dgvTopItems.Rows.Clear();
+            foreach (var item in Program.SessionService.GetTopItems(sid, 5))
+                dgvTopItems.Rows.Add(item.Name, item.Category, item.Units.ToString(), Fmt(item.Revenue));
+
+            // Recent Tx
+            dgvRecentTx.Rows.Clear();
+            foreach (var o in orders.OrderByDescending(o => o.Timestamp).Take(8))
+            {
+                var cust = Program.DataService.Customers.FirstOrDefault(c => c.Id == o.CustomerId);
+                dgvRecentTx.Rows.Add(o.OrderId, cust?.Name ?? "Walk-in", Fmt(o.Total), o.Timestamp.ToString("hh:mm tt"));
             }
         }
 
-        // ── KPI Card Factory ─────────────────────────────────────────
-        private Guna.UI2.WinForms.Guna2Panel CreateKpiCard(string title, string value, string trend)
+        private Guna.UI2.WinForms.Guna2Panel CreateKpiCard(string title, string value)
         {
-            var pnl = new Guna.UI2.WinForms.Guna2Panel
-            {
-                Size = new Size(150, 84),
-                BorderRadius = 8,
-                BorderColor = ColorTranslator.FromHtml("#E5E7EB"),
-                BorderThickness = 1,
-                FillColor = Color.White,
-                Margin = new Padding(0, 0, 12, 0)
-            };
-
-            var lblT = new Label { Text = title, Font = new Font("Segoe UI", 8F), ForeColor = Color.Gray, Location = new Point(12, 10), AutoSize = true };
-            var lblV = new Label { Text = value, Font = new Font("Segoe UI", 14F, FontStyle.Bold), Location = new Point(12, 35), AutoSize = true };
-            var lblTrend = new Label { Text = trend, Font = new Font("Segoe UI", 7F), ForeColor = trend.StartsWith("+") ? Color.Green : Color.Red, Location = new Point(100, 10), AutoSize = true };
-
-            pnl.Controls.AddRange(new Control[] { lblT, lblV, lblTrend });
+            var pnl = new Guna.UI2.WinForms.Guna2Panel { Size = new Size(180, 84), BorderRadius = 10, BorderColor = ColorTranslator.FromHtml("#F3F4F6"), BorderThickness = 1, FillColor = Color.White, Margin = new Padding(8, 0, 8, 0) };
+            pnl.ShadowDecoration.Enabled = true;
+            pnl.ShadowDecoration.Shadow = new Padding(0, 0, 5, 5);
+            pnl.ShadowDecoration.Color = Color.FromArgb(20, 0, 0, 0);
+            pnl.Controls.Add(new Label { Text = title.ToUpper(), Font = new Font("Segoe UI Semibold", 7.5F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(14, 14), AutoSize = true, BackColor = Color.Transparent });
+            pnl.Controls.Add(new Label { Text = value, Font = new Font("Segoe UI", 16F, FontStyle.Bold), Location = new Point(12, 38), AutoSize = true, BackColor = Color.Transparent });
             return pnl;
         }
 
-        // ── Z-Report Close Day ───────────────────────────────────────
-        private void BtnCloseDay_Click(object? sender, EventArgs e)
+        private Guna.UI2.WinForms.Guna2Panel CreateInsightCard(string title, string value)
         {
-            var todayOrders = Program.DataService.Orders.Where(o => o.Timestamp.Date == DateTime.Today).ToList();
-            decimal todayTotal = todayOrders.Sum(o => o.Total);
-
-            MessageBox.Show(
-                $"═══ Z-REPORT ═══\n" +
-                $"Date: {DateTime.Today:dd/MM/yyyy}\n" +
-                $"Transactions: {todayOrders.Count}\n" +
-                $"Total Sales: {todayTotal.ToString("C2")}\n" +
-                $"────────────────\n" +
-                $"All transactions for today have been locked.",
-                "End of Day Closeout", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var pnl = new Guna.UI2.WinForms.Guna2Panel { Size = new Size(180, 60), BorderRadius = 8, BorderColor = ColorTranslator.FromHtml("#E5E7EB"), BorderThickness = 1, FillColor = ColorTranslator.FromHtml("#F9FAFB"), Margin = new Padding(8, 0, 8, 0) };
+            pnl.ShadowDecoration.Enabled = true;
+            pnl.ShadowDecoration.Shadow = new Padding(0, 0, 3, 3);
+            pnl.ShadowDecoration.Color = Color.FromArgb(10, 0, 0, 0);
+            pnl.Controls.Add(new Label { Text = title, Font = new Font("Segoe UI", 8F), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(12, 8), AutoSize = true, BackColor = Color.Transparent });
+            pnl.Controls.Add(new Label { Text = value, Font = new Font("Segoe UI", 10.5F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#111827"), Location = new Point(12, 28), AutoSize = true, BackColor = Color.Transparent });
+            return pnl;
         }
 
-        protected override void Dispose(bool disposing)
+        // ── SALES SUMMARY PAGE ─────────────────────────────────
+        private List<(string Name, string Category, int Units, decimal Revenue)> _allSalesData = new();
+
+        private void LoadSalesSummaryPage()
         {
-            if (disposing) components?.Dispose();
-            base.Dispose(disposing);
+            if (_selectedSession == null) { dgvAllSales.Rows.Clear(); return; }
+            _allSalesData = Program.SessionService.GetAllItemSales(_selectedSession.SessionId);
+            PopulateSalesDgv(_allSalesData);
         }
+
+        private void PopulateSalesDgv(List<(string Name, string Category, int Units, decimal Revenue)> data)
+        {
+            dgvAllSales.Rows.Clear();
+            foreach (var item in data)
+                dgvAllSales.Rows.Add(item.Name, item.Category, item.Units.ToString(), Fmt(item.Revenue));
+        }
+
+        private void FilterSalesDgv()
+        {
+            var q = txtSalesSearch.Text.Trim().ToLower();
+            if (string.IsNullOrEmpty(q)) { PopulateSalesDgv(_allSalesData); return; }
+            PopulateSalesDgv(_allSalesData.Where(x => x.Name.ToLower().Contains(q) || x.Category.ToLower().Contains(q)).ToList());
+        }
+
+        // ── HISTORY PAGE ───────────────────────────────────────
+        private List<BusinessSession> _historySessions = new();
+
+        private void LoadHistoryPage()
+        {
+            _historySessions = Program.SessionService.GetAllSessions();
+
+            // Charts data (last 10 sessions)
+            var recent = _historySessions.Where(s => s.IsClosed).Take(10).Reverse().ToList();
+            _historyRevenue = recent.Select(s => (s.OpenedAt.ToString("MMM dd"), s.TotalRevenue)).ToList();
+            _historyTxCounts = recent.Select(s => (s.OpenedAt.ToString("MMM dd"), (decimal)s.TotalTransactions)).ToList();
+            pnlRevenueChart.Invalidate();
+            pnlTxChart.Invalidate();
+
+            // Table
+            dgvSessionHistory.Rows.Clear();
+            foreach (var s in _historySessions)
+            {
+                string time = $"{s.OpenedAt:hh:mm tt}" + (s.IsClosed ? $" - {s.ClosedAt:hh:mm tt}" : "");
+                string duration = s.IsClosed && s.ClosedAt.HasValue ? $"{(s.ClosedAt.Value - s.OpenedAt).TotalHours:0.0}h" : "Active";
+                string status = s.IsClosed ? "✅ Closed" : "🟢 Active";
+                dgvSessionHistory.Rows.Add(
+                    s.OpenedAt.ToString("MMM dd, yyyy"), time, duration,
+                    s.TotalTransactions.ToString(), s.TotalUnitsSold.ToString(),
+                    Fmt(s.TotalRevenue), s.OpenedBy, status
+                );
+            }
+        }
+
+        private void DgvSessionHistory_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= _historySessions.Count) return;
+            _selectedSession = _historySessions[e.RowIndex];
+            ShowPage("overview");
+            LoadAllPages();
+        }
+
+        // ── Over/Short ─────────────────────────────────────────
+        private void UpdateOverShort()
+        {
+            var session = Program.SessionService.GetActiveSession();
+            if (session == null) return;
+            var orders = Program.SessionService.GetSessionOrders(session.SessionId);
+            decimal expected = session.StartingCash + orders.Sum(o => o.Total);
+            if (decimal.TryParse(txtActualCash.Text.Replace("₱", "").Replace(",", ""), out decimal actual))
+            {
+                decimal diff = actual - expected;
+                lblOverShortValue.Text = Fmt(diff);
+                lblOverShortValue.ForeColor = diff >= 0 ? ColorTranslator.FromHtml("#52B743") : ColorTranslator.FromHtml("#EF4444");
+            }
+            else { lblOverShortValue.Text = "₱0.00"; lblOverShortValue.ForeColor = ColorTranslator.FromHtml("#9CA3AF"); }
+        }
+
+        // ── Close Session ──────────────────────────────────────
+        private async void BtnCloseDay_Click(object? sender, EventArgs e)
+        {
+            var session = Program.SessionService.GetActiveSession();
+            if (session == null) { MessageBox.Show("No active session.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            decimal actualCash = 0;
+            if (decimal.TryParse(txtActualCash.Text.Replace("₱", "").Replace(",", ""), out decimal parsed)) actualCash = parsed;
+            
+            if (actualCash <= 0)
+            {
+                MessageBox.Show("Please enter the actual cash counted before closing the store session.", "Actual Cash Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (MessageBox.Show($"Close this session?\n\nOpened: {session.OpenedAt:MMM dd, hh:mm tt}\nActual cash: {Fmt(actualCash)}", "Close Session", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+
+            try 
+            {
+                var closed = await Program.SessionService.CloseSessionAsync(actualCash, Program.CurrentUser?.FullName ?? session.OpenedBy);
+                decimal overShort = closed.ActualCash - closed.ExpectedCash;
+                var best = Program.SessionService.GetSessionOrders(closed.SessionId).SelectMany(o => o.Items).GroupBy(i => i.ProductName).OrderByDescending(g => g.Sum(i => i.Quantity)).FirstOrDefault();
+
+                MessageBox.Show(
+                    $"═══ Z-REPORT ═══\nSession: {closed.OpenedAt:MMM dd, yyyy}\nOpened: {closed.OpenedAt:hh:mm tt} by {closed.OpenedBy}\nClosed: {closed.ClosedAt:hh:mm tt} by {closed.ClosedBy}\n────────────────\nTransactions: {closed.TotalTransactions}\nUnits Sold: {closed.TotalUnitsSold}\nRevenue: {Fmt(closed.TotalRevenue)}\n────────────────\nStarting Cash: {Fmt(closed.StartingCash)}\nExpected: {Fmt(closed.ExpectedCash)}\nActual: {Fmt(closed.ActualCash)}\nOver/Short: {(overShort >= 0 ? "+" : "")}{Fmt(overShort)}\n────────────────\nBest Seller: {best?.Key ?? "N/A"}\n\nSession locked.",
+                    "Z-Report", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                txtActualCash.Text = "";
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ── Open Session ───────────────────────────────────────
+        private async void BtnOpenStore_Click(object? sender, EventArgs e)
+        {
+            if (Program.SessionService.HasActiveSession()) { MessageBox.Show("Session already active.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            using var dlg = new Form { Text = "Open Store Session", Size = new Size(340, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.White };
+            var lblP = new Label { Text = "Starting cash in register:", Location = new Point(20, 20), Size = new Size(280, 24), Font = new Font("Segoe UI", 10F) };
+            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = "200", Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = "₱200.00" };
+            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = "₱200 Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
+            btnD.Click += (s2, e2) => txtC.Text = "200";
+            var btnO = new Guna.UI2.WinForms.Guna2Button { Text = "Open Session", Location = new Point(160, 100), Size = new Size(140, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 9F, FontStyle.Bold), BorderThickness = 0 };
+            
+            btnO.Click += (s2, e2) => 
+            {
+                if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal val) || val < 0)
+                {
+                    MessageBox.Show("Please enter a valid starting cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                dlg.DialogResult = DialogResult.OK;
+                dlg.Close();
+            };
+
+            dlg.Controls.AddRange(new Control[] { lblP, txtC, btnD, btnO });
+            if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
+            
+            if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal cash)) cash = 200m;
+            try 
+            { 
+                var newSession = await Program.SessionService.OpenSessionAsync(Program.CurrentUser?.FullName ?? "Main Counter", cash); 
+                MessageBox.Show($"Store Session Opened successfully.\nStarting Cash: ₱{cash:#,##0.00}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (InvalidOperationException ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        }
+
+        // ── Session UI ─────────────────────────────────────────
+        private void UpdateSessionUI()
+        {
+            var session = Program.SessionService.GetActiveSession();
+            bool isActive = session != null;
+            btnOpenStore.Visible = !isActive;
+            btnCloseDay.Visible = isActive;
+            btnPrintReport.Visible = isActive;
+            txtActualCash.Visible = isActive;
+            lblActualCashLabel.Visible = isActive;
+            lblOverShortLabel.Visible = isActive;
+            lblOverShortValue.Visible = isActive;
+            pnlInfoBox.Visible = isActive;
+
+            if (isActive)
+            {
+                lblSessionStatus.Text = "\u2705 Session Active";
+                lblSessionStatus.ForeColor = ColorTranslator.FromHtml("#52B743");
+                lblSessionTime.Text = $"Opened {session!.OpenedAt:hh:mm tt} by {session.OpenedBy}";
+                lblDrawerFundValue.Text = Fmt(session.StartingCash);
+                var orders = Program.SessionService.GetSessionOrders(session.SessionId);
+                lblExpectedCashValue.Text = Fmt(session.StartingCash + orders.Sum(o => o.Total));
+                lblTxCountValue.Text = orders.Count.ToString();
+                var best = orders.SelectMany(o => o.Items).GroupBy(i => i.ProductName).OrderByDescending(g => g.Sum(i => i.Quantity)).FirstOrDefault();
+                lblBestSellerValue.Text = best?.Key ?? "\u2014";
+            }
+            else
+            {
+                lblSessionStatus.Text = "\u26AA No active session";
+                lblSessionStatus.ForeColor = ColorTranslator.FromHtml("#9CA3AF");
+                lblSessionTime.Text = "";
+                lblExpectedCashValue.Text = "\u2014";
+                lblTxCountValue.Text = "\u2014";
+                lblBestSellerValue.Text = "\u2014";
+                lblDrawerFundValue.Text = "\u2014";
+            }
+        }
+
+        // ── Export CSV ──────────────────────────────────────────
+        private void BtnExportCsv_Click(object? sender, EventArgs e)
+        {
+            if (_selectedSession == null) return;
+            var orders = _selectedSessionOrders;
+            using var dlg = new SaveFileDialog { Filter = "CSV (*.csv)|*.csv", FileName = $"Session_{_selectedSession.OpenedAt:yyyyMMdd}.csv" };
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+            
+            var sb = new StringBuilder();
+            sb.AppendLine($"Session ID, {_selectedSession.SessionId}");
+            sb.AppendLine($"Opened At, {_selectedSession.OpenedAt:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"Opened By, {_selectedSession.OpenedBy}");
+            sb.AppendLine();
+            sb.AppendLine("Order ID,Customer,Items,Amount,Time\n");
+            
+            foreach (var o in orders.OrderByDescending(o => o.Timestamp))
+            {
+                var cust = Program.DataService.Customers.FirstOrDefault(c => c.Id == o.CustomerId);
+                sb.AppendLine($"\"{o.OrderId}\",\"{cust?.Name ?? "Walk-in"}\",\"{string.Join("; ", o.Items.Select(i => $"{i.Quantity}x {i.ProductName}"))}\",{o.Total},{o.Timestamp:hh:mm tt}");
+            }
+            File.WriteAllText(dlg.FileName, sb.ToString());
+            MessageBox.Show($"Exported to:\n{dlg.FileName}", "Export", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        // ── Export PDF ──────────────────────────────────────────
+        private void BtnExportPdf_Click(object? sender, EventArgs e)
+        {
+            if (_selectedSession == null) return;
+            var sid = _selectedSession.SessionId;
+            var orders = Program.SessionService.GetSessionOrders(sid);
+            var items = Program.SessionService.GetAllItemSales(sid);
+            using var dlg = new SaveFileDialog { Filter = "PDF (*.pdf)|*.pdf", FileName = $"Session_{_selectedSession.OpenedAt:yyyyMMdd}.pdf" };
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+
+            Document.Create(c => c.Page(page =>
+            {
+                page.Size(PageSizes.A4); page.Margin(30); page.DefaultTextStyle(x => x.FontSize(10));
+                page.Header().Column(col =>
+                {
+                    col.Item().Text("The Matcha Club \u2014 Session Report").Bold().FontSize(18).FontColor("#52B743");
+                    col.Item().Text($"Session ID: {_selectedSession.SessionId}").FontSize(8).FontColor("#9CA3AF");
+                    col.Item().Text($"Opened: {_selectedSession.OpenedAt:MMM dd, yyyy hh:mm tt} by {_selectedSession.OpenedBy}").FontSize(9).FontColor("#6B7280");
+                    if (_selectedSession.IsClosed)
+                        col.Item().Text($"Closed: {_selectedSession.ClosedAt:MMM dd, yyyy hh:mm tt} by {_selectedSession.ClosedBy}").FontSize(9).FontColor("#6B7280");
+                    
+                    col.Item().PaddingTop(5).PaddingBottom(10).LineHorizontal(1).LineColor("#E5E7EB");
+                });
+                page.Content().Column(col =>
+                {
+                    col.Item().PaddingBottom(6).Text("Product Sales").Bold().FontSize(12);
+                    col.Item().Table(t =>
+                    {
+                        t.ColumnsDefinition(c2 => { c2.RelativeColumn(3); c2.RelativeColumn(1.5f); c2.RelativeColumn(1); c2.RelativeColumn(1.5f); });
+                        t.Header(h => { foreach (var hdr in new[] { "Product", "Category", "Units", "Revenue" }) h.Cell().Background("#52B743").Padding(6).Text(hdr).FontColor("#FFF").Bold().FontSize(9); });
+                        foreach (var item in items) { t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(item.Name).FontSize(9); t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(item.Category).FontSize(9); t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(item.Units.ToString()).FontSize(9); t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(Fmt(item.Revenue)).FontSize(9); }
+                    });
+                });
+                page.Footer().AlignCenter().Text(t => { t.Span("The Matcha Club POS \u2014 ").FontSize(8).FontColor("#9CA3AF"); t.Span($"Generated {DateTime.Now:MMM dd, yyyy}").FontSize(8).FontColor("#9CA3AF"); });
+            })).GeneratePdf(dlg.FileName);
+            MessageBox.Show($"PDF exported to:\n{dlg.FileName}", "Export", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private string Fmt(decimal amount) => $"\u20b1{amount:#,##0.00}";
+
+        protected override void Dispose(bool disposing) { if (disposing) components?.Dispose(); base.Dispose(disposing); }
     }
 }

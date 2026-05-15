@@ -30,6 +30,9 @@ namespace TheMatchaClubApp
         // ── Existing data service (JSON-based for products, orders, etc.) ──
         public static JsonDataService DataService { get; } = new JsonDataService();
 
+        // ── Session management service ───────────────────────────────────
+        public static SessionService SessionService { get; } = new SessionService(DataService);
+
         // ── DI container for Identity & EF services ──────────────────────
         public static IServiceProvider Services { get; private set; } = null!;
 

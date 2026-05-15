@@ -108,46 +108,70 @@ namespace TheMatchaClubApp.Forms
 
             // Cart items
             pnlCartItems.BackColor = CardBg;
+            pnlCartItems.Padding = new Padding(8, 4, 8, 4);
 
             // Cart totals
             pnlCartTotals.BackColor = CardBg;
+            pnlCartTotals.Padding = new Padding(16, 8, 16, 8);
             pnlCartTotals.Paint += (s, e) =>
             {
-                using var pen = new Pen(ColorTranslator.FromHtml("#F3F4F6"), 1);
+                using var pen = new Pen(BorderLight, 1);
+                // Top separator
                 e.Graphics.DrawLine(pen, 16, 0, pnlCartTotals.Width - 16, 0);
                 // Separator before total
                 e.Graphics.DrawLine(pen, 16, 52, pnlCartTotals.Width - 16, 52);
             };
 
-            lblSubtotal.Font = new Font("Segoe UI", 9F);
+            lblSubtotal.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             lblSubtotal.ForeColor = TextSecondary;
-            lblSubtotal.BackColor = Color.Transparent;
-            lblSubtotalValue.Font = new Font("Segoe UI", 9F);
-            lblSubtotalValue.ForeColor = TextSecondary;
-            lblSubtotalValue.BackColor = Color.Transparent;
+            lblSubtotalValue.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblSubtotalValue.ForeColor = TextPrimary;
 
-            lblTotal.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTotal.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             lblTotal.ForeColor = TextPrimary;
-            lblTotal.BackColor = Color.Transparent;
-            lblTotalValue.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            lblTotalValue.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             lblTotalValue.ForeColor = Green;
-            lblTotalValue.BackColor = Color.Transparent;
 
             // Complete sale button
-            btnCompleteSale.BorderRadius = 12;
+            btnCompleteSale.BorderRadius = 10;
             btnCompleteSale.FillColor = ColorTranslator.FromHtml("#F3F4F6");
             btnCompleteSale.ForeColor = ColorTranslator.FromHtml("#D1D5DB");
-            btnCompleteSale.HoverState.FillColor = GreenHover;
+            btnCompleteSale.HoverState.FillColor = Green;
+            btnCompleteSale.HoverState.ForeColor = Color.White;
             btnCompleteSale.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnCompleteSale.BorderThickness = 0;
-            btnCompleteSale.Enabled = false;
+            btnCompleteSale.ShadowDecoration.Enabled = true;
+            btnCompleteSale.ShadowDecoration.Color = Color.FromArgb(20, 0, 0, 0);
+            btnCompleteSale.ShadowDecoration.Depth = 10;
 
-            lblCashNote.Font = new Font("Segoe UI", 8F);
+            lblCashNote.Font = new Font("Segoe UI Semibold", 8F);
             lblCashNote.ForeColor = TextMuted;
-            lblCashNote.BackColor = Color.Transparent;
+
+            // Clear Cart Button styling
+            btnClearCart.FillColor = Color.Transparent;
+            btnClearCart.ForeColor = ColorTranslator.FromHtml("#EF4444");
+            btnClearCart.BorderThickness = 0;
+            btnClearCart.Font = new Font("Segoe UI Semibold", 9F);
+            btnClearCart.HoverState.FillColor = Color.FromArgb(20, 239, 68, 68); // Very light red
+            btnClearCart.Cursor = Cursors.Hand;
 
             // Initialize cart UI
             RefreshCartUI();
+
+            // ── Session Overlay Styling ──
+            pnlSessionOverlay.FillColor = Color.FromArgb(210, 255, 255, 255);
+            pnlSessionOverlay.BorderThickness = 0;
+            
+            lblSessionWarning.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold);
+            lblSessionWarning.ForeColor = TextPrimary;
+            lblSessionWarning.BackColor = Color.Transparent;
+            
+            btnQuickOpenSession.FillColor = Green;
+            btnQuickOpenSession.ForeColor = Color.White;
+            btnQuickOpenSession.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            btnQuickOpenSession.HoverState.FillColor = GreenHover;
+            btnQuickOpenSession.ShadowDecoration.Enabled = true;
+            btnQuickOpenSession.ShadowDecoration.Color = Color.FromArgb(30, 0, 0, 0);
+            btnQuickOpenSession.Cursor = Cursors.Hand;
         }
 
         private void StyleActionButton(Guna2Button btn)

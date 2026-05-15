@@ -9,6 +9,11 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheMatchaClubApp.Core.Models;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using System.IO;
+using System.Diagnostics;
+using QuestInfrastructure = QuestPDF.Infrastructure;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -33,17 +38,25 @@ namespace TheMatchaClubApp.Forms
             // Wire up filters
             btnFilterAll.Click += (s, e) => ApplyFilter("All");
             btnFilterDineIn.Click += (s, e) => ApplyFilter("Dine-In");
-            btnFilterTakeaway.Click += (s, e) => ApplyFilter("Take-Out");
+            btnFilterTakeOut.Click += (s, e) => ApplyFilter("Take-Out");
             txtSearch.TextChanged += (s, e) => ApplyFilter(_activeFilter);
 
             // Wire up actions
-            btnReprint.Click += BtnReprint_Click;
+            btnExportPDF.Click += BtnExportPDF_Click;
             btnEmailReceipt.Click += BtnEmailReceipt_Click;
+            cmbDateFilter.SelectedIndexChanged += (s, e) => {
+                dtpCustomDate.Visible = cmbDateFilter.SelectedIndex == 4; // Custom Date
+                UpdateToolbarLayout();
+                ApplyFilter(_activeFilter);
+            };
+            dtpCustomDate.ValueChanged += (s, e) => ApplyFilter(_activeFilter);
+            pnlFilterBar.Resize += (s, e) => UpdateToolbarLayout();
 
             // Bind data service events
             Program.DataService.OrdersChanged += (s, e) => LoadOrdersAsync();
 
             LoadOrdersAsync();
+            UpdateToolbarLayout();
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -128,6 +141,25 @@ namespace TheMatchaClubApp.Forms
         }
 
         // ══════════════════════════════════════════════════════════════
+        //  LAYOUT
+        // ══════════════════════════════════════════════════════════════
+        
+        private void UpdateToolbarLayout()
+        {
+            int startX = cmbDateFilter.Right + 12;
+            
+            if (dtpCustomDate.Visible)
+            {
+                dtpCustomDate.Left = startX;
+                startX = dtpCustomDate.Right + 12;
+            }
+            
+            btnFilterAll.Left = startX;
+            btnFilterDineIn.Left = btnFilterAll.Right + 8;
+            btnFilterTakeOut.Left = btnFilterDineIn.Right + 8;
+        }
+
+        // ══════════════════════════════════════════════════════════════
         //  FILTERING
         // ══════════════════════════════════════════════════════════════
 
@@ -139,14 +171,37 @@ namespace TheMatchaClubApp.Forms
             // Update button visual states
             StyleFilterPill(btnFilterAll, filterType == "All");
             StyleFilterPill(btnFilterDineIn, filterType == "Dine-In");
-            StyleFilterPill(btnFilterTakeaway, filterType == "Take-Out");
+            StyleFilterPill(btnFilterTakeOut, filterType == "Take-Out");
 
             _boundOrders.Clear();
             var filtered = _allOrders.AsEnumerable();
             
-            if (filterType != "All")
-                filtered = filtered.Where(o => o.OrderType == filterType);
+            // Apply Date Filter
+            switch (cmbDateFilter.SelectedIndex)
+            {
+                case 1: // Today
+                    filtered = filtered.Where(o => o.Timestamp.Date == DateTime.Today);
+                    break;
+                case 2: // This Week
+                    var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                    filtered = filtered.Where(o => o.Timestamp.Date >= startOfWeek);
+                    break;
+                case 3: // This Month
+                    var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                    filtered = filtered.Where(o => o.Timestamp.Date >= startOfMonth);
+                    break;
+                case 4: // Custom Date
+                    filtered = filtered.Where(o => o.Timestamp.Date == dtpCustomDate.Value.Date);
+                    break;
+            }
+            
+            // Apply Order Type Filter
+            if (filterType == "Dine-In")
+                filtered = filtered.Where(o => o.IsDineIn);
+            else if (filterType == "Take-Out")
+                filtered = filtered.Where(o => !o.IsDineIn);
 
+            // Apply Text Search
             if (!string.IsNullOrEmpty(searchText))
             {
                 filtered = filtered.Where(o => 
@@ -261,7 +316,7 @@ namespace TheMatchaClubApp.Forms
             lblThankYou.Width = 288;
             lblThankYou.Location = new Point(16, lblThankYou.Top);
             
-            btnReprint.Top = totalsY + 165;
+            btnExportPDF.Top = totalsY + 165;
             btnEmailReceipt.Top = totalsY + 165;
 
             lblReceiptSubtotal.Text = order.Subtotal.ToString("C2");
@@ -281,16 +336,140 @@ namespace TheMatchaClubApp.Forms
             return null;
         }
 
-        private void BtnReprint_Click(object? sender, EventArgs e)
+        private void BtnExportPDF_Click(object? sender, EventArgs e)
         {
             var order = GetSelectedOrder();
             if (order == null) return;
 
-            var pd = new PrintDocument();
-            pd.PrintPage += (s, pe) => DrawReceipt(pe, order);
+            try
+            {
+                QuestPDF.Settings.License = QuestInfrastructure.LicenseType.Community;
 
-            using var preview = new PrintPreviewDialog { Document = pd, Width = 400, Height = 600 };
-            preview.ShowDialog();
+                string fileName = $"Receipt_{order.OrderId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
+
+                var settings = Program.DataService.Settings;
+                var accentColor = "#52B743"; // Matcha Green
+
+                Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(PageSizes.A6);
+                        page.Margin(0.5f, QuestInfrastructure.Unit.Centimetre);
+                        page.PageColor(Colors.White);
+                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Verdana));
+
+                        // ── Header Section ───────────────────────────────────
+                        page.Header().Column(col =>
+                        {
+                            col.Item().Height(4).Background(accentColor);
+                            col.Item().PaddingTop(10).AlignCenter().Row(r =>
+                            {
+                                r.AutoItem().PaddingRight(5).Text("\U0001F375").FontSize(18).FontColor(accentColor);
+                                r.AutoItem().Text(settings.StoreName).FontSize(16).Bold().FontColor(accentColor);
+                            });
+                            col.Item().AlignCenter().Text(settings.Address).FontSize(8).FontColor(Colors.Grey.Medium);
+                            col.Item().AlignCenter().Text(settings.Phone).FontSize(8).FontColor(Colors.Grey.Medium);
+                            col.Item().PaddingTop(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
+                        });
+
+                        // ── Content Section ──────────────────────────────────
+                        page.Content().PaddingVertical(10).Column(col =>
+                        {
+                            // Order Metadata
+                            col.Item().Row(row =>
+                            {
+                                row.RelativeItem().Column(c =>
+                                {
+                                    c.Item().Text("ORDER ID").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                                    c.Item().Text(order.OrderId).Bold().FontSize(10);
+                                });
+                                row.RelativeItem().AlignRight().Column(c =>
+                                {
+                                    c.Item().Text("DATE").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                                    c.Item().Text(order.Timestamp.ToString("dd MMM yyyy HH:mm")).FontSize(9);
+                                });
+                            });
+
+                            col.Item().PaddingTop(8).Row(row =>
+                            {
+                                row.RelativeItem().Column(c =>
+                                {
+                                    c.Item().Text("CUSTOMER").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                                    c.Item().Text(order.CustomerName ?? "Walk-In").FontSize(9);
+                                });
+                                row.RelativeItem().AlignRight().Column(c =>
+                                {
+                                    c.Item().Text("TYPE").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                                    c.Item().Text(order.IsDineIn ? "Dine-In" : "Take-Out").FontSize(9);
+                                });
+                            });
+
+                            // Items Table
+                            col.Item().PaddingTop(15).Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(3);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().PaddingBottom(4).Text("ITEM").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                                    header.Cell().PaddingBottom(4).AlignCenter().Text("QTY").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                                    header.Cell().PaddingBottom(4).AlignRight().Text("TOTAL").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
+                                });
+
+                                foreach (var item in order.Items)
+                                {
+                                    table.Cell().PaddingVertical(2).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).Text(item.ProductName).FontSize(8);
+                                    table.Cell().PaddingVertical(2).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).AlignCenter().Text(item.Quantity.ToString()).FontSize(8);
+                                    table.Cell().PaddingVertical(2).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).AlignRight().Text(item.LineTotal.ToString("N2")).FontSize(8);
+                                }
+                            });
+
+                            // Totals Section
+                            col.Item().PaddingTop(10).AlignRight().Column(innerCol =>
+                            {
+                                innerCol.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Subtotal").FontSize(8).FontColor(Colors.Grey.Medium);
+                                    r.ConstantItem(60).AlignRight().Text(order.Subtotal.ToString("N2")).FontSize(8);
+                                });
+                                
+                                innerCol.Item().PaddingTop(4).Background(accentColor).PaddingHorizontal(8).PaddingVertical(4).Row(r =>
+                                {
+                                    r.RelativeItem().Text("TOTAL DUE").FontSize(11).Bold().FontColor(Colors.White);
+                                    r.ConstantItem(80).AlignRight().Text(order.Total.ToString("C2")).FontSize(11).Bold().FontColor(Colors.White);
+                                });
+                            });
+
+                            col.Item().PaddingTop(20).AlignCenter().Column(c =>
+                            {
+                                c.Item().Text($"Paid via {order.PaymentMethod}").FontSize(8).Bold().FontColor(Colors.Grey.Darken1);
+                                c.Item().Text($"Served by {order.CashierName}").FontSize(7).FontColor(Colors.Grey.Medium);
+                            });
+                        });
+
+                        // ── Footer Section ───────────────────────────────────
+                        page.Footer().PaddingTop(10).AlignCenter().Column(c =>
+                        {
+                            c.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
+                            c.Item().PaddingTop(5).Text("Thank you for choosing The Matcha Club!").FontSize(8).Italic().FontColor(Colors.Grey.Medium);
+                            c.Item().Text("Visit us again soon.").FontSize(7).FontColor(Colors.Grey.Lighten1);
+                        });
+                    });
+                }).GeneratePdf(filePath);
+
+                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error exporting PDF: {ex.Message}", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void DrawReceipt(PrintPageEventArgs e, Order order)

@@ -48,7 +48,6 @@ namespace TheMatchaClubApp.Forms
         private void UpdateBranding()
         {
             var settings = Program.DataService.Settings;
-            // Update sidebar branding label if it exists
             if (lblLogoText != null)
                 lblLogoText.Text = settings.StoreName;
         }
@@ -87,7 +86,13 @@ namespace TheMatchaClubApp.Forms
         private void NavDashboard_Click(object? s, EventArgs e)
         {
             SetActiveNav(navDashboard);
-            _dashboard ??= new DashboardView();
+            if (_dashboard == null)
+            {
+                _dashboard = new DashboardView();
+                _dashboard.NewSaleClicked += (_, __) => NavQuickSale_Click(this, EventArgs.Empty);
+                _dashboard.ViewReportsClicked += (_, __) => NavReports_Click(this, EventArgs.Empty);
+                _dashboard.AddProductClicked += (_, __) => NavItems_Click(this, EventArgs.Empty);
+            }
             ShowView(_dashboard);
         }
 

@@ -16,8 +16,9 @@ namespace TheMatchaClubApp.Forms
             txtSearch = new Guna.UI2.WinForms.Guna2TextBox();
             btnFilterAll = new Guna.UI2.WinForms.Guna2Button();
             btnFilterDineIn = new Guna.UI2.WinForms.Guna2Button();
-            btnFilterTakeaway = new Guna.UI2.WinForms.Guna2Button();
-            lblDateDisplay = new System.Windows.Forms.Label();
+            btnFilterTakeOut = new Guna.UI2.WinForms.Guna2Button();
+            cmbDateFilter = new Guna.UI2.WinForms.Guna2ComboBox();
+            dtpCustomDate = new Guna.UI2.WinForms.Guna2DateTimePicker();
             btnExport = new Guna.UI2.WinForms.Guna2Button();
             dgvOrders = new Guna.UI2.WinForms.Guna2DataGridView();
             pnlPagination = new System.Windows.Forms.Panel();
@@ -45,7 +46,7 @@ namespace TheMatchaClubApp.Forms
             lblReceiptTotal = new System.Windows.Forms.Label();
             lblPaidVia = new System.Windows.Forms.Label();
             lblThankYou = new System.Windows.Forms.Label();
-            btnReprint = new Guna.UI2.WinForms.Guna2Button();
+            btnExportPDF = new Guna.UI2.WinForms.Guna2Button();
             btnEmailReceipt = new Guna.UI2.WinForms.Guna2Button();
 
             SuspendLayout();
@@ -85,28 +86,46 @@ namespace TheMatchaClubApp.Forms
             pnlFilterBar.Controls.Add(txtSearch);
             pnlFilterBar.Controls.Add(btnFilterAll);
             pnlFilterBar.Controls.Add(btnFilterDineIn);
-            pnlFilterBar.Controls.Add(btnFilterTakeaway);
-            pnlFilterBar.Controls.Add(lblDateDisplay);
+            pnlFilterBar.Controls.Add(btnFilterTakeOut);
+            pnlFilterBar.Controls.Add(dtpCustomDate);
+            pnlFilterBar.Controls.Add(cmbDateFilter);
             pnlFilterBar.Controls.Add(btnExport);
             pnlFilterBar.Dock = System.Windows.Forms.DockStyle.Top;
             pnlFilterBar.Size = new System.Drawing.Size(684, 56);
 
             txtSearch.Location = new System.Drawing.Point(16, 12);
-            txtSearch.Size = new System.Drawing.Size(240, 32);
+            txtSearch.Size = new System.Drawing.Size(200, 32);
             txtSearch.PlaceholderText = "Order ID, Customer...";
-            btnFilterAll.Location = new System.Drawing.Point(270, 14);
-            btnFilterAll.Size = new System.Drawing.Size(50, 28);
+            
+            cmbDateFilter.Location = new System.Drawing.Point(224, 12);
+            cmbDateFilter.Size = new System.Drawing.Size(145, 32);
+            cmbDateFilter.Items.AddRange(new object[] { "All Time", "Today", "This Week", "This Month", "Custom Date" });
+            cmbDateFilter.SelectedIndex = 0;
+
+            dtpCustomDate.Location = new System.Drawing.Point(375, 12);
+            dtpCustomDate.Size = new System.Drawing.Size(140, 32);
+            dtpCustomDate.Visible = false;
+            dtpCustomDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            cmbDateFilter.StartIndex = 0;
+            cmbDateFilter.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            cmbDateFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cmbDateFilter.FocusedColor = System.Drawing.Color.FromArgb(94, 148, 255);
+            cmbDateFilter.FocusedState.BorderColor = System.Drawing.Color.FromArgb(94, 148, 255);
+            cmbDateFilter.Name = "cmbDateFilter";
+            
+            btnFilterAll.Location = new System.Drawing.Point(500, 12);
+            btnFilterAll.Size = new System.Drawing.Size(60, 32);
             btnFilterAll.Text = "All";
-            btnFilterDineIn.Location = new System.Drawing.Point(324, 14);
-            btnFilterDineIn.Size = new System.Drawing.Size(64, 28);
-            btnFilterDineIn.Text = "Dine-in";
-            btnFilterTakeaway.Location = new System.Drawing.Point(392, 14);
-            btnFilterTakeaway.Size = new System.Drawing.Size(76, 28);
-            btnFilterTakeaway.Text = "Takeaway";
-            lblDateDisplay.Location = new System.Drawing.Point(480, 18);
-            lblDateDisplay.Size = new System.Drawing.Size(120, 20);
-            lblDateDisplay.Text = "\U0001F4C5 Today: May 20, 2024";
-            btnExport.Location = new System.Drawing.Point(600, 14);
+            
+            btnFilterDineIn.Location = new System.Drawing.Point(565, 12);
+            btnFilterDineIn.Size = new System.Drawing.Size(85, 32);
+            btnFilterDineIn.Text = "Dine-In";
+            
+            btnFilterTakeOut.Location = new System.Drawing.Point(655, 12);
+            btnFilterTakeOut.Size = new System.Drawing.Size(95, 32);
+            btnFilterTakeOut.Text = "Take-Out";
+            
+            btnExport.Location = new System.Drawing.Point(590, 14);
             btnExport.Size = new System.Drawing.Size(70, 28);
             btnExport.Text = "\u2B07 Export";
             btnExport.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
@@ -162,7 +181,7 @@ namespace TheMatchaClubApp.Forms
             pnlReceiptBody.Controls.Add(lblReceiptTotal);
             pnlReceiptBody.Controls.Add(lblPaidVia);
             pnlReceiptBody.Controls.Add(lblThankYou);
-            pnlReceiptBody.Controls.Add(btnReprint);
+            pnlReceiptBody.Controls.Add(btnExportPDF);
             pnlReceiptBody.Controls.Add(btnEmailReceipt);
 
             lblStoreName.Location = new System.Drawing.Point(90, 20);
@@ -234,9 +253,9 @@ namespace TheMatchaClubApp.Forms
             lblThankYou.Text = "Thank you!";
             lblThankYou.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
-            btnReprint.Location = new System.Drawing.Point(16, 370);
-            btnReprint.Size = new System.Drawing.Size(140, 36);
-            btnReprint.Text = "\U0001F5A8 Reprint";
+            btnExportPDF.Location = new System.Drawing.Point(16, 370);
+            btnExportPDF.Size = new System.Drawing.Size(140, 36);
+            btnExportPDF.Text = "\U0001F4E5 Export PDF";
             btnEmailReceipt.Location = new System.Drawing.Point(164, 370);
             btnEmailReceipt.Size = new System.Drawing.Size(140, 36);
             btnEmailReceipt.Text = "\u2709 Email";
@@ -262,8 +281,9 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2TextBox txtSearch;
         private Guna.UI2.WinForms.Guna2Button btnFilterAll;
         private Guna.UI2.WinForms.Guna2Button btnFilterDineIn;
-        private Guna.UI2.WinForms.Guna2Button btnFilterTakeaway;
-        private System.Windows.Forms.Label lblDateDisplay;
+        private Guna.UI2.WinForms.Guna2Button btnFilterTakeOut;
+        private Guna.UI2.WinForms.Guna2ComboBox cmbDateFilter;
+        private Guna.UI2.WinForms.Guna2DateTimePicker dtpCustomDate;
         private Guna.UI2.WinForms.Guna2Button btnExport;
         private Guna.UI2.WinForms.Guna2DataGridView dgvOrders;
         private System.Windows.Forms.Panel pnlPagination;
@@ -289,7 +309,7 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblReceiptTotal;
         private System.Windows.Forms.Label lblPaidVia;
         private System.Windows.Forms.Label lblThankYou;
-        private Guna.UI2.WinForms.Guna2Button btnReprint;
+        private Guna.UI2.WinForms.Guna2Button btnExportPDF;
         private Guna.UI2.WinForms.Guna2Button btnEmailReceipt;
     }
 }

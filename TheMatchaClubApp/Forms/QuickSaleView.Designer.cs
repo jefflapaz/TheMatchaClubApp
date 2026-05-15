@@ -33,6 +33,29 @@ namespace TheMatchaClubApp.Forms
             btnCompleteSale = new Guna.UI2.WinForms.Guna2Button();
             lblCashNote = new System.Windows.Forms.Label();
             txtSearch = new Guna.UI2.WinForms.Guna2TextBox();
+            pnlSessionOverlay = new Guna.UI2.WinForms.Guna2Panel();
+            lblSessionWarning = new System.Windows.Forms.Label();
+            btnQuickOpenSession = new Guna.UI2.WinForms.Guna2Button();
+            
+            // pnlSessionOverlay
+            pnlSessionOverlay.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlSessionOverlay.BackColor = System.Drawing.Color.FromArgb(200, 255, 255, 255); // Semi-transparent
+            pnlSessionOverlay.Visible = false;
+            pnlSessionOverlay.Controls.Add(lblSessionWarning);
+            pnlSessionOverlay.Controls.Add(btnQuickOpenSession);
+
+            lblSessionWarning.AutoSize = false;
+            lblSessionWarning.Size = new System.Drawing.Size(400, 40);
+            lblSessionWarning.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            lblSessionWarning.Text = "Store session is currently closed.";
+            lblSessionWarning.Font = new System.Drawing.Font("Segoe UI Semibold", 14F, System.Drawing.FontStyle.Bold);
+            lblSessionWarning.ForeColor = System.Drawing.Color.FromArgb(55, 65, 81);
+            
+            btnQuickOpenSession.Size = new System.Drawing.Size(220, 48);
+            btnQuickOpenSession.Text = "\u2615 Open Store Session";
+            btnQuickOpenSession.BorderRadius = 12;
+            
+            btnClearCart = new Guna.UI2.WinForms.Guna2Button();
             SuspendLayout();
 
             // tlpMain
@@ -59,9 +82,10 @@ namespace TheMatchaClubApp.Forms
             pnlCartSidebar.Margin = new System.Windows.Forms.Padding(0);
 
             // pnlLeftArea
-            pnlLeftArea.Controls.Add(pnlProductGrid);  // Index 0: Fills the remaining space below
-            pnlLeftArea.Controls.Add(pnlCategoryRow);  // Index 1: Claims next 76px
-            pnlLeftArea.Controls.Add(pnlTopHeader);    // Index 2: Claims top 64px
+            pnlLeftArea.Controls.Add(pnlSessionOverlay); // Index 0: Overlay
+            pnlLeftArea.Controls.Add(pnlProductGrid);    // Index 1: Fills the remaining space below
+            pnlLeftArea.Controls.Add(pnlCategoryRow);    // Index 2: Claims next 76px
+            pnlLeftArea.Controls.Add(pnlTopHeader);      // Index 3: Claims top 64px
             pnlLeftArea.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlLeftArea.Name = "pnlLeftArea";
             pnlLeftArea.Margin = new System.Windows.Forms.Padding(0);
@@ -138,16 +162,22 @@ namespace TheMatchaClubApp.Forms
             // Cart header
             pnlCartHeader.Controls.Add(lblCurrentOrder);
             pnlCartHeader.Controls.Add(lblOrderMeta);
+            pnlCartHeader.Controls.Add(btnClearCart);
             pnlCartHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlCartHeader.Size = new System.Drawing.Size(320, 64);
+            pnlCartHeader.Size = new System.Drawing.Size(400, 64);
 
             lblCurrentOrder.Location = new System.Drawing.Point(16, 12);
             lblCurrentOrder.Size = new System.Drawing.Size(160, 22);
             lblCurrentOrder.Text = "Current Order";
 
             lblOrderMeta.Location = new System.Drawing.Point(16, 34);
-            lblOrderMeta.Size = new System.Drawing.Size(180, 18);
+            lblOrderMeta.Size = new System.Drawing.Size(260, 18);
             lblOrderMeta.Text = "Order #1025 \u2022 Cashier: Admin";
+
+            btnClearCart.Location = new System.Drawing.Point(290, 16);
+            btnClearCart.Size = new System.Drawing.Size(95, 32);
+            btnClearCart.Text = "Clear Cart";
+            btnClearCart.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
 
             // Cart items wrapper
             pnlCartItemsWrapper.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -227,6 +257,10 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblTotal;
         private System.Windows.Forms.Label lblTotalValue;
         private Guna.UI2.WinForms.Guna2Button btnCompleteSale;
+        private Guna.UI2.WinForms.Guna2Panel pnlSessionOverlay;
+        private System.Windows.Forms.Label lblSessionWarning;
+        private Guna.UI2.WinForms.Guna2Button btnQuickOpenSession;
+        private Guna.UI2.WinForms.Guna2Button btnClearCart;
         private System.Windows.Forms.Label lblCashNote;
         private Guna.UI2.WinForms.Guna2TextBox txtSearch;
     }

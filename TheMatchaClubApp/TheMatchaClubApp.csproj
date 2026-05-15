@@ -23,6 +23,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.8" />
+    <PackageReference Include="QuestPDF" Version="2026.5.0" />
     <PackageReference Include="ReaLTaiizor" Version="3.8.1.8" />
   </ItemGroup>
 
@@ -41,6 +42,9 @@
     <Compile Update="Forms\DashboardDesign.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Forms\DashboardPaint.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Update="Forms\NavItemDesign.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -53,21 +57,15 @@
     <Compile Update="Forms\CustomOrderTableDesign.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Forms\QuickSaleDesign.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Update="Forms\QuickSaleDesign.cs" />
     <Compile Update="Forms\OrdersDesign.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="Forms\ItemsDesign.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Forms\CustomersDesign.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Forms\ReportsDesign.cs">
-      <SubType>Code</SubType>
-    </Compile>
+    <Compile Update="Forms\CustomersDesign.cs" />
+    <Compile Update="Forms\ReportsDesign.cs" />
     <Compile Update="Forms\SettingsDesign.cs">
       <SubType>Code</SubType>
     </Compile>

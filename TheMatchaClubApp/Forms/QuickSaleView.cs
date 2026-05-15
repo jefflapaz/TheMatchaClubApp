@@ -21,14 +21,6 @@ namespace TheMatchaClubApp.Forms
         // Last completed order — used by Print & Email buttons
         private Order? _lastOrder;
 
-        private class CartLine
-        {
-            public Product Product { get; }
-            public int Qty { get; set; }
-            public decimal Total => Product.Price * Qty;
-            public CartLine(Product product, int qty) { Product = product; Qty = qty; }
-        }
-
         // ── Constructor ──────────────────────────────────────────────
         public QuickSaleView()
         {
@@ -43,7 +35,17 @@ namespace TheMatchaClubApp.Forms
 
             // Wire buttons
             btnCompleteSale.Click += BtnCompleteSale_Click;
+            btnQuickOpenSession.Click += BtnQuickOpenSession_Click;
+            btnClearCart.Click += BtnClearCart_Click;
             txtSearch.TextChanged += (s, e) => PopulateProducts(_activeCategory);
+            
+            pnlSessionOverlay.Resize += (s, e) => CenterOverlayControls();
+            
+            Program.SessionService.SessionOpened += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(UpdateSessionState)); };
+            Program.SessionService.SessionClosed += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(UpdateSessionState)); };
+            Program.DataService.DataLoaded += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { UpdateSessionState(); PopulateCategories(); PopulateProducts(_activeCategory); })); };
+            
+            UpdateSessionState();
 
             Program.DataService.ProductsChanged += (s, e) =>
             {
@@ -77,6 +79,64 @@ namespace TheMatchaClubApp.Forms
                 ScrollCategories(-e.Delta);
                 ((HandledMouseEventArgs)e).Handled = true;
             };
+        }
+
+        private void UpdateSessionState()
+        {
+            bool isActive = Program.SessionService.HasActiveSession();
+            pnlSessionOverlay.Visible = !isActive;
+            pnlProductGrid.Enabled = isActive;
+            pnlCategoryRow.Enabled = isActive;
+            btnCompleteSale.Enabled = isActive;
+            
+            if (!isActive)
+            {
+                pnlSessionOverlay.BringToFront();
+                CenterOverlayControls();
+            }
+        }
+
+        private void CenterOverlayControls()
+        {
+            int centerX = pnlSessionOverlay.Width / 2;
+            int centerY = pnlSessionOverlay.Height / 2;
+            
+            lblSessionWarning.Location = new Point(centerX - (lblSessionWarning.Width / 2), centerY - 60);
+            btnQuickOpenSession.Location = new Point(centerX - (btnQuickOpenSession.Width / 2), centerY);
+        }
+
+        private async void BtnQuickOpenSession_Click(object? sender, EventArgs e)
+        {
+            if (Program.SessionService.HasActiveSession()) return;
+
+            using var dlg = new Form { Text = "Open Store Session", Size = new Size(340, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.White };
+            var lblP = new Label { Text = "Starting cash in register:", Location = new Point(20, 20), Size = new Size(280, 24), Font = new Font("Segoe UI", 10F) };
+            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = "200", Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = "₱200.00" };
+            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = "₱200 Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
+            btnD.Click += (s2, e2) => txtC.Text = "200";
+            var btnO = new Guna.UI2.WinForms.Guna2Button { Text = "Open Session", Location = new Point(160, 100), Size = new Size(140, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 9F, FontStyle.Bold), BorderThickness = 0 };
+            
+            btnO.Click += (s2, e2) => 
+            {
+                if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal val) || val < 0)
+                {
+                    MessageBox.Show("Please enter a valid starting cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                dlg.DialogResult = DialogResult.OK;
+                dlg.Close();
+            };
+
+            dlg.Controls.AddRange(new Control[] { lblP, txtC, btnD, btnO });
+            if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
+            
+            if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal cash)) cash = 200m;
+            try 
+            { 
+                var newSession = await Program.SessionService.OpenSessionAsync(Program.CurrentUser?.FullName ?? "Main Counter", cash); 
+                MessageBox.Show($"Store Session Opened successfully.\nStarting Cash: ₱{cash:#,##0.00}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (InvalidOperationException ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
         }
 
         private int _categoryScrollPos = 0;
@@ -220,6 +280,10 @@ namespace TheMatchaClubApp.Forms
         {
             pnlCartItems.SuspendLayout();
             pnlCartItems.Controls.Clear();
+            
+            // Update Order Number Placeholder
+            string nextOrderNum = Program.DataService.GenerateOrderNumber();
+            lblOrderMeta.Text = $"Order {nextOrderNum} \u2022 Cashier: {Program.CurrentUser?.FullName ?? "Admin"}";
 
             if (_cart.Count == 0)
             {
@@ -242,113 +306,26 @@ namespace TheMatchaClubApp.Forms
                 btnCompleteSale.Enabled = false;
                 btnCompleteSale.FillColor = ColorTranslator.FromHtml("#F3F4F6");
                 btnCompleteSale.ForeColor = ColorTranslator.FromHtml("#D1D5DB");
-                btnCompleteSale.Text = "₱ Complete Sale (Cash)";
+                btnCompleteSale.Text = "\u20B1 Complete Sale (Cash)";
             }
             else
             {
                 int y = 4;
-                // Use the actual visible client width minus margin for each row
-                int rowWidth = Math.Max(300, pnlCartItems.ClientSize.Width - 8);
-
                 foreach (var line in _cart)
                 {
-                    var linePanel = new Panel
+                    var row = new CartItemRow(line)
                     {
                         Location = new Point(4, y),
-                        Size = new Size(rowWidth, 52),
-                        BackColor = Color.Transparent
+                        Width = pnlCartItems.Width - 24, // Account for scrollbar
+                        Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
                     };
 
                     var capturedLine = line;
+                    row.QtyChanged += (s, e) => UpdateCartTotals();
+                    row.RemoveClicked += (s, e) => { _cart.Remove(capturedLine); RefreshCartUI(); };
 
-                    // ── Quantity Controls: [-] N [+] ──
-                    var btnMinus = new Guna.UI2.WinForms.Guna2Button
-                    {
-                        Text = "-", Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                        Size = new Size(22, 22), Location = new Point(4, 15),
-                        BorderRadius = 4, FillColor = ColorTranslator.FromHtml("#E5E7EB"), ForeColor = Color.Black,
-                        Cursor = Cursors.Hand
-                    };
-                    btnMinus.Click += (s, e) => {
-                        if (capturedLine.Qty > 1) { capturedLine.Qty--; RefreshCartUI(); }
-                        else { _cart.Remove(capturedLine); RefreshCartUI(); }
-                    };
-
-                    var lblQty = new Label
-                    {
-                        Text = capturedLine.Qty.ToString(), Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                        ForeColor = ColorTranslator.FromHtml("#111827"),
-                        Location = new Point(28, 16), Size = new Size(20, 20),
-                        TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.Transparent
-                    };
-
-                    var btnPlus = new Guna.UI2.WinForms.Guna2Button
-                    {
-                        Text = "+", Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                        Size = new Size(22, 22), Location = new Point(50, 15),
-                        BorderRadius = 4, FillColor = ColorTranslator.FromHtml("#E5E7EB"), ForeColor = Color.Black,
-                        Cursor = Cursors.Hand
-                    };
-                    btnPlus.Click += (s, e) => { capturedLine.Qty++; RefreshCartUI(); };
-
-                    // ── Layout measurements ──
-                    int nameLeft = 80;
-                    int totalWidth = 80;    // right-aligned price column
-                    int removeWidth = 24;   // remove button
-                    int nameWidth = Math.Max(60, rowWidth - nameLeft - totalWidth - removeWidth - 4);
-
-                    // ── Product Name (with ellipsis for long names) ──
-                    var lblItemName = new Label
-                    {
-                        Text = line.Product.Name, Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                        ForeColor = ColorTranslator.FromHtml("#374151"),
-                        Location = new Point(nameLeft, 6), Size = new Size(nameWidth, 20),
-                        BackColor = Color.Transparent, AutoEllipsis = true
-                    };
-
-                    // ── Unit Price (below name) ──
-                    var lblUnitPrice = new Label
-                    {
-                        Text = $"@ {line.Product.Price.ToString("C2")}",
-                        Font = new Font("Segoe UI", 7.5F),
-                        ForeColor = ColorTranslator.FromHtml("#9CA3AF"),
-                        Location = new Point(nameLeft, 28), Size = new Size(nameWidth, 16),
-                        BackColor = Color.Transparent
-                    };
-
-                    // ── Remove Button ──
-                    int removeX = rowWidth - totalWidth - removeWidth;
-                    var btnRemove = new Label
-                    {
-                        Text = "✕", Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                        ForeColor = ColorTranslator.FromHtml("#EF4444"),
-                        Size = new Size(removeWidth, 20), Location = new Point(removeX, 16),
-                        Cursor = Cursors.Hand, BackColor = Color.Transparent,
-                        TextAlign = ContentAlignment.MiddleCenter
-                    };
-                    btnRemove.Click += (s, e) => { _cart.Remove(capturedLine); RefreshCartUI(); };
-
-                    // ── Line Total (right-aligned) ──
-                    var lblLineTotal = new Label
-                    {
-                        Text = line.Total.ToString("C2"),
-                        Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold),
-                        ForeColor = ColorTranslator.FromHtml("#111827"),
-                        TextAlign = ContentAlignment.MiddleRight,
-                        Location = new Point(rowWidth - totalWidth, 0), Size = new Size(totalWidth, 52),
-                        BackColor = Color.Transparent
-                    };
-
-                    linePanel.Controls.Add(btnMinus);
-                    linePanel.Controls.Add(lblQty);
-                    linePanel.Controls.Add(btnPlus);
-                    linePanel.Controls.Add(lblItemName);
-                    linePanel.Controls.Add(lblUnitPrice);
-                    linePanel.Controls.Add(btnRemove);
-                    linePanel.Controls.Add(lblLineTotal);
-
-                    pnlCartItems.Controls.Add(linePanel);
-                    y += 56;
+                    pnlCartItems.Controls.Add(row);
+                    y += row.Height + 4;
                 }
 
                 btnCompleteSale.Enabled = true;
@@ -356,22 +333,46 @@ namespace TheMatchaClubApp.Forms
                 btnCompleteSale.ForeColor = Color.White;
             }
 
-            decimal total = _cart.Sum(c => c.Total);
+            UpdateCartTotals();
+            pnlCartItems.ResumeLayout();
+        }
 
+        private void UpdateCartTotals()
+        {
+            decimal total = _cart.Sum(c => c.Total);
             lblSubtotalValue.Text = total.ToString("C2");
             lblTotalValue.Text = total.ToString("C2");
-            btnCompleteSale.Text = "₱ Complete Sale (Cash)";
-
-            pnlCartItems.ResumeLayout();
+            btnCompleteSale.Text = $"\u20B1 Complete Sale ({total:C2})";
         }
 
         // ══════════════════════════════════════════════════════════════
         //  SECTION 3: CHECKOUT WORKFLOW
         // ══════════════════════════════════════════════════════════════
 
+        private void BtnClearCart_Click(object? sender, EventArgs e)
+        {
+            if (_cart.Count == 0) return;
+            if (MessageBox.Show("Are you sure you want to clear the current cart?", "Clear Cart", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                _cart.Clear();
+                RefreshCartUI();
+            }
+        }
+
         private async void BtnCompleteSale_Click(object? sender, EventArgs e)
         {
             if (_cart.Count == 0) return;
+
+            // ── Session Gate: block checkout if no active session ────
+            if (!Program.SessionService.HasActiveSession())
+            {
+                MessageBox.Show(
+                    "No active store session.\n\nPlease open a store session from the Reports page before processing orders.",
+                    "Store Session Required",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
 
             decimal total = _cart.Sum(c => c.Total);
 
@@ -388,7 +389,7 @@ namespace TheMatchaClubApp.Forms
             // ── Step 2: Build the Order ───────────────────────────────
             var order = new Order
             {
-                OrderId = $"ORD-{DateTime.Now:yyyyMMddHHmmss}",
+                OrderId = Program.DataService.GenerateOrderNumber(),
                 Timestamp = DateTime.Now,
                 Subtotal = total,
                 Total = total,
@@ -397,6 +398,8 @@ namespace TheMatchaClubApp.Forms
                 CustomerId = customer?.Id,
                 CustomerName = customer?.Name ?? "Walk-In",
                 CustomerEmail = customer?.Email ?? string.Empty,
+                PaymentMethod = "Cash", // Currently only cash supported
+                CashierName = "Admin", // Fallback or linked to logged user
                 Items = _cart.Select(c => new OrderItem
                 {
                     ProductId = c.Product.Id,
@@ -417,7 +420,8 @@ namespace TheMatchaClubApp.Forms
                 }
             }
 
-            // ── Step 4: Persist ──────────────────────────────────────
+            // ── Step 4: Link to active session & Persist ─────────────
+            Program.SessionService.AttachOrderToSession(order);
             Program.DataService.Orders.Add(order);
             await Program.DataService.SaveOrdersAsync();
             await Program.DataService.SaveProductsAsync();

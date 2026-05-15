@@ -26,13 +26,10 @@ namespace TheMatchaClubApp.Forms
             pnlNavContainer = new Panel();
             pnlSidebarBottom = new Panel();
             btnLogout = new Guna.UI2.WinForms.Guna2Button();
-            lblStation = new Label();
-            lblStationName = new Label();
             pnlFooter = new Panel();
             lblCopyright = new Label();
             lblSystemOnline = new Label();
             lblDbConnected = new Label();
-            lnkSupport = new LinkLabel();
             btnClose = new Guna.UI2.WinForms.Guna2ControlBox();
             btnMaximize = new Guna.UI2.WinForms.Guna2ControlBox();
             btnMinimize = new Guna.UI2.WinForms.Guna2ControlBox();
@@ -91,8 +88,6 @@ namespace TheMatchaClubApp.Forms
             // pnlSidebarBottom
             // ═══════════════════════════════════════════════════════════
             pnlSidebarBottom.Controls.Add(btnLogout);
-            pnlSidebarBottom.Controls.Add(lblStation);
-            pnlSidebarBottom.Controls.Add(lblStationName);
             pnlSidebarBottom.Dock = DockStyle.Bottom;
             pnlSidebarBottom.Location = new Point(0, 680);
             pnlSidebarBottom.Name = "pnlSidebarBottom";
@@ -110,27 +105,12 @@ namespace TheMatchaClubApp.Forms
             btnLogout.TabIndex = 0;
             btnLogout.Text = "⏻  Log Out";
 
-            // lblStation
-            lblStation.Location = new Point(20, 64);
-            lblStation.Name = "lblStation";
-            lblStation.Size = new Size(200, 18);
-            lblStation.TabIndex = 1;
-            lblStation.Text = "STATION 01";
-
-            // lblStationName
-            lblStationName.Location = new Point(20, 82);
-            lblStationName.Name = "lblStationName";
-            lblStationName.Size = new Size(200, 22);
-            lblStationName.TabIndex = 2;
-            lblStationName.Text = "Main Counter";
-
             // ═══════════════════════════════════════════════════════════
             // pnlFooter
             // ═══════════════════════════════════════════════════════════
             pnlFooter.Controls.Add(lblCopyright);
             pnlFooter.Controls.Add(lblSystemOnline);
             pnlFooter.Controls.Add(lblDbConnected);
-            pnlFooter.Controls.Add(lnkSupport);
             pnlFooter.Dock = DockStyle.Bottom;
             pnlFooter.Location = new Point(264, 752);
             pnlFooter.Name = "pnlFooter";
@@ -161,16 +141,6 @@ namespace TheMatchaClubApp.Forms
             lblDbConnected.TabIndex = 2;
             lblDbConnected.Text = "●  Database Connected";
             lblDbConnected.TextAlign = ContentAlignment.MiddleRight;
-
-            // lnkSupport
-            lnkSupport.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            lnkSupport.Location = new Point(920, 14);
-            lnkSupport.Name = "lnkSupport";
-            lnkSupport.Size = new Size(60, 20);
-            lnkSupport.TabIndex = 3;
-            lnkSupport.TabStop = true;
-            lnkSupport.Text = "Support";
-            lnkSupport.TextAlign = ContentAlignment.MiddleRight;
 
             // ═══════════════════════════════════════════════════════════
             // Window Control Buttons (top-right overlay)
@@ -239,15 +209,12 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Panel pnlNavContainer;
         private System.Windows.Forms.Panel pnlSidebarBottom;
         private Guna.UI2.WinForms.Guna2Button btnLogout;
-        private System.Windows.Forms.Label lblStation;
-        private System.Windows.Forms.Label lblStationName;
 
         // ── Footer ─────────────────────────────────────────────────
         private System.Windows.Forms.Panel pnlFooter;
         private System.Windows.Forms.Label lblCopyright;
         private System.Windows.Forms.Label lblSystemOnline;
         private System.Windows.Forms.Label lblDbConnected;
-        private System.Windows.Forms.LinkLabel lnkSupport;
 
         // ── Window Controls ────────────────────────────────────────
         private Guna.UI2.WinForms.Guna2ControlBox btnClose;

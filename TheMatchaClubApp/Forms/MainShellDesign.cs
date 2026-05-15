@@ -99,13 +99,8 @@ namespace TheMatchaClubApp.Forms
             btnLogout.TextAlign = HorizontalAlignment.Left;
             btnLogout.Click += BtnLogout_Click;
 
-            lblStation.Font = new Font("Segoe UI", 7F, FontStyle.Bold);
-            lblStation.ForeColor = TextMuted;
-            lblStation.BackColor = Color.Transparent;
-
-            lblStationName.Font = new Font("Segoe UI Semibold", 8F, FontStyle.Bold);
-            lblStationName.ForeColor = TextDark;
-            lblStationName.BackColor = Color.Transparent;
+            btnLogout.TextAlign = HorizontalAlignment.Left;
+            btnLogout.Click += BtnLogout_Click;
 
             // ── Content panel ──────────────────────────────────────
             pnlContent.BackColor = ContentBg;
@@ -126,12 +121,6 @@ namespace TheMatchaClubApp.Forms
             lblDbConnected.Font = new Font("Segoe UI", 8F);
             lblDbConnected.ForeColor = TextGray;
             lblDbConnected.BackColor = Color.Transparent;
-
-            lnkSupport.Font = new Font("Segoe UI", 8F);
-            lnkSupport.LinkColor = GreenAccent;
-            lnkSupport.ActiveLinkColor = ColorTranslator.FromHtml("#46A037");
-            lnkSupport.LinkBehavior = LinkBehavior.HoverUnderline;
-            lnkSupport.BackColor = Color.Transparent;
         }
 
         // ────────────────────────────────────────────────────────────

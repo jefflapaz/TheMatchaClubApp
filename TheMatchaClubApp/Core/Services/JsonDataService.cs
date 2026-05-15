@@ -24,6 +24,7 @@ namespace TheMatchaClubApp.Core.Services
         public List<string> Categories { get; set; } = new();
         public List<Customer> Customers { get; set; } = new();
         public List<Order> Orders { get; set; } = new();
+        public List<BusinessSession> Sessions { get; set; } = new();
 
         // ── Events ───────────────────────────────────────────────────
         public event EventHandler? ProductsChanged;
@@ -31,6 +32,8 @@ namespace TheMatchaClubApp.Core.Services
         public event EventHandler? OrdersChanged;
         public event EventHandler? CustomersChanged;
         public event EventHandler? SettingsChanged;
+        public event EventHandler? SessionsChanged;
+        public event EventHandler? DataLoaded;
 
         // ── Constructor ──────────────────────────────────────────────
         public JsonDataService()
@@ -47,6 +50,9 @@ namespace TheMatchaClubApp.Core.Services
             Categories = await LoadAsync<List<string>>("categories.json") ?? new List<string>();
             Customers  = await LoadAsync<List<Customer>>("customers.json") ?? new List<Customer>();
             Orders     = await LoadAsync<List<Order>>("orders.json") ?? new List<Order>();
+            Sessions   = await LoadAsync<List<BusinessSession>>("sessions.json") ?? new List<BusinessSession>();
+
+            DataLoaded?.Invoke(this, EventArgs.Empty);
         }
 
         // ── Save Methods (Task.Run to prevent UI stutter) ────────────
@@ -98,7 +104,32 @@ namespace TheMatchaClubApp.Core.Services
             OrdersChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public async Task SaveSessionsAsync()
+        {
+            await SaveAsync("sessions.json", Sessions);
+            SessionsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         // ── Core I/O (wrapped in Task.Run) ───────────────────────────
+        public string GenerateOrderNumber()
+        {
+            string datePart = DateTime.Now.ToString("yyyyMMdd");
+            string prefix = $"ORD-{datePart}-";
+            
+            // Find the highest sequence number for today
+            int lastSeq = 0;
+            var todayOrders = Orders.Where(o => o.OrderId.StartsWith(prefix)).ToList();
+            if (todayOrders.Any())
+            {
+                var seqs = todayOrders
+                    .Select(o => o.OrderId.Replace(prefix, ""))
+                    .Select(s => int.TryParse(s, out int n) ? n : 0);
+                lastSeq = seqs.Max();
+            }
+            
+            return $"{prefix}{(lastSeq + 1):D4}";
+        }
+
         private async Task<T?> LoadAsync<T>(string filename)
         {
             var path = Path.Combine(AppFolder, filename);

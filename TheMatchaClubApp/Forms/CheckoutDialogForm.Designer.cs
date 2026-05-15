@@ -46,8 +46,8 @@ namespace TheMatchaClubApp.Forms
             lblTitle.Size = new System.Drawing.Size(300, 28);
             lblTitle.Text = "Complete Order";
 
-            btnClose.Location = new System.Drawing.Point(378, 10);
-            btnClose.Size = new System.Drawing.Size(30, 30);
+            btnClose.Location = new System.Drawing.Point(374, 7);
+            btnClose.Size = new System.Drawing.Size(36, 36);
             btnClose.Text = "✕";
             btnClose.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
 
