@@ -95,16 +95,16 @@ namespace TheMatchaClubApp.Forms
             lblPaginationInfo.BackColor = Color.Transparent;
 
             // dgvOrders Styling
-            dgvOrders.ThemeStyle.AlternatingRowsStyle.BackColor = Color.White;
+            dgvOrders.ThemeStyle.AlternatingRowsStyle.BackColor = ColorTranslator.FromHtml("#FAFAFA");
             dgvOrders.ThemeStyle.RowsStyle.BackColor = Color.White;
             dgvOrders.ThemeStyle.RowsStyle.ForeColor = OTextSecondary;
             dgvOrders.ThemeStyle.RowsStyle.SelectionBackColor = OGreenBg;
             dgvOrders.ThemeStyle.RowsStyle.SelectionForeColor = OTextPrimary;
             dgvOrders.ThemeStyle.HeaderStyle.BackColor = OBgColor;
             dgvOrders.ThemeStyle.HeaderStyle.ForeColor = OTextMuted;
-            dgvOrders.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            dgvOrders.ThemeStyle.HeaderStyle.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
             dgvOrders.GridColor = OBorderLight;
-            dgvOrders.RowTemplate.Height = 52;
+            dgvOrders.RowTemplate.Height = 48;
             dgvOrders.BorderStyle = BorderStyle.None;
             dgvOrders.BackgroundColor = OCardBg;
 
@@ -140,9 +140,19 @@ namespace TheMatchaClubApp.Forms
             pnlReceiptBody.Paint += PnlReceiptBody_Paint;
 
             lblStoreName.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            lblStoreName.ForeColor = OTextPrimary;
+            lblStoreName.ForeColor = OGreen;
             lblStoreName.BackColor = Color.Transparent;
             lblStoreName.TextAlign = ContentAlignment.MiddleCenter;
+
+            // Fix: Use clean white background for logo, no green circle
+            pnlReceiptLogo.FillColor = Color.Transparent;
+            pnlReceiptLogo.BackColor = Color.Transparent;
+            pnlReceiptLogo.BorderThickness = 0;
+            pnlReceiptLogo.ShadowDecoration.Enabled = false;
+            lblReceiptLogo.Font = new Font("Segoe UI", 20F);
+            lblReceiptLogo.ForeColor = OGreen;
+            lblReceiptLogo.BackColor = Color.Transparent;
+            lblReceiptLogo.Text = "🍵";
 
             lblStoreAddress.Font = new Font("Segoe UI", 8F);
             lblStoreAddress.ForeColor = OTextSecondary;
@@ -162,8 +172,6 @@ namespace TheMatchaClubApp.Forms
 
             StyleReceiptLabel(lblReceiptSubtotalLabel);
             StyleReceiptValue(lblReceiptSubtotal);
-            StyleReceiptLabel(lblReceiptTaxLabel);
-            StyleReceiptValue(lblReceiptTax);
 
             lblReceiptTotalLabel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             lblReceiptTotalLabel.ForeColor = OTextPrimary;
@@ -180,11 +188,19 @@ namespace TheMatchaClubApp.Forms
             lblThankYou.ForeColor = OTextMuted;
             lblThankYou.BackColor = Color.Transparent;
 
-            // Export PDF / Email buttons
+            // Print / Export PDF / Email buttons
+            btnPrintReceipt.FillColor = OCardBg;
+            btnPrintReceipt.ForeColor = OGreen;
+            btnPrintReceipt.BorderColor = OGreen;
+            btnPrintReceipt.BorderRadius = 8;
+            btnPrintReceipt.BorderThickness = 1;
+            btnPrintReceipt.Font = new Font("Segoe UI Semibold", 8.5F, FontStyle.Bold);
+            btnPrintReceipt.HoverState.FillColor = OGreenBg;
+
             btnExportPDF.FillColor = OGreen;
             btnExportPDF.ForeColor = Color.White;
             btnExportPDF.BorderRadius = 8;
-            btnExportPDF.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnExportPDF.Font = new Font("Segoe UI Semibold", 8.5F, FontStyle.Bold);
             btnExportPDF.BorderThickness = 0;
             btnExportPDF.HoverState.FillColor = ColorTranslator.FromHtml("#45A037");
 
@@ -193,8 +209,22 @@ namespace TheMatchaClubApp.Forms
             btnEmailReceipt.BorderColor = OBorderLight;
             btnEmailReceipt.BorderRadius = 8;
             btnEmailReceipt.BorderThickness = 1;
-            btnEmailReceipt.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnEmailReceipt.Font = new Font("Segoe UI Semibold", 8.5F, FontStyle.Bold);
             btnEmailReceipt.HoverState.FillColor = Color.FromArgb(249, 250, 251);
+
+            // Cashier + Order Type receipt labels
+            StyleReceiptLabel(lblReceiptCashierLabel);
+            StyleReceiptValue(lblReceiptCashier);
+            StyleReceiptLabel(lblReceiptOrderTypeLabel);
+            StyleReceiptValue(lblReceiptOrderType);
+
+            // Cash Tendered / Change labels
+            StyleReceiptLabel(lblReceiptCashTenderedLabel);
+            StyleReceiptValue(lblReceiptCashTendered);
+            StyleReceiptLabel(lblReceiptChangeLabel);
+            lblReceiptChange.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            lblReceiptChange.ForeColor = OGreen;
+            lblReceiptChange.BackColor = Color.Transparent;
         }
 
         private void StyleFilterPill(Guna.UI2.WinForms.Guna2Button btn, bool active)
@@ -228,28 +258,27 @@ namespace TheMatchaClubApp.Forms
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // Store logo circle
-            using var logoBrush = new SolidBrush(OGreenBg);
-            g.FillEllipse(logoBrush, 138, 20, 44, 44); // Centered (320 width / 2 = 160 - 22)
-            using var leafFont = new Font("Segoe UI", 16F);
-            using var greenBrush = new SolidBrush(OGreen);
-            g.DrawString("\U0001F375", leafFont, greenBrush, 145, 26);
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             // Dashed separators
             using var dashPen = new Pen(ColorTranslator.FromHtml("#D1D5DB"), 1);
             dashPen.DashStyle = DashStyle.Dash;
             
-            // Above Order ID
-            g.DrawLine(dashPen, 16, lblReceiptOrderIdLabel.Top - 10, 304, lblReceiptOrderIdLabel.Top - 10);
+            // Separator above Order ID
+            int metaTop = lblReceiptOrderIdLabel.Top - 15;
+            if (metaTop > 0)
+                g.DrawLine(dashPen, 16, metaTop, pnlReceiptBody.Width - 16, metaTop);
             
-            // Below Station / Customer
-            int headerBottom = lblReceiptCustomerLabel.Bottom + 10;
-            g.DrawLine(dashPen, 16, headerBottom, 304, headerBottom);
+            // Separator below order meta
+            int metaBottom = lblReceiptCustomerLabel.Bottom + 15;
+            if (metaBottom > 0)
+                g.DrawLine(dashPen, 16, metaBottom, pnlReceiptBody.Width - 16, metaBottom);
 
             // Solid line above Subtotal
             using var solidPen = new Pen(ColorTranslator.FromHtml("#E5E7EB"), 1);
-            g.DrawLine(solidPen, 16, lblReceiptSubtotalLabel.Top - 10, 304, lblReceiptSubtotalLabel.Top - 10);
+            int totalTop = lblReceiptSubtotalLabel.Top - 15;
+            if (totalTop > 0)
+                g.DrawLine(solidPen, 16, totalTop, pnlReceiptBody.Width - 16, totalTop);
         }
     }
 }

@@ -16,11 +16,14 @@ namespace TheMatchaClubApp.Forms
         internal List<Order>? _recentOrders;
         internal string? _sessionDurationText;
         internal decimal _todaySalesTotal;
+        internal int _hoveredTxRow = -1;
+        private bool _isLoading;
 
         // ── Navigation Events ───────────────────────────────────────
         public event EventHandler? NewSaleClicked;
         public event EventHandler? ViewReportsClicked;
         public event EventHandler? AddProductClicked;
+        public event EventHandler<string>? ViewOrderClicked;
 
         // ══════════════════════════════════════════════════════════════
         //  CONSTRUCTOR
@@ -56,6 +59,11 @@ namespace TheMatchaClubApp.Forms
                     NewSaleClicked?.Invoke(this, EventArgs.Empty);
             };
 
+            // Recent transactions: hover + click
+            pnlRecentTx.MouseMove += PnlRecentTx_MouseMove;
+            pnlRecentTx.MouseLeave += (s, e) => { _hoveredTxRow = -1; pnlRecentTx.Cursor = Cursors.Default; pnlRecentTx.Invalidate(); };
+            pnlRecentTx.MouseClick += PnlRecentTx_MouseClick;
+
             // Real-time data subscriptions
             Program.DataService.OrdersChanged += OnDataChanged;
             Program.DataService.ProductsChanged += OnDataChanged;
@@ -69,6 +77,30 @@ namespace TheMatchaClubApp.Forms
             tmrSessionDuration.Start();
         }
 
+        private void PnlRecentTx_MouseMove(object? sender, MouseEventArgs e)
+        {
+            if (_recentOrders == null || _recentOrders.Count == 0) { _hoveredTxRow = -1; return; }
+            int headerEnd = 62; // header row + separator
+            int rowH = Math.Max(28, Math.Min(32, (pnlRecentTx.Height - 68) / Math.Max(_recentOrders.Count, 1)));
+            int row = (e.Y - headerEnd) / rowH;
+            int newHover = (row >= 0 && row < _recentOrders.Count) ? row : -1;
+            if (newHover != _hoveredTxRow)
+            {
+                _hoveredTxRow = newHover;
+                pnlRecentTx.Cursor = newHover >= 0 ? Cursors.Hand : Cursors.Default;
+                pnlRecentTx.Invalidate();
+            }
+        }
+
+        private void PnlRecentTx_MouseClick(object? sender, MouseEventArgs e)
+        {
+            if (_hoveredTxRow >= 0 && _recentOrders != null && _hoveredTxRow < _recentOrders.Count)
+            {
+                var order = _recentOrders[_hoveredTxRow];
+                ViewOrderClicked?.Invoke(this, order.OrderId);
+            }
+        }
+
         private void OnDataChanged(object? s, EventArgs e)
         {
             if (!IsDisposed && IsHandleCreated)
@@ -80,6 +112,11 @@ namespace TheMatchaClubApp.Forms
         // ══════════════════════════════════════════════════════════════
         private void LoadDashboardData()
         {
+            if (_isLoading) return;
+            _isLoading = true;
+            try
+            {
+                SuspendLayout();
             var session = Program.SessionService.GetActiveSession();
             var todayOrders = Program.DataService.Orders
                 .Where(o => o.Timestamp.Date == DateTime.Today).ToList();
@@ -130,6 +167,23 @@ namespace TheMatchaClubApp.Forms
             UpdateSessionDuration(); // Card 7
             lblCard8Value.Text = peakHour;
 
+            // ── Comparison vs Previous Session ───────────────────
+            var prevSession = Program.DataService.Sessions
+                .Where(s => s.IsClosed && (session == null || s.SessionId != session.SessionId))
+                .OrderByDescending(s => s.OpenedAt)
+                .FirstOrDefault();
+
+            if (prevSession != null && prevSession.TotalRevenue > 0 && totalSales > 0)
+            {
+                decimal pctChange = (totalSales - prevSession.TotalRevenue) / prevSession.TotalRevenue * 100;
+                string arrow = pctChange >= 0 ? "↑" : "↓";
+                lblCard1Title.Text = $"Total Sales Today  {arrow} {Math.Abs(pctChange):0.0}% vs last";
+            }
+            else
+            {
+                lblCard1Title.Text = "Total Sales Today";
+            }
+
             lblDate.Text = "📅 " + DateTime.Today.ToString("M/d/yyyy");
 
             // ── Build Chart Data ──────────────────────────────────
@@ -160,6 +214,13 @@ namespace TheMatchaClubApp.Forms
             pnlTopProducts.Invalidate();
             pnlRecentTx.Invalidate();
             pnlSessionStatus.Invalidate();
+
+                ResumeLayout();
+            }
+            finally
+            {
+                _isLoading = false;
+            }
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -171,11 +232,24 @@ namespace TheMatchaClubApp.Forms
 
             if (session == null)
             {
-                // Check if there was a closed session today
+                var lastSession = Program.DataService.Sessions
+                    .Where(s => s.IsClosed)
+                    .OrderByDescending(s => s.OpenedAt)
+                    .FirstOrDefault();
+
                 var closedToday = Program.DataService.Sessions
                     .Any(s => s.IsClosed && s.OpenedAt.Date == DateTime.Today);
 
-                if (closedToday)
+                bool hasAnySessions = Program.DataService.Sessions.Any();
+
+                if (!hasAnySessions)
+                {
+                    // First-time user
+                    lblEmptyIcon.Text = "🏡";
+                    lblEmptyMessage.Text = "Welcome! Open your first session to get started.";
+                    btnEmptyAction.Text = "Open Session";
+                }
+                else if (closedToday)
                 {
                     lblEmptyIcon.Text = "✅";
                     lblEmptyMessage.Text = "Store session closed. View reports for summary.";
@@ -187,13 +261,30 @@ namespace TheMatchaClubApp.Forms
                     lblEmptyMessage.Text = "Open a store session to begin operations.";
                     btnEmptyAction.Text = "Open Session";
                 }
+
+                // Show last session snapshot in KPI cards when no session active
+                if (lastSession != null)
+                {
+                    lblCard1Value.Text = $"₱{lastSession.TotalRevenue:#,##0.00}";
+                    lblCard1Title.Text = $"Last Session ({lastSession.OpenedAt:MMM dd})";
+                    lblCard2Value.Text = lastSession.TotalTransactions.ToString();
+                    lblCard5Value.Text = lastSession.TotalUnitsSold.ToString();
+
+                    var lastOrders = Program.SessionService.GetSessionOrders(lastSession.SessionId);
+                    var topItem = lastOrders.SelectMany(o => o.Items)
+                        .GroupBy(i => i.ProductName)
+                        .OrderByDescending(g => g.Sum(i => i.Quantity))
+                        .FirstOrDefault();
+                    lblCard6Value.Text = topItem?.Key ?? "—";
+                }
+
                 showEmpty = true;
             }
             else if (orderCount == 0)
             {
                 lblEmptyIcon.Text = "⏳";
-                lblEmptyMessage.Text = "Session is open. Waiting for first transaction…";
-                btnEmptyAction.Text = "New Sale";
+                lblEmptyMessage.Text = "Session is open. Waiting for first sale…";
+                btnEmptyAction.Text = "🛒  New Sale";
                 showEmpty = true;
             }
             else
@@ -236,16 +327,20 @@ namespace TheMatchaClubApp.Forms
         // ══════════════════════════════════════════════════════════════
         //  SESSION MANAGEMENT
         // ══════════════════════════════════════════════════════════════
+        private bool _isSessionProcessing; // Prevent double-click on session operations
+
         private async void HandleOpenSession()
         {
+            if (_isSessionProcessing) return;
             if (Program.SessionService.HasActiveSession())
             {
                 MessageBox.Show("A session is already active.", "Session Open", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            string cashierName = Program.CurrentUser?.FullName ?? "Admin";
-            string? input = ShowInputDialog("Enter starting cash amount:", "Open Store Session", "200.00");
+            string cashierName = Program.GetCurrentCashierName();
+            string defaultCash = Program.DataService.Settings.DefaultStartingCash.ToString("F2");
+            string? input = ShowInputDialog("Enter starting cash amount:", "Open Store Session", defaultCash);
             if (string.IsNullOrWhiteSpace(input)) return;
             if (!decimal.TryParse(input, out decimal startingCash) || startingCash < 0)
             {
@@ -253,36 +348,88 @@ namespace TheMatchaClubApp.Forms
                 return;
             }
 
-            try { await Program.SessionService.OpenSessionAsync(cashierName, startingCash); }
+            // Confirmation
+            var confirm = MessageBox.Show(
+                $"Open a new store session?\n\nCashier: {cashierName}\nStarting Cash: ₱{startingCash:#,##0.00}",
+                "Confirm Open Session",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes) return;
+
+            _isSessionProcessing = true;
+            btnQuickOpenSession.Enabled = false;
+            try
+            {
+                await Program.SessionService.OpenSessionAsync(cashierName, startingCash);
+            }
             catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally
+            {
+                _isSessionProcessing = false;
+                btnQuickOpenSession.Enabled = true;
+            }
         }
 
         private async void HandleCloseSession()
         {
+            if (_isSessionProcessing) return;
             if (!Program.SessionService.HasActiveSession())
             {
                 MessageBox.Show("No active session to close.", "No Session", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            string? input = ShowInputDialog("Enter actual cash counted in register:", "Close Store Session", "0.00");
-            if (string.IsNullOrWhiteSpace(input)) return;
-            if (!decimal.TryParse(input, out decimal actualCash) || actualCash < 0)
+            var activeSession = Program.SessionService.GetActiveSession()!;
+            Program.SessionService.ComputeSessionTotals(activeSession);
+            decimal expectedCash = activeSession.StartingCash + activeSession.TotalRevenue;
+
+            // Confirmation
+            var confirm = MessageBox.Show(
+                $"Close the current store session?\n\nRevenue: ₱{activeSession.TotalRevenue:#,##0.00}\nTransactions: {activeSession.TotalTransactions}\nExpected Cash: ₱{expectedCash:#,##0.00}",
+                "Confirm Close Session",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes) return;
+
+            decimal actualCash = 0;
+            var settings = Program.DataService.Settings;
+
+            if (settings.RequireCashCountOnClose)
             {
-                MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                string? input = ShowInputDialog($"Enter actual cash counted in register:\n(Expected: ₱{expectedCash:#,##0.00})", "Close Store Session", expectedCash.ToString("F2"));
+                if (string.IsNullOrWhiteSpace(input)) return;
+                if (!decimal.TryParse(input, out actualCash) || actualCash < 0)
+                {
+                    MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
             }
 
+            _isSessionProcessing = true;
+            btnQuickCloseSession.Enabled = false;
             try
             {
-                var session = await Program.SessionService.CloseSessionAsync(actualCash, Program.CurrentUser?.FullName);
+                var session = await Program.SessionService.CloseSessionAsync(actualCash, Program.GetCurrentCashierName());
                 decimal diff = session.ActualCash - session.ExpectedCash;
-                string status = diff >= 0 ? $"Over: +₱{diff:#,##0.00}" : $"Short: -₱{Math.Abs(diff):#,##0.00}";
-                MessageBox.Show(
-                    $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}\n{status}",
-                    "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                if (settings.RequireCashCountOnClose && settings.EnableOverShortWarnings && Math.Abs(diff) > 0)
+                {
+                    string status = diff >= 0 ? $"Over: +₱{diff:#,##0.00}" : $"Short: -₱{Math.Abs(diff):#,##0.00}";
+                    MessageBox.Show(
+                        $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}\n{status}",
+                        "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}",
+                        "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally
+            {
+                _isSessionProcessing = false;
+                btnQuickCloseSession.Enabled = true;
+            }
         }
 
         private static string? ShowInputDialog(string prompt, string title, string defaultValue)

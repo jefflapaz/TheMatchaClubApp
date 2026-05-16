@@ -172,7 +172,7 @@ namespace TheMatchaClubApp.Forms
 
             lblOrderMeta.Location = new System.Drawing.Point(16, 34);
             lblOrderMeta.Size = new System.Drawing.Size(260, 18);
-            lblOrderMeta.Text = "Order #1025 \u2022 Cashier: Admin";
+            lblOrderMeta.Text = "Order #— \u2022 Cashier: —";
 
             btnClearCart.Location = new System.Drawing.Point(290, 16);
             btnClearCart.Size = new System.Drawing.Size(95, 32);
@@ -190,7 +190,7 @@ namespace TheMatchaClubApp.Forms
 
             // Cart totals
             pnlCartTotals.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlCartTotals.Size = new System.Drawing.Size(400, 150);
+            pnlCartTotals.Size = new System.Drawing.Size(400, 170);
             pnlCartTotals.Controls.Add(lblSubtotal);
             pnlCartTotals.Controls.Add(lblSubtotalValue);
             pnlCartTotals.Controls.Add(lblTotal);
@@ -198,27 +198,27 @@ namespace TheMatchaClubApp.Forms
             pnlCartTotals.Controls.Add(btnCompleteSale);
             pnlCartTotals.Controls.Add(lblCashNote);
 
-            lblSubtotal.Location = new System.Drawing.Point(16, 8);
-            lblSubtotal.Size = new System.Drawing.Size(80, 18);
+            lblSubtotal.Location = new System.Drawing.Point(16, 12);
+            lblSubtotal.Size = new System.Drawing.Size(80, 20);
             lblSubtotal.Text = "Subtotal";
-            lblSubtotalValue.Location = new System.Drawing.Point(280, 8);
-            lblSubtotalValue.Size = new System.Drawing.Size(100, 18);
-            lblSubtotalValue.Text = "$0.00";
+            lblSubtotalValue.Location = new System.Drawing.Point(240, 12);
+            lblSubtotalValue.Size = new System.Drawing.Size(140, 20);
+            lblSubtotalValue.Text = "\u20B1 0.00";
             lblSubtotalValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
-            lblTotal.Location = new System.Drawing.Point(16, 36);
+            lblTotal.Location = new System.Drawing.Point(16, 56);
             lblTotal.Size = new System.Drawing.Size(80, 24);
             lblTotal.Text = "Total";
-            lblTotalValue.Location = new System.Drawing.Point(260, 36);
-            lblTotalValue.Size = new System.Drawing.Size(120, 24);
-            lblTotalValue.Text = "$0.00";
+            lblTotalValue.Location = new System.Drawing.Point(200, 52);
+            lblTotalValue.Size = new System.Drawing.Size(180, 32);
+            lblTotalValue.Text = "\u20B1 0.00";
             lblTotalValue.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
-            btnCompleteSale.Location = new System.Drawing.Point(16, 72);
+            btnCompleteSale.Location = new System.Drawing.Point(16, 100);
             btnCompleteSale.Size = new System.Drawing.Size(368, 52);
-            btnCompleteSale.Text = "$ Complete Sale (Cash)";
+            btnCompleteSale.Text = "\u20B1 Complete Sale (Cash)";
 
-            lblCashNote.Location = new System.Drawing.Point(16, 128);
+            lblCashNote.Location = new System.Drawing.Point(16, 154);
             lblCashNote.Size = new System.Drawing.Size(368, 16);
             lblCashNote.Text = "Cash-only payments supported";
             lblCashNote.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

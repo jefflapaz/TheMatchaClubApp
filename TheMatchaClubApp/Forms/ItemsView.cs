@@ -33,13 +33,38 @@ namespace TheMatchaClubApp.Forms
                 if (!IsDisposed) BeginInvoke(new Action(() => 
                 {
                     // If active category was deleted, reset to All Items
-                    if (_activeCategory != "All Items" && !Program.DataService.Categories.Contains(_activeCategory))
+                    if (_activeCategory != "All Items" && !Program.DataService.Categories.Any(c => c.Name == _activeCategory))
                     {
                         _activeCategory = "All Items";
                         PopulateItems(_activeCategory);
                     }
                     PopulateCategories();
                 }));
+            };
+
+            flpCategoryButtons.AllowDrop = true;
+            flpCategoryButtons.DragEnter += (s, e) => { if (e.Data!.GetDataPresent(typeof(CategoryNavItem))) e.Effect = DragDropEffects.Move; };
+            flpCategoryButtons.DragOver += (s, e) =>
+            {
+                if (e.Data!.GetDataPresent(typeof(CategoryNavItem)))
+                {
+                    var source = (CategoryNavItem)e.Data.GetData(typeof(CategoryNavItem))!;
+                    var pt = flpCategoryButtons.PointToClient(new Point(e.X, e.Y));
+                    var target = flpCategoryButtons.GetChildAtPoint(pt);
+                    if (target != null && target != source && target is CategoryNavItem tNav && !tNav.IsProtected)
+                    {
+                        int targetIdx = flpCategoryButtons.Controls.GetChildIndex(target);
+                        flpCategoryButtons.Controls.SetChildIndex(source, targetIdx);
+                    }
+                }
+            };
+            flpCategoryButtons.DragDrop += async (s, e) =>
+            {
+                var ordered = flpCategoryButtons.Controls.OfType<CategoryNavItem>()
+                    .Where(n => !n.IsProtected)
+                    .Select(n => n.Category)
+                    .ToList();
+                await Program.DataService.UpdateCategoryOrderAsync(ordered);
             };
 
             PopulateCategories();
@@ -51,49 +76,46 @@ namespace TheMatchaClubApp.Forms
             flpCategoryButtons.SuspendLayout();
             flpCategoryButtons.Controls.Clear();
 
-            var categories = new List<string> { "All Items" };
-            var customCats = Program.DataService.Categories
-                .Where(c => c != "All Items")
-                .Distinct()
+            // "All Items" is virtual
+            var allItemsCat = new Category { Name = "All Items", DisplayOrder = -1 };
+            var navAll = new CategoryNavItem(allItemsCat, true);
+            navAll.CategoryClicked += (s, e) =>
+            {
+                _activeCategory = "All Items";
+                UpdateCategoryButtons();
+                PopulateItems("All Items");
+            };
+            flpCategoryButtons.Controls.Add(navAll);
+
+            var categories = Program.DataService.Categories
+                .Where(c => c.Name != "All Items")
+                .OrderBy(c => c.DisplayOrder)
                 .ToList();
-            categories.AddRange(customCats);
 
             foreach (var cat in categories)
             {
-                bool isProtected = cat == "All Items";
-                var navItem = new CategoryNavItem(cat, isProtected);
+                var navItem = new CategoryNavItem(cat, false);
                 
                 navItem.CategoryClicked += (s, e) => 
                 {
-                    _activeCategory = cat;
+                    _activeCategory = cat.Name;
                     UpdateCategoryButtons();
-                    PopulateItems(cat);
+                    PopulateItems(cat.Name);
                 };
 
-                navItem.DeleteClicked += async (s, e) =>
+                navItem.EditClicked += async (s, e) =>
                 {
-                    if (isProtected) return;
-                    
-                    bool inUse = Program.DataService.Products.Any(p => string.Equals(p.CategoryName, cat, StringComparison.OrdinalIgnoreCase));
-                    if (inUse)
+                    string newName = Microsoft.VisualBasic.Interaction.InputBox("Enter new name for category:", "Rename Category", cat.Name);
+                    if (!string.IsNullOrWhiteSpace(newName) && newName != cat.Name)
                     {
-                        var msg = new Guna.UI2.WinForms.Guna2MessageDialog 
-                        { 
-                            Caption = "Error", 
-                            Text = "Cannot delete. Move or delete existing items first.", 
-                            Style = Guna.UI2.WinForms.MessageDialogStyle.Light, 
-                            Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, 
-                            Icon = Guna.UI2.WinForms.MessageDialogIcon.Error 
-                        };
-                        msg.Show();
-                    }
-                    else
-                    {
-                        Program.DataService.Categories.Remove(cat);
-                        await Program.DataService.SaveCategoriesAsync();
-                        if (_activeCategory == cat) _activeCategory = "All Items";
+                        if (Program.DataService.Categories.Any(c => string.Equals(c.Name, newName, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            MessageBox.Show("Category already exists.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+                        await Program.DataService.RenameCategoryAsync(cat, newName);
                         PopulateCategories();
-                        PopulateItems(_activeCategory);
+                        if (_activeCategory == cat.Name) PopulateItems(newName);
                     }
                 };
 
@@ -280,7 +302,11 @@ namespace TheMatchaClubApp.Forms
             var lblCat = new Label { Text = "Category", Location = new Point(20, 130), AutoSize = true };
             var cmbCat = new Guna.UI2.WinForms.Guna2ComboBox { Location = new Point(20, 152), Size = new Size(360, 40), BorderColor = ColorTranslator.FromHtml("#52B743") };
             
-            var categories = Program.DataService.Categories.Where(c => c != "All Items").Distinct().ToList();
+            var categories = Program.DataService.Categories
+                .Where(c => c.Name != "All Items")
+                .OrderBy(c => c.DisplayOrder)
+                .Select(c => c.Name)
+                .ToList();
             cmbCat.Items.AddRange(categories.ToArray());
             if (!isNew && categories.Contains(product.CategoryName)) cmbCat.SelectedItem = product.CategoryName;
 
@@ -290,17 +316,19 @@ namespace TheMatchaClubApp.Forms
                 string newCat = Microsoft.VisualBasic.Interaction.InputBox("Enter new category name:", "New Category", "");
                 if (string.IsNullOrWhiteSpace(newCat)) return;
                 
-                if (Program.DataService.Categories.Contains(newCat, StringComparer.OrdinalIgnoreCase))
+                if (Program.DataService.Categories.Any(c => string.Equals(c.Name, newCat, StringComparison.OrdinalIgnoreCase)))
                 {
                     var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Caption = "Error", Text = "Error: This category already exists.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Error };
                     msg.Show();
                 }
                 else
                 {
-                    Program.DataService.Categories.Add(newCat);
+                    var catObj = new Category { Name = newCat, DisplayOrder = Program.DataService.Categories.Count };
+                    Program.DataService.Categories.Add(catObj);
                     await Program.DataService.SaveCategoriesAsync();
                     cmbCat.Items.Add(newCat);
                     cmbCat.SelectedItem = newCat;
+                    PopulateCategories();
                 }
             };
 

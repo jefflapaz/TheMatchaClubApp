@@ -21,7 +21,7 @@ namespace TheMatchaClubApp.Core.Services
         // ── Data Stores ──────────────────────────────────────────────
         public StoreSettings Settings { get; set; } = new();
         public List<Product> Products { get; set; } = new();
-        public List<string> Categories { get; set; } = new();
+        public List<Category> Categories { get; set; } = new();
         public List<Customer> Customers { get; set; } = new();
         public List<Order> Orders { get; set; } = new();
         public List<BusinessSession> Sessions { get; set; } = new();
@@ -47,7 +47,34 @@ namespace TheMatchaClubApp.Core.Services
         {
             Settings   = await LoadAsync<StoreSettings>("settings.json") ?? new StoreSettings();
             Products   = await LoadAsync<List<Product>>("products.json") ?? new List<Product>();
-            Categories = await LoadAsync<List<string>>("categories.json") ?? new List<string>();
+            
+            // Migration: Load categories.json as dynamic to check if it's List<string> or List<Category>
+            var catPath = Path.Combine(AppFolder, "categories.json");
+            if (File.Exists(catPath))
+            {
+                try
+                {
+                    string json = File.ReadAllText(catPath);
+                    using var doc = JsonDocument.Parse(json);
+                    if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                    {
+                        if (doc.RootElement.GetArrayLength() > 0 && doc.RootElement[0].ValueKind == JsonValueKind.String)
+                        {
+                            // Migration needed
+                            var oldCats = JsonSerializer.Deserialize<List<string>>(json, JsonOpts) ?? new();
+                            Categories = oldCats.Select((name, index) => new Category { Name = name, DisplayOrder = index }).ToList();
+                            await SaveCategoriesAsync();
+                        }
+                        else
+                        {
+                            Categories = JsonSerializer.Deserialize<List<Category>>(json, JsonOpts) ?? new();
+                        }
+                    }
+                }
+                catch { Categories = new List<Category>(); }
+            }
+            else { Categories = new List<Category>(); }
+            
             Customers  = await LoadAsync<List<Customer>>("customers.json") ?? new List<Customer>();
             Orders     = await LoadAsync<List<Order>>("orders.json") ?? new List<Order>();
             Sessions   = await LoadAsync<List<BusinessSession>>("sessions.json") ?? new List<BusinessSession>();
@@ -72,9 +99,9 @@ namespace TheMatchaClubApp.Core.Services
             for (int i = Categories.Count - 1; i >= 0; i--)
             {
                 var cat = Categories[i];
-                if (cat == "All Items") continue; // Protected
+                if (cat.Name == "All Items") continue; // Protected
                 
-                if (!Products.Any(p => string.Equals(p.CategoryName, cat, StringComparison.OrdinalIgnoreCase)))
+                if (!Products.Any(p => string.Equals(p.CategoryName, cat.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     Categories.RemoveAt(i);
                     changed = true;
@@ -90,6 +117,47 @@ namespace TheMatchaClubApp.Core.Services
         {
             await SaveAsync("categories.json", Categories);
             CategoriesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public async Task RenameCategoryAsync(Category category, string newName)
+        {
+            string oldName = category.Name;
+            category.Name = newName;
+            
+            // Update all products
+            foreach (var p in Products)
+            {
+                if (string.Equals(p.CategoryName, oldName, StringComparison.OrdinalIgnoreCase))
+                {
+                    p.CategoryName = newName;
+                }
+            }
+
+            // Update all historical orders
+            foreach (var order in Orders)
+            {
+                foreach (var item in order.Items)
+                {
+                    if (string.Equals(item.CategoryName, oldName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        item.CategoryName = newName;
+                    }
+                }
+            }
+
+            await SaveCategoriesAsync();
+            await SaveProductsAsync();
+            await SaveOrdersAsync();
+        }
+
+        public async Task UpdateCategoryOrderAsync(List<Category> orderedCategories)
+        {
+            for (int i = 0; i < orderedCategories.Count; i++)
+            {
+                orderedCategories[i].DisplayOrder = i;
+            }
+            Categories = orderedCategories;
+            await SaveCategoriesAsync();
         }
 
         public async Task SaveCustomersAsync()

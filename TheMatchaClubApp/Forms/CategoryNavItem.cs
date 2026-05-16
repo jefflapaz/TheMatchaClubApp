@@ -3,28 +3,30 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
+using TheMatchaClubApp.Core.Models;
 
 namespace TheMatchaClubApp.Forms
 {
     public partial class CategoryNavItem : UserControl
     {
         private bool _isActive;
-        public string CategoryName { get; private set; }
+        public Category Category { get; private set; }
+        public string CategoryName => Category.Name;
         public bool IsProtected { get; private set; }
 
         public event EventHandler? CategoryClicked;
-        public event EventHandler? DeleteClicked;
+        public event EventHandler? EditClicked;
 
         private Point _mouseDownLocation;
         private bool _isSwiping;
 
-        public CategoryNavItem(string name, bool isProtected = false)
+        public CategoryNavItem(Category category, bool isProtected = false)
         {
             InitializeComponent();
-            CategoryName = name;
+            Category = category;
             IsProtected = isProtected;
 
-            btnCategory.Text = name;
+            btnCategory.Text = Category.Name;
             StyleControls();
             
             btnCategory.MouseDown += BtnCategory_MouseDown;
@@ -32,7 +34,7 @@ namespace TheMatchaClubApp.Forms
             btnCategory.MouseUp += BtnCategory_MouseUp;
 
             btnCancel.Click += (s, e) => HideActions();
-            btnDelete.Click += (s, e) => DeleteClicked?.Invoke(this, EventArgs.Empty);
+            btnEdit.Click += (s, e) => EditClicked?.Invoke(this, EventArgs.Empty);
         }
 
         private void StyleControls()
@@ -58,11 +60,11 @@ namespace TheMatchaClubApp.Forms
             btnCancel.ForeColor = Color.White;
             btnCancel.Cursor = Cursors.Hand;
 
-            btnDelete.BorderRadius = 4;
-            btnDelete.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            btnDelete.FillColor = ColorTranslator.FromHtml("#EF4444"); // Red
-            btnDelete.ForeColor = Color.White;
-            btnDelete.Cursor = Cursors.Hand;
+            btnEdit.BorderRadius = 4;
+            btnEdit.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnEdit.FillColor = ColorTranslator.FromHtml("#3B82F6"); // Blue
+            btnEdit.ForeColor = Color.White;
+            btnEdit.Cursor = Cursors.Hand;
             
             pnlActions.BackColor = Color.Transparent;
         }
@@ -100,9 +102,20 @@ namespace TheMatchaClubApp.Forms
         {
             if (e.Button == MouseButtons.Left)
             {
-                if (Math.Abs(e.X - _mouseDownLocation.X) > 15)
+                int dx = Math.Abs(e.X - _mouseDownLocation.X);
+                int dy = Math.Abs(e.Y - _mouseDownLocation.Y);
+
+                if (!_isSwiping && (dx > 8 || dy > 8))
                 {
-                    _isSwiping = true;
+                    if (dx > dy)
+                    {
+                        _isSwiping = true;
+                    }
+                    else if (!IsProtected)
+                    {
+                        // Start Drag
+                        this.DoDragDrop(this, DragDropEffects.Move);
+                    }
                 }
             }
         }

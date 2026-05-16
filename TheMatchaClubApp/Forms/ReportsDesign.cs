@@ -73,38 +73,46 @@ namespace TheMatchaClubApp.Forms
             // Insights row
             pnlInsightsRow.BackColor = Color.Transparent;
 
-            // Top items
-            StyleCardPanel(pnlTableCard);
-            lblTableHeader.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
-            lblTableHeader.ForeColor = RTextPrimary;
-            lblTableHeader.BackColor = Color.Transparent;
-            StyleDgv(dgvTopItems);
+            // Top items Overview
+            StyleChartPanel(pnlTableCard, lblTableHeader);
+            pnlTableCard.Paint += PnlTopItemsOverview_Paint;
+            pnlTableCard.Height = 240;
 
-            // Recent tx
-            StyleCardPanel(pnlRecentTx);
-            lblRecentTxTitle.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
-            lblRecentTxTitle.ForeColor = RTextPrimary;
-            lblRecentTxTitle.BackColor = Color.Transparent;
-            StyleDgv(dgvRecentTx);
+            // Recent tx Overview
+            StyleChartPanel(pnlRecentTx, lblRecentTxTitle);
+            pnlRecentTx.Paint += PnlRecentTxOverview_Paint;
+            pnlRecentTx.Height = 280;
 
-            // Sales Summary page
-            pnlSalesHeader.BackColor = RBg;
-            lblSalesTitle.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold);
-            lblSalesTitle.ForeColor = RTextPrimary;
-            lblSalesTitle.BackColor = Color.Transparent;
-            lblSalesTitle.TextAlign = ContentAlignment.MiddleLeft;
-            txtSalesSearch.BorderRadius = 8;
-            txtSalesSearch.BorderColor = RBorder;
-            txtSalesSearch.FocusedState.BorderColor = RGreen;
-            txtSalesSearch.Font = new Font("Segoe UI", 9F);
-            StyleDgv(dgvAllSales);
+            // Session History filters
+            pnlSessionHistoryFilters.BackColor = RBg;
+            cmbHistoryMonth.BorderRadius = 8;
+            cmbHistoryMonth.BorderColor = RBorder;
+            cmbHistoryMonth.FillColor = RCard;
+            cmbHistoryMonth.ForeColor = RTextPrimary;
+            cmbHistoryMonth.Font = new Font("Segoe UI", 9F);
+            cmbHistoryMonth.ItemHeight = 24;
+            cmbHistoryYear.BorderRadius = 8;
+            cmbHistoryYear.BorderColor = RBorder;
+            cmbHistoryYear.FillColor = RCard;
+            cmbHistoryYear.ForeColor = RTextPrimary;
+            cmbHistoryYear.Font = new Font("Segoe UI", 9F);
+            cmbHistoryYear.ItemHeight = 24;
+            lblSessionCount.Font = new Font("Segoe UI", 9F);
+            lblSessionCount.ForeColor = RTextMuted;
+            lblSessionCount.BackColor = Color.Transparent;
 
-            // History page
+            // LIVE indicator styling
+            lblSelectedSession.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            lblSelectedSession.ForeColor = RGreen;
+
+            // History charts page
             pnlHistoryCharts.BackColor = Color.Transparent;
             StyleChartPanel(pnlRevenueChart, lblRevenueChartTitle);
             StyleChartPanel(pnlTxChart, lblTxChartTitle);
             pnlRevenueChart.Paint += PnlRevenueChart_Paint;
             pnlTxChart.Paint += PnlTxChart_Paint;
+
+            // Session history table
             StyleCardPanel(pnlHistoryTableCard);
             lblHistoryTableTitle.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             lblHistoryTableTitle.ForeColor = RTextPrimary;
@@ -239,18 +247,18 @@ namespace TheMatchaClubApp.Forms
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
             var pnl = (Control)sender!;
-            int titleSpace = 36; // Space reserved for the top label
+            int titleSpace = 36;
+            int legendWidth = 160;
 
-            // Calculate dynamic circle bounds to support DPI scaling and resizing
-            int drawWidth = pnl.Width - 140; // Reserve 140px on the right for the legend
-            int drawHeight = pnl.Height - titleSpace - 16; // Reserve padding
+            // Calculate dynamic circle bounds
+            int drawWidth = pnl.Width - legendWidth - 20;
+            int drawHeight = pnl.Height - titleSpace - 16;
 
-            // Ensure perfect circle by taking the smallest dimension
             int diameter = Math.Min(drawWidth, drawHeight);
+            if (diameter < 40) return;
             int r = diameter / 2;
-            int inner = (int)(r * 0.55); // Inner hole is 55% of radius
+            int inner = (int)(r * 0.55);
 
-            // Center coordinates
             int cx = (drawWidth / 2) + 16;
             int cy = titleSpace + r + 4;
 
@@ -269,18 +277,24 @@ namespace TheMatchaClubApp.Forms
             using var centerBrush = new SolidBrush(RCard);
             g.FillEllipse(centerBrush, cx - inner, cy - inner, inner * 2, inner * 2);
 
-            // Responsive Legend vertically centered
-            int legendX = cx + r + 24;
-            int itemHeight = 32;
-            int ly = cy - ((_categoryData.Count * itemHeight) / 2); // Center block vertically
-            
+            // Legend — single-line, dynamically spaced
+            int legendX = pnl.Width - legendWidth + 8;
+            int availableH = pnl.Height - titleSpace - 16;
+            int itemHeight = Math.Max(16, Math.Min(22, availableH / Math.Max(_categoryData.Count, 1)));
+            int totalLegendH = _categoryData.Count * itemHeight;
+            int ly = titleSpace + (availableH - totalLegendH) / 2;
+
             ci = 0;
+            using var tf = new Font("Segoe UI", 7.5F);
             foreach (var kv in _categoryData)
             {
                 using var lb = new SolidBrush(ChartColors[ci % ChartColors.Length]);
-                g.FillRectangle(lb, legendX, ly + 2, 12, 12);
-                using var tf = new Font("Segoe UI", 7.5F);
-                g.DrawString($"{kv.Key}\n{kv.Value:₱#,##0}", tf, Brushes.Gray, legendX + 18, ly - 2);
+                g.FillRectangle(lb, legendX, ly + 3, 10, 10);
+                float pct = (float)kv.Value / total * 100f;
+                string text = $"{kv.Key}  ₱{kv.Value:#,##0}";
+                // Truncate long names
+                if (text.Length > 22) text = text[..22] + "…";
+                g.DrawString(text, tf, Brushes.Gray, legendX + 16, ly);
                 ly += itemHeight;
                 ci++;
             }
@@ -386,6 +400,116 @@ namespace TheMatchaClubApp.Forms
                 var sz = g.MeasureString(data[i].Label, lf);
                 g.DrawString(data[i].Label, lf, Brushes.Gray, x + barW / 2 - sz.Width / 2, bottom + 2);
             }
+        }
+
+        // ═══ OVERVIEW LISTS PAINT HANDLERS ═══
+        private void PnlTopItemsOverview_Paint(object? sender, PaintEventArgs e)
+        {
+            if (_topProducts == null || _topProducts.Count == 0) return;
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            var pnl = (Control)sender!;
+            
+            int maxUnits = _topProducts.Max(p => p.Units);
+            if (maxUnits == 0) maxUnits = 1;
+            int y = 42, rowH = Math.Min(32, (pnl.Height - 50) / Math.Max(_topProducts.Count, 1));
+
+            using var nameFont = new Font("Segoe UI", 9F);
+            using var valFont = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            using var rankFont = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+
+            for (int i = 0; i < _topProducts.Count; i++)
+            {
+                var p = _topProducts[i];
+                int barW = 120;
+                int barX = pnl.Width - 240;
+
+                // Rank
+                using var rankBrush = new SolidBrush(i < 3 ? RGreen : RTextMuted);
+                g.DrawString($"#{i + 1}", rankFont, rankBrush, 16, y + 2);
+
+                // Name
+                g.DrawString(p.Name, nameFont, new SolidBrush(RTextPrimary), 48, y + 2);
+
+                // Progress bar
+                float pct = (float)p.Units / maxUnits;
+                using var barBg = new SolidBrush(ColorTranslator.FromHtml("#F3F4F6"));
+                using var barFg = new SolidBrush(Color.FromArgb(180, RGreen));
+                var bgRect = new Rectangle(barX, y + 6, barW, 12);
+                using var bgPath = CreateRoundRectPath(bgRect, 4);
+                g.FillPath(barBg, bgPath);
+                if (pct > 0)
+                {
+                    var fgRect = new Rectangle(barX, y + 6, Math.Max(8, (int)(barW * pct)), 12);
+                    using var fgPath = CreateRoundRectPath(fgRect, 4);
+                    g.FillPath(barFg, fgPath);
+                }
+
+                // Units & Revenue
+                string info = $"{p.Units} sold  {Fmt(p.Revenue)}";
+                g.DrawString(info, valFont, new SolidBrush(RTextSecondary), pnl.Width - 110, y + 2);
+                y += rowH;
+            }
+        }
+
+        private void PnlRecentTxOverview_Paint(object? sender, PaintEventArgs e)
+        {
+            if (_recentOrders == null || _recentOrders.Count == 0)
+            {
+                var g2 = e.Graphics; g2.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+                using var f = new Font("Segoe UI", 9F);
+                g2.DrawString("No transactions found for this session.", f, new SolidBrush(RTextMuted), 20, 48);
+                return;
+            }
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            var pnl = (Control)sender!;
+
+            // Header row
+            int y = 42;
+            using var hdrFont = new Font("Segoe UI", 8F, FontStyle.Bold);
+            using var hdrBrush = new SolidBrush(RTextMuted);
+            g.DrawString("ORDER ID", hdrFont, hdrBrush, 20, y);
+            g.DrawString("CUSTOMER", hdrFont, hdrBrush, pnl.Width * 0.30f, y);
+            g.DrawString("AMOUNT", hdrFont, hdrBrush, pnl.Width * 0.60f, y);
+            g.DrawString("TIME", hdrFont, hdrBrush, pnl.Width * 0.80f, y);
+            y += 24;
+
+            using var rowFont = new Font("Segoe UI", 9F);
+            using var boldFont = new Font("Segoe UI", 9F, FontStyle.Bold);
+            int rowH = Math.Min(30, (pnl.Height - 75) / Math.Max(_recentOrders.Count, 1));
+
+            for (int i = 0; i < _recentOrders.Count; i++)
+            {
+                var o = _recentOrders[i];
+                if (i % 2 == 1)
+                {
+                    using var altBrush = new SolidBrush(Color.FromArgb(8, 0, 0, 0));
+                    g.FillRectangle(altBrush, 12, y - 2, pnl.Width - 24, rowH);
+                }
+                g.DrawString(o.OrderId.Length > 12 ? o.OrderId[^8..] : o.OrderId, rowFont, new SolidBrush(RTextPrimary), 20, y);
+                
+                var custName = _selectedSessionOrders.FirstOrDefault(x => x.OrderId == o.OrderId)?.CustomerName ?? "Walk-in";
+                g.DrawString(custName, rowFont, new SolidBrush(RTextPrimary), pnl.Width * 0.30f, y);
+                
+                g.DrawString(Fmt(o.Total), boldFont, new SolidBrush(RGreen), pnl.Width * 0.60f, y);
+                g.DrawString(o.Timestamp.ToString("h:mm tt"), rowFont, new SolidBrush(RTextSecondary), pnl.Width * 0.80f, y);
+                y += rowH;
+            }
+        }
+
+        private static GraphicsPath CreateRoundRectPath(Rectangle rect, int radius)
+        {
+            var path = new GraphicsPath();
+            int d = radius * 2;
+            path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
         }
     }
 

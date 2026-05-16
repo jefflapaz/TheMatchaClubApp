@@ -68,13 +68,21 @@ namespace TheMatchaClubApp.Forms
             picAvatar.SizeMode = PictureBoxSizeMode.StretchImage; picAvatar.BackColor = Color.Transparent;
             picAvatar.Paint += PicAvatar_Paint;
 
-            // ── Quick Actions ─────────────────────────────────────
+            // ── Quick Actions (PRIMARY → SECONDARY → TERTIARY) ────
             pnlQuickActions.BackColor = Color.Transparent;
             StyleActionBtn(btnQuickNewSale, Green, true);
-            StyleActionBtn(btnQuickOpenSession, Blue, false);
+            btnQuickNewSale.Size = new Size(140, 32);
+            btnQuickNewSale.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            StyleActionBtn(btnQuickOpenSession, Green, false);
             StyleActionBtn(btnQuickCloseSession, Orange, false);
             StyleActionBtn(btnQuickReports, Purple, false);
-            StyleActionBtn(btnQuickAddProduct, Teal, false);
+            // Tertiary: muted fill, subtle text
+            btnQuickAddProduct.BorderRadius = 8;
+            btnQuickAddProduct.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnQuickAddProduct.FillColor = ColorTranslator.FromHtml("#F3F4F6");
+            btnQuickAddProduct.ForeColor = TextSecondary;
+            btnQuickAddProduct.BorderThickness = 0;
+            btnQuickAddProduct.HoverState.FillColor = ColorTranslator.FromHtml("#E5E7EB");
 
             // ── KPI Cards ─────────────────────────────────────────
             var cards = GetAllCards();
@@ -101,11 +109,12 @@ namespace TheMatchaClubApp.Forms
             pnlEmptyState.BackColor = Color.Transparent; pnlEmptyState.FillColor = CardBg;
             pnlEmptyState.BorderRadius = 16; pnlEmptyState.BorderColor = BorderCard; pnlEmptyState.BorderThickness = 1;
             pnlEmptyState.ShadowDecoration.Enabled = false;
-            lblEmptyIcon.Font = new Font("Segoe UI", 36F); lblEmptyIcon.ForeColor = TextMuted; lblEmptyIcon.BackColor = Color.Transparent;
-            lblEmptyMessage.Font = new Font("Segoe UI", 11F); lblEmptyMessage.ForeColor = TextSecondary; lblEmptyMessage.BackColor = Color.Transparent;
+            lblEmptyIcon.Font = new Font("Segoe UI", 42F); lblEmptyIcon.ForeColor = TextMuted; lblEmptyIcon.BackColor = Color.Transparent;
+            lblEmptyMessage.Font = new Font("Segoe UI", 12F); lblEmptyMessage.ForeColor = TextSecondary; lblEmptyMessage.BackColor = Color.Transparent;
             btnEmptyAction.FillColor = Green; btnEmptyAction.HoverState.FillColor = ColorTranslator.FromHtml("#46A037");
-            btnEmptyAction.BorderRadius = 10; btnEmptyAction.ForeColor = Color.White;
-            btnEmptyAction.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            btnEmptyAction.BorderRadius = 12; btnEmptyAction.ForeColor = Color.White;
+            btnEmptyAction.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            btnEmptyAction.Size = new Size(180, 44);
 
             // ── Resize ────────────────────────────────────────────
             this.Resize += (s, e) => ResizeLayout();
@@ -128,8 +137,8 @@ namespace TheMatchaClubApp.Forms
             card.BorderColor = BorderCard; card.BorderThickness = 1;
             card.ShadowDecoration.Enabled = true; card.ShadowDecoration.Depth = 6;
             card.ShadowDecoration.Color = Color.FromArgb(8, 0, 0, 0);
-            title.Font = new Font("Segoe UI", 8F); title.ForeColor = TextSecondary; title.BackColor = Color.Transparent;
-            value.Font = new Font("Segoe UI", 17F, FontStyle.Bold); value.ForeColor = TextPrimary; value.BackColor = Color.Transparent;
+            title.Font = new Font("Segoe UI", 7.5F); title.ForeColor = TextMuted; title.BackColor = Color.Transparent;
+            value.Font = new Font("Segoe UI", 18F, FontStyle.Bold); value.ForeColor = TextPrimary; value.BackColor = Color.Transparent;
         }
 
         private void StyleActionBtn(Guna2Button btn, Color accent, bool filled)
@@ -147,14 +156,14 @@ namespace TheMatchaClubApp.Forms
             pnl.BorderColor = BorderCard; pnl.BorderThickness = 1;
             pnl.ShadowDecoration.Enabled = true; pnl.ShadowDecoration.Depth = 4;
             pnl.ShadowDecoration.Color = Color.FromArgb(6, 0, 0, 0);
-            title.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
-            title.ForeColor = TextPrimary; title.BackColor = Color.Transparent;
+            title.Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold);
+            title.ForeColor = TextBody; title.BackColor = Color.Transparent;
         }
 
         // ── Responsive Layout ─────────────────────────────────────
         private void ResizeLayout()
         {
-            int m = 20, gap = 10;
+            int m = 24, gap = 12;
             int w = this.ClientSize.Width;
             int h = this.ClientSize.Height;
             if (w < 100 || h < 100) return;
@@ -168,24 +177,24 @@ namespace TheMatchaClubApp.Forms
             LayoutActionButtons();
 
             // KPI cards: 2 rows of 4
-            int kpiY = qaY + 44;
-            int cardW = Math.Max(140, (w - m * 2 - gap * 3) / 4);
-            int cardH = 72;
+            int kpiY = qaY + 46;
+            int cardW = Math.Max(160, (w - m * 2 - gap * 3) / 4);
+            int cardH = 76;
             var cards = GetAllCards();
             for (int i = 0; i < 8; i++)
             {
                 int row = i / 4, col = i % 4;
                 cards[i].card.Location = new Point(m + col * (cardW + gap), kpiY + row * (cardH + gap));
                 cards[i].card.Size = new Size(cardW, cardH);
-                cards[i].title.Location = new Point(50, 12);
-                cards[i].value.Location = new Point(50, 32);
-                cards[i].value.MaximumSize = new Size(cardW - 60, 30);
+                cards[i].title.Location = new Point(52, 14);
+                cards[i].value.Location = new Point(52, 34);
+                cards[i].value.MaximumSize = new Size(cardW - 64, 32);
             }
 
             // Analytics area
-            int analyticsY = kpiY + cardH * 2 + gap * 2 + 8;
+            int analyticsY = kpiY + cardH * 2 + gap * 2 + 10;
             int analyticsH = Math.Max(200, h - analyticsY - 8);
-            int rightW = Math.Max(220, Math.Min(340, (int)(w * 0.30)));
+            int rightW = Math.Max(260, Math.Min(340, (int)(w * 0.30)));
             int leftW = w - m * 2 - gap - rightW;
 
             // Left column panels

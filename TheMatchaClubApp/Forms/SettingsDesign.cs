@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
+using TheMatchaClubApp.Core;
+using TheMatchaClubApp.Core.Models;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -16,23 +18,34 @@ namespace TheMatchaClubApp.Forms
         private static readonly Color STextMuted = ColorTranslator.FromHtml("#9CA3AF");
         private static readonly Color SGreen = ColorTranslator.FromHtml("#52B743");
 
+        private static readonly string[] TabNames = {
+            "Store Profile", "Session & Cash", "Receipt Editor", "Appearance",
+            "Products & Categories", "Customers", "Export & Backup", "Security"
+        };
+        private static readonly string[] TabIcons = {
+            "🏪", "💰", "🧾", "🎨", "📦", "👥", "💾", "🔒"
+        };
+
         private void InitializeDesign()
         {
             this.BackColor = SBg;
             this.Dock = DockStyle.Fill;
 
-            // Tab sidebar
-            pnlTabSidebar.BackColor = Color.Transparent;
-
-            string[] tabs = { "Store Profile", "Receipt Editor", "App Preferences", "Admin Security", "Email (SMTP)", "Data Management" };
-            _tabButtons = new Guna2Button[tabs.Length];
-            for (int i = 0; i < tabs.Length; i++)
+            // ── Tab sidebar ──
+            pnlTabSidebar.BackColor = SCard;
+            pnlTabSidebar.Paint += (s, e) =>
+            {
+                using var pen = new Pen(ColorTranslator.FromHtml("#E5E7EB"), 1);
+                e.Graphics.DrawLine(pen, pnlTabSidebar.Width - 1, 0, pnlTabSidebar.Width - 1, pnlTabSidebar.Height);
+            };
+            _tabButtons = new Guna2Button[TabNames.Length];
+            for (int i = 0; i < TabNames.Length; i++)
             {
                 var btn = new Guna2Button
                 {
-                    Text = "   " + tabs[i],
-                    Size = new Size(208, 48),
-                    Margin = new Padding(0, 2, 0, 2),
+                    Text = $"  {TabIcons[i]}  {TabNames[i]}",
+                    Size = new Size(196, 40),
+                    Margin = new Padding(0, 1, 0, 1),
                     BorderRadius = 0,
                     TextAlign = HorizontalAlignment.Left,
                     Font = new Font("Segoe UI", 9F),
@@ -45,12 +58,22 @@ namespace TheMatchaClubApp.Forms
             }
             UpdateTabStyles();
 
-            // Right panel
             pnlRightPanel.BackColor = SBg;
-
-            lblSettingsTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            pnlRightPanel.Padding = new Padding(0);
+            lblSettingsTitle.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
             lblSettingsTitle.ForeColor = STextPrimary;
             lblSettingsTitle.BackColor = Color.Transparent;
+
+            // Responsive layout handler
+            pnlRightPanel.Resize += (s, e) =>
+            {
+                int pw = pnlRightPanel.Width;
+                btnSaveAll.Location = new Point(pw - btnSaveAll.Width - 28, 14);
+                foreach (var sp in _sectionPanels)
+                {
+                    sp.Size = new Size(pw, pnlRightPanel.Height - 58);
+                }
+            };
 
             btnSaveAll.FillColor = SGreen;
             btnSaveAll.HoverState.FillColor = ColorTranslator.FromHtml("#46A037");
@@ -59,16 +82,15 @@ namespace TheMatchaClubApp.Forms
             btnSaveAll.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnSaveAll.BorderThickness = 0;
 
-            // Card 1
-            StyleSettingsCard(pnlCard1);
-            lblCard1Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
-            lblCard1Title.ForeColor = STextPrimary;
-            lblCard1Title.BackColor = Color.Transparent;
-            lblCard1Sub.Font = new Font("Segoe UI", 8F);
-            lblCard1Sub.ForeColor = STextSecondary;
-            lblCard1Sub.BackColor = Color.Transparent;
+            // ── Store Profile cards ──
+            StyleSettingsCard(pnlCardProfile);
+            StyleCardHeader(lblCardProfileTitle, lblCardProfileSub);
+            StyleSettingsCard(pnlCardLocation);
+            StyleCardHeader(lblCardLocationTitle, lblCardLocationSub);
+            StyleSettingsCard(pnlCardSmtp);
+            StyleCardHeader(lblCardSmtpTitle, lblCardSmtpSub);
 
-            // Logo upload box
+            // Logo upload
             pnlLogoUpload.BackColor = Color.Transparent;
             pnlLogoUpload.FillColor = ColorTranslator.FromHtml("#F9FAFB");
             pnlLogoUpload.BorderColor = SBorder;
@@ -78,54 +100,126 @@ namespace TheMatchaClubApp.Forms
             pnlLogoUpload.Cursor = Cursors.Hand;
             pnlLogoUpload.Paint += (s, e) =>
             {
-                // Dashed border
                 using var pen = new Pen(SBorder, 1.5f) { DashStyle = DashStyle.Dash };
-                var g = e.Graphics;
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.DrawRectangle(pen, 4, 4, pnlLogoUpload.Width - 8, pnlLogoUpload.Height - 8);
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                e.Graphics.DrawRectangle(pen, 4, 4, pnlLogoUpload.Width - 8, pnlLogoUpload.Height - 8);
             };
             lblUploadText.Font = new Font("Segoe UI", 8F);
             lblUploadText.ForeColor = STextMuted;
             lblUploadText.BackColor = Color.Transparent;
 
-            // Input fields
-            StyleInput(txtStoreName);
-            StyleInput(txtTaxId);
-            StyleInput(txtSupportEmail);
-            StyleFieldLabel(lblStoreNameLabel);
-            StyleFieldLabel(lblTaxIdLabel);
-            StyleFieldLabel(lblSupportEmailLabel);
+            // Store Profile inputs
+            StyleInput(txtStoreName); StyleInput(txtSupportEmail); StyleInput(txtPhone); StyleInput(txtReceiptFooter); StyleInput(txtCashierName);
+            StyleFieldLabel(lblStoreNameLabel); StyleFieldLabel(lblSupportEmailLabel); StyleFieldLabel(lblPhoneLabel); StyleFieldLabel(lblReceiptFooterLabel); StyleFieldLabel(lblCashierNameLabel);
 
-            // Card 2
-            StyleSettingsCard(pnlCard2);
-            lblCard2Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
-            lblCard2Title.ForeColor = STextPrimary;
-            lblCard2Title.BackColor = Color.Transparent;
-            lblCard2Sub.Font = new Font("Segoe UI", 8F);
-            lblCard2Sub.ForeColor = STextSecondary;
-            lblCard2Sub.BackColor = Color.Transparent;
+            // Location inputs
+            StyleInput(txtPopupLocation); StyleInput(txtOperatingLocation);
+            StyleFieldLabel(lblPopupLocationLabel); StyleFieldLabel(lblOperatingLocationLabel);
 
-            StyleInput(txtAddress);
-            StyleInput(txtCity);
-            StyleInput(txtPostalCode);
-            StyleInput(txtPhone);
-            StyleInput(txtWebsite);
-            StyleFieldLabel(lblAddressLabel);
-            StyleFieldLabel(lblCityLabel);
-            StyleFieldLabel(lblPostalLabel);
-            StyleFieldLabel(lblPhoneLabel);
-            StyleFieldLabel(lblWebsiteLabel);
+            // SMTP inputs
+            StyleInput(txtSmtpServer); StyleInput(txtSmtpPort); StyleInput(txtSmtpPassword);
+            StyleFieldLabel(lblSmtpServerLabel); StyleFieldLabel(lblSmtpPortLabel); StyleFieldLabel(lblSmtpPasswordLabel);
 
-            // Placeholder
-            pnlPlaceholder.BackColor = Color.Transparent;
-            pnlPlaceholder.FillColor = SCard;
-            pnlPlaceholder.BorderRadius = 16;
-            pnlPlaceholder.BorderColor = ColorTranslator.FromHtml("#F3F4F6");
-            pnlPlaceholder.BorderThickness = 1;
-            pnlPlaceholder.ShadowDecoration.Enabled = false;
-            lblPlaceholderText.Font = new Font("Segoe UI", 10F);
-            lblPlaceholderText.ForeColor = STextMuted;
-            lblPlaceholderText.BackColor = Color.Transparent;
+            // ── Session & Cash card ──
+            StyleSettingsCard(pnlCardSession);
+            StyleCardHeader(lblCardSessionTitle, lblCardSessionSub);
+            StyleInput(txtDefaultCash); StyleInput(txtSessionTimeout);
+            StyleFieldLabel(lblDefaultCashLabel); StyleFieldLabel(lblSessionTimeoutLabel);
+
+            // Toggle labels
+            StyleToggleLabel(lblRequireCashCount);
+            StyleToggleLabel(lblOverShortWarnings);
+            StyleToggleLabel(lblAutoZReport);
+            StyleToggleLabel(lblAutoLockQuickSale);
+
+            // Toggle switches
+            StyleToggle(chkRequireCashCount);
+            StyleToggle(chkOverShortWarnings);
+            StyleToggle(chkAutoZReport);
+            StyleToggle(chkAutoLockQuickSale);
+
+            // ── Receipt Editor card ──
+            StyleSettingsCard(pnlCardReceipt);
+            StyleCardHeader(lblCardReceiptTitle, lblCardReceiptSub);
+            StyleToggleLabel(lblShowCashier); StyleToggle(chkShowCashier);
+            StyleToggleLabel(lblShowCustomer); StyleToggle(chkShowCustomer);
+            StyleToggleLabel(lblShowOrderType); StyleToggle(chkShowOrderType);
+            StyleToggleLabel(lblShowSessionNum); StyleToggle(chkShowSessionNum);
+            StyleFieldLabel(lblPaperWidthLabel); StyleFieldLabel(lblReceiptFooterEditorLabel);
+            StyleInput(txtReceiptFooterEditor);
+            cmbPaperWidth.BorderRadius = 8; cmbPaperWidth.BorderColor = SBorder;
+            cmbPaperWidth.FocusedState.BorderColor = SGreen; cmbPaperWidth.ForeColor = STextPrimary;
+            cmbPaperWidth.BackColor = Color.Transparent; cmbPaperWidth.FillColor = SCard;
+            cmbPaperWidth.Font = new Font("Segoe UI", 9F);
+
+            // Receipt live preview
+            pnlReceiptPreview.BackColor = Color.Transparent;
+            pnlReceiptPreview.FillColor = Color.White;
+            pnlReceiptPreview.BorderColor = SBorder;
+            pnlReceiptPreview.BorderRadius = 4;
+            pnlReceiptPreview.BorderThickness = 1;
+            pnlReceiptPreview.ShadowDecoration.Enabled = true;
+            pnlReceiptPreview.ShadowDecoration.Depth = 8;
+            pnlReceiptPreview.ShadowDecoration.Color = Color.FromArgb(20, 0, 0, 0);
+            pnlReceiptPreview.Paint += PnlReceiptPreview_Paint;
+
+            // Preview title label
+            lblReceiptPreviewTitle.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            lblReceiptPreviewTitle.ForeColor = STextMuted;
+            lblReceiptPreviewTitle.BackColor = Color.Transparent;
+            lblReceiptPreviewTitle.TextAlign = ContentAlignment.MiddleCenter;
+
+            // ── Appearance card ──
+            StyleSettingsCard(pnlCardAppearance);
+            StyleCardHeader(lblCardAppearanceTitle, lblCardAppearanceSub);
+            StyleToggleLabel(lblDarkMode); StyleToggle(chkDarkMode);
+            StyleToggleLabel(lblAnimations); StyleToggle(chkAnimations);
+            StyleFieldLabel(lblFontScaleLabel);
+            cmbFontScale.BorderRadius = 8; cmbFontScale.BorderColor = SBorder;
+            cmbFontScale.FocusedState.BorderColor = SGreen; cmbFontScale.ForeColor = STextPrimary;
+            cmbFontScale.BackColor = Color.Transparent; cmbFontScale.FillColor = SCard;
+            cmbFontScale.Font = new Font("Segoe UI", 9F);
+
+            // ── Placeholder styling for other sections ──
+            StylePlaceholderSection(pnlProductsCats, "📦", "Products & Categories", $"Managing {Program.DataService.Products.Count} products across {Program.DataService.Categories.Count} categories.");
+            StylePlaceholderSection(pnlCustomers, "👥", "Customers", $"Managing {Program.DataService.Customers.Count} registered customers.");
+            StylePlaceholderSection(pnlExportBackup, "💾", "Export & Backup", "Export your data or create a full backup.");
+            StylePlaceholderSection(pnlSecurity, "🔒", "Security", "Password and authentication settings.");
+        }
+
+        private void StylePlaceholderSection(Panel section, string icon, string title, string description)
+        {
+            var card = new Guna2Panel
+            {
+                Location = new Point(24, 8),
+                Size = new Size(720, 200),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(card);
+
+            var lblIcon = new Label
+            {
+                Text = icon, Font = new Font("Segoe UI", 32F),
+                Location = new Point(24, 30), AutoSize = true, BackColor = Color.Transparent
+            };
+            var lblTitle = new Label
+            {
+                Text = title, Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold),
+                ForeColor = STextPrimary, Location = new Point(24, 100), AutoSize = true, BackColor = Color.Transparent
+            };
+            var lblDesc = new Label
+            {
+                Text = description, Font = new Font("Segoe UI", 9F),
+                ForeColor = STextSecondary, Location = new Point(24, 130), Size = new Size(660, 40), BackColor = Color.Transparent
+            };
+            var lblStatus = new Label
+            {
+                Text = "✅ Connected to live data", Font = new Font("Segoe UI", 8F),
+                ForeColor = SGreen, Location = new Point(24, 165), AutoSize = true, BackColor = Color.Transparent
+            };
+
+            card.Controls.Add(lblIcon); card.Controls.Add(lblTitle); card.Controls.Add(lblDesc); card.Controls.Add(lblStatus);
+            section.Controls.Add(card);
         }
 
         private void StyleSettingsCard(Guna2Panel card)
@@ -135,7 +229,19 @@ namespace TheMatchaClubApp.Forms
             card.BorderRadius = 16;
             card.BorderColor = ColorTranslator.FromHtml("#F3F4F6");
             card.BorderThickness = 1;
-            card.ShadowDecoration.Enabled = false;
+            card.ShadowDecoration.Enabled = true;
+            card.ShadowDecoration.Depth = 4;
+            card.ShadowDecoration.Color = Color.FromArgb(6, 0, 0, 0);
+        }
+
+        private void StyleCardHeader(Label title, Label sub)
+        {
+            title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            title.ForeColor = STextPrimary;
+            title.BackColor = Color.Transparent;
+            sub.Font = new Font("Segoe UI", 8F);
+            sub.ForeColor = STextSecondary;
+            sub.BackColor = Color.Transparent;
         }
 
         private void StyleInput(Guna2TextBox txt)
@@ -157,18 +263,33 @@ namespace TheMatchaClubApp.Forms
             lbl.BackColor = Color.Transparent;
         }
 
+        private void StyleToggleLabel(Label lbl)
+        {
+            lbl.Font = new Font("Segoe UI", 9.5F);
+            lbl.ForeColor = STextPrimary;
+            lbl.BackColor = Color.Transparent;
+        }
+
+        private void StyleToggle(Guna2ToggleSwitch toggle)
+        {
+            toggle.CheckedState.FillColor = SGreen;
+            toggle.CheckedState.InnerColor = Color.White;
+            toggle.UncheckedState.FillColor = ColorTranslator.FromHtml("#D1D5DB");
+            toggle.UncheckedState.InnerColor = Color.White;
+        }
+
         private void UpdateTabStyles()
         {
-            foreach (var btn in _tabButtons)
+            for (int i = 0; i < _tabButtons.Length; i++)
             {
-                string name = btn.Text.Trim();
+                var btn = _tabButtons[i];
+                string name = TabNames[i];
                 bool active = name == _activeTab;
                 if (active)
                 {
                     btn.FillColor = SCard;
                     btn.ForeColor = SGreen;
                     btn.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
-                    // Left border via Paint
                     btn.Paint -= TabBtn_Paint;
                     btn.Paint += TabBtn_Paint;
                 }
@@ -184,9 +305,28 @@ namespace TheMatchaClubApp.Forms
 
         private void TabBtn_Paint(object? sender, PaintEventArgs e)
         {
-            // Left green border for active tab
             using var brush = new SolidBrush(SGreen);
             e.Graphics.FillRectangle(brush, 0, 4, 4, ((Control)sender!).Height - 8);
+        }
+
+        private void PnlReceiptPreview_Paint(object? sender, PaintEventArgs e)
+        {
+            // Build a live settings snapshot from current field values
+            var liveSettings = new StoreSettings
+            {
+                StoreName = txtStoreName.Text,
+                Address = Program.DataService.Settings.Address,
+                CurrentOperatingLocation = txtOperatingLocation.Text,
+                Phone = txtPhone.Text,
+                Email = txtSupportEmail.Text,
+                ReceiptShowCashierName = chkShowCashier.Checked,
+                ReceiptShowCustomerName = chkShowCustomer.Checked,
+                ReceiptShowOrderType = chkShowOrderType.Checked,
+                ReceiptShowSessionNumber = chkShowSessionNum.Checked,
+                ReceiptFooterMessage = txtReceiptFooterEditor?.Text ?? "Thank you!"
+            };
+
+            ReceiptRenderer.Render(e.Graphics, pnlReceiptPreview.ClientRectangle, null, liveSettings);
         }
     }
 }

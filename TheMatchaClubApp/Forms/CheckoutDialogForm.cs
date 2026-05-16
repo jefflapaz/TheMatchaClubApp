@@ -22,6 +22,7 @@ namespace TheMatchaClubApp.Forms
         private decimal _totalAmount;
         private Customer? _selectedExistingCustomer;
         private bool _suppressSearch;
+        private bool _isProcessing; // Prevent double-click
 
         // ── Constructor ──────────────────────────────────────────────
         public CheckoutDialogForm(decimal totalAmount)
@@ -54,6 +55,31 @@ namespace TheMatchaClubApp.Forms
             txtCustomerSearch.TextChanged += (s, e) => ClearValidation();
             txtFirstName.TextChanged += (s, e) => ClearValidation();
             txtLastName.TextChanged += (s, e) => ClearValidation();
+
+            // ── Keyboard shortcuts ──
+            // ENTER in Cash field → confirm if valid
+            txtCash.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter && btnConfirm.Enabled && !_isProcessing)
+                {
+                    e.SuppressKeyPress = true;
+                    BtnConfirm_Click(btnConfirm, EventArgs.Empty);
+                }
+            };
+
+            // ESC → cancel
+            this.KeyPreview = true;
+            this.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Escape)
+                {
+                    this.DialogResult = DialogResult.Cancel;
+                    this.Close();
+                }
+            };
+
+            // Auto-focus cash field on dialog shown
+            this.Shown += (s, e) => txtCash.Focus();
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -205,50 +231,68 @@ namespace TheMatchaClubApp.Forms
 
         private async void BtnConfirm_Click(object? sender, EventArgs e)
         {
+            if (_isProcessing) return; // Prevent double-click
             ClearValidation();
 
             if (!decimal.TryParse(txtCash.Text, out decimal cash) || cash < _totalAmount) return;
 
-            CashReceived = cash;
-            ChangeDue = cash - _totalAmount;
+            _isProcessing = true;
+            btnConfirm.Enabled = false;
+            btnConfirm.Text = "Processing...";
 
-            // ── Path A: Existing customer selected from autocomplete ──
-            if (_selectedExistingCustomer != null)
+            try
             {
-                SelectedCustomer = _selectedExistingCustomer;
-            }
-            // ── Path B: New customer via dedicated fields ──
-            else if (!string.IsNullOrWhiteSpace(txtFirstName.Text) || !string.IsNullOrWhiteSpace(txtLastName.Text))
-            {
-                string firstName = txtFirstName.Text.Trim();
-                string lastName = txtLastName.Text.Trim();
-                string fullName = $"{firstName} {lastName}".Trim();
+                CashReceived = cash;
+                ChangeDue = cash - _totalAmount;
 
-                var newCust = new Customer
+                // ── Path A: Existing customer selected from autocomplete ──
+                if (_selectedExistingCustomer != null)
                 {
-                    Name = fullName,
-                    Phone = txtPhone.Text.Trim(),
-                    Email = txtNewEmail.Text.Trim(),
-                    MemberSince = DateTime.Now
-                };
-                Program.DataService.Customers.Add(newCust);
-                await Program.DataService.SaveCustomersAsync();
-                SelectedCustomer = newCust;
-            }
-            // ── Path C: Walk-in (everything empty) ──
-            else if (string.IsNullOrWhiteSpace(txtCustomerSearch.Text))
-            {
-                SelectedCustomer = null;
-            }
-            // ── Invalid: search text present but no selection or fields filled ──
-            else
-            {
-                ShowValidationError("The customer has not yet registered yet.");
-                return;
-            }
+                    SelectedCustomer = _selectedExistingCustomer;
+                }
+                // ── Path B: New customer via dedicated fields ──
+                else if (!string.IsNullOrWhiteSpace(txtFirstName.Text) || !string.IsNullOrWhiteSpace(txtLastName.Text))
+                {
+                    string firstName = txtFirstName.Text.Trim();
+                    string lastName = txtLastName.Text.Trim();
+                    string fullName = $"{firstName} {lastName}".Trim();
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+                    var newCust = new Customer
+                    {
+                        Name = fullName,
+                        Phone = txtPhone.Text.Trim(),
+                        Email = txtNewEmail.Text.Trim(),
+                        MemberSince = DateTime.Now
+                    };
+                    Program.DataService.Customers.Add(newCust);
+                    await Program.DataService.SaveCustomersAsync();
+                    SelectedCustomer = newCust;
+                }
+                // ── Path C: Walk-in (everything empty) ──
+                else if (string.IsNullOrWhiteSpace(txtCustomerSearch.Text))
+                {
+                    SelectedCustomer = null;
+                }
+                // ── Invalid: search text present but no selection or fields filled ──
+                else
+                {
+                    ShowValidationError("Customer not found. Please select from suggestions or fill in details.");
+                    _isProcessing = false;
+                    btnConfirm.Enabled = true;
+                    btnConfirm.Text = "✓  Confirm & Complete Sale";
+                    return;
+                }
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                _isProcessing = false;
+                btnConfirm.Enabled = true;
+                btnConfirm.Text = "✓  Confirm & Complete Sale";
+                ShowValidationError($"Error: {ex.Message}");
+            }
         }
 
         protected override void Dispose(bool disposing)

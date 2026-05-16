@@ -49,11 +49,11 @@ namespace TheMatchaClubApp.Forms
             // txtQty
             txtQty.Location = new System.Drawing.Point(38, 11);
             txtQty.Name = "txtQty";
-            txtQty.Size = new System.Drawing.Size(42, 30);
+            txtQty.Size = new System.Drawing.Size(48, 30);
             txtQty.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
 
             // btnPlus
-            btnPlus.Location = new System.Drawing.Point(80, 11);
+            btnPlus.Location = new System.Drawing.Point(86, 11);
             btnPlus.Name = "btnPlus";
             btnPlus.Size = new System.Drawing.Size(30, 30);
             btnPlus.Text = "+";

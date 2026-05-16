@@ -30,6 +30,8 @@ namespace TheMatchaClubApp.Forms
             btnCloseReceipt = new Guna.UI2.WinForms.Guna2Button();
             pnlReceiptBody = new System.Windows.Forms.Panel();
             lblStoreName = new System.Windows.Forms.Label();
+            pnlReceiptLogo = new Guna.UI2.WinForms.Guna2Panel();
+            lblReceiptLogo = new System.Windows.Forms.Label();
             lblStoreAddress = new System.Windows.Forms.Label();
             lblReceiptOrderIdLabel = new System.Windows.Forms.Label();
             lblReceiptOrderId = new System.Windows.Forms.Label();
@@ -40,14 +42,21 @@ namespace TheMatchaClubApp.Forms
             lblReceiptItems = new System.Windows.Forms.Label();
             lblReceiptSubtotalLabel = new System.Windows.Forms.Label();
             lblReceiptSubtotal = new System.Windows.Forms.Label();
-            lblReceiptTaxLabel = new System.Windows.Forms.Label();
-            lblReceiptTax = new System.Windows.Forms.Label();
             lblReceiptTotalLabel = new System.Windows.Forms.Label();
             lblReceiptTotal = new System.Windows.Forms.Label();
             lblPaidVia = new System.Windows.Forms.Label();
             lblThankYou = new System.Windows.Forms.Label();
+            btnPrintReceipt = new Guna.UI2.WinForms.Guna2Button();
             btnExportPDF = new Guna.UI2.WinForms.Guna2Button();
             btnEmailReceipt = new Guna.UI2.WinForms.Guna2Button();
+            lblReceiptCashierLabel = new System.Windows.Forms.Label();
+            lblReceiptCashier = new System.Windows.Forms.Label();
+            lblReceiptOrderTypeLabel = new System.Windows.Forms.Label();
+            lblReceiptOrderType = new System.Windows.Forms.Label();
+            lblReceiptCashTenderedLabel = new System.Windows.Forms.Label();
+            lblReceiptCashTendered = new System.Windows.Forms.Label();
+            lblReceiptChangeLabel = new System.Windows.Forms.Label();
+            lblReceiptChange = new System.Windows.Forms.Label();
 
             SuspendLayout();
 
@@ -156,7 +165,7 @@ namespace TheMatchaClubApp.Forms
             pnlReceiptHeader.Size = new System.Drawing.Size(320, 48);
             lblReceiptTitle.Location = new System.Drawing.Point(16, 14);
             lblReceiptTitle.Size = new System.Drawing.Size(140, 20);
-            lblReceiptTitle.Text = "\U0001F9FE Virtual Receipt";
+            lblReceiptTitle.Text = "Virtual Receipt";
             btnCloseReceipt.Location = new System.Drawing.Point(280, 10);
             btnCloseReceipt.Size = new System.Drawing.Size(28, 28);
             btnCloseReceipt.Text = "\u2715";
@@ -164,6 +173,7 @@ namespace TheMatchaClubApp.Forms
             // Receipt body
             pnlReceiptBody.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlReceiptBody.AutoScroll = true;
+            pnlReceiptBody.Controls.Add(pnlReceiptLogo);
             pnlReceiptBody.Controls.Add(lblStoreName);
             pnlReceiptBody.Controls.Add(lblStoreAddress);
             pnlReceiptBody.Controls.Add(lblReceiptOrderIdLabel);
@@ -175,21 +185,38 @@ namespace TheMatchaClubApp.Forms
             pnlReceiptBody.Controls.Add(lblReceiptItems);
             pnlReceiptBody.Controls.Add(lblReceiptSubtotalLabel);
             pnlReceiptBody.Controls.Add(lblReceiptSubtotal);
-            pnlReceiptBody.Controls.Add(lblReceiptTaxLabel);
-            pnlReceiptBody.Controls.Add(lblReceiptTax);
             pnlReceiptBody.Controls.Add(lblReceiptTotalLabel);
             pnlReceiptBody.Controls.Add(lblReceiptTotal);
             pnlReceiptBody.Controls.Add(lblPaidVia);
             pnlReceiptBody.Controls.Add(lblThankYou);
+            pnlReceiptBody.Controls.Add(lblReceiptCashierLabel);
+            pnlReceiptBody.Controls.Add(lblReceiptCashier);
+            pnlReceiptBody.Controls.Add(lblReceiptOrderTypeLabel);
+            pnlReceiptBody.Controls.Add(lblReceiptOrderType);
+            pnlReceiptBody.Controls.Add(lblReceiptCashTenderedLabel);
+            pnlReceiptBody.Controls.Add(lblReceiptCashTendered);
+            pnlReceiptBody.Controls.Add(lblReceiptChangeLabel);
+            pnlReceiptBody.Controls.Add(lblReceiptChange);
+            pnlReceiptBody.Controls.Add(btnPrintReceipt);
             pnlReceiptBody.Controls.Add(btnExportPDF);
             pnlReceiptBody.Controls.Add(btnEmailReceipt);
 
-            lblStoreName.Location = new System.Drawing.Point(90, 20);
+            // pnlReceiptLogo
+            pnlReceiptLogo.Controls.Add(lblReceiptLogo);
+            pnlReceiptLogo.Size = new System.Drawing.Size(44, 44);
+            pnlReceiptLogo.BorderRadius = 22;
+            
+            // lblReceiptLogo
+            lblReceiptLogo.Text = "\U0001F375";
+            lblReceiptLogo.Size = new System.Drawing.Size(44, 44);
+            lblReceiptLogo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+            lblStoreName.Location = new System.Drawing.Point(16, 85);
             lblStoreName.Size = new System.Drawing.Size(140, 24);
-            lblStoreName.Text = "Matcha Caf\u00E9";
-            lblStoreAddress.Location = new System.Drawing.Point(60, 44);
+            lblStoreName.Text = "The Matcha Club";
+            lblStoreAddress.Location = new System.Drawing.Point(60, 115);
             lblStoreAddress.Size = new System.Drawing.Size(200, 16);
-            lblStoreAddress.Text = "123 Green Tea Lane, Suite 4B";
+            lblStoreAddress.Text = "";
 
             lblReceiptOrderIdLabel.Location = new System.Drawing.Point(16, 80);
             lblReceiptOrderIdLabel.Size = new System.Drawing.Size(80, 16);
@@ -227,13 +254,6 @@ namespace TheMatchaClubApp.Forms
             lblReceiptSubtotal.Text = "$23.15";
             lblReceiptSubtotal.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
-            lblReceiptTaxLabel.Location = new System.Drawing.Point(16, 232);
-            lblReceiptTaxLabel.Size = new System.Drawing.Size(80, 16);
-            lblReceiptTaxLabel.Text = "Tax";
-            lblReceiptTax.Location = new System.Drawing.Point(200, 232);
-            lblReceiptTax.Size = new System.Drawing.Size(100, 16);
-            lblReceiptTax.Text = "$1.85";
-            lblReceiptTax.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
             lblReceiptTotalLabel.Location = new System.Drawing.Point(16, 260);
             lblReceiptTotalLabel.Size = new System.Drawing.Size(80, 20);
@@ -253,11 +273,49 @@ namespace TheMatchaClubApp.Forms
             lblThankYou.Text = "Thank you!";
             lblThankYou.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
-            btnExportPDF.Location = new System.Drawing.Point(16, 370);
-            btnExportPDF.Size = new System.Drawing.Size(140, 36);
-            btnExportPDF.Text = "\U0001F4E5 Export PDF";
-            btnEmailReceipt.Location = new System.Drawing.Point(164, 370);
-            btnEmailReceipt.Size = new System.Drawing.Size(140, 36);
+            // Cashier + Order Type labels
+            lblReceiptCashierLabel.Location = new System.Drawing.Point(16, 120);
+            lblReceiptCashierLabel.Size = new System.Drawing.Size(80, 16);
+            lblReceiptCashierLabel.Text = "Cashier";
+            lblReceiptCashier.Location = new System.Drawing.Point(180, 120);
+            lblReceiptCashier.Size = new System.Drawing.Size(120, 16);
+            lblReceiptCashier.Text = "—";
+            lblReceiptCashier.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+
+            lblReceiptOrderTypeLabel.Location = new System.Drawing.Point(16, 140);
+            lblReceiptOrderTypeLabel.Size = new System.Drawing.Size(80, 16);
+            lblReceiptOrderTypeLabel.Text = "Order Type";
+            lblReceiptOrderType.Location = new System.Drawing.Point(180, 140);
+            lblReceiptOrderType.Size = new System.Drawing.Size(120, 16);
+            lblReceiptOrderType.Text = "Dine-In";
+            lblReceiptOrderType.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+
+            // Cash Tendered / Change labels
+            lblReceiptCashTenderedLabel.Location = new System.Drawing.Point(16, 280);
+            lblReceiptCashTenderedLabel.Size = new System.Drawing.Size(100, 16);
+            lblReceiptCashTenderedLabel.Text = "Cash Tendered";
+            lblReceiptCashTendered.Location = new System.Drawing.Point(200, 280);
+            lblReceiptCashTendered.Size = new System.Drawing.Size(100, 16);
+            lblReceiptCashTendered.Text = "\u20b10.00";
+            lblReceiptCashTendered.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+
+            lblReceiptChangeLabel.Location = new System.Drawing.Point(16, 300);
+            lblReceiptChangeLabel.Size = new System.Drawing.Size(100, 16);
+            lblReceiptChangeLabel.Text = "Change";
+            lblReceiptChange.Location = new System.Drawing.Point(200, 300);
+            lblReceiptChange.Size = new System.Drawing.Size(100, 16);
+            lblReceiptChange.Text = "\u20b10.00";
+            lblReceiptChange.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+
+            // Action buttons: Print → Export PDF → Email
+            btnPrintReceipt.Location = new System.Drawing.Point(16, 370);
+            btnPrintReceipt.Size = new System.Drawing.Size(88, 36);
+            btnPrintReceipt.Text = "\U0001F5A8 Print";
+            btnExportPDF.Location = new System.Drawing.Point(110, 370);
+            btnExportPDF.Size = new System.Drawing.Size(100, 36);
+            btnExportPDF.Text = "\U0001F4E5 PDF";
+            btnEmailReceipt.Location = new System.Drawing.Point(216, 370);
+            btnEmailReceipt.Size = new System.Drawing.Size(88, 36);
             btnEmailReceipt.Text = "\u2709 Email";
 
             // OrdersView
@@ -292,6 +350,8 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblReceiptTitle;
         private Guna.UI2.WinForms.Guna2Button btnCloseReceipt;
         private System.Windows.Forms.Panel pnlReceiptBody;
+        private Guna.UI2.WinForms.Guna2Panel pnlReceiptLogo;
+        private System.Windows.Forms.Label lblReceiptLogo;
         private System.Windows.Forms.Label lblStoreName;
         private System.Windows.Forms.Label lblStoreAddress;
         private System.Windows.Forms.Label lblReceiptOrderIdLabel;
@@ -303,13 +363,20 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblReceiptItems;
         private System.Windows.Forms.Label lblReceiptSubtotalLabel;
         private System.Windows.Forms.Label lblReceiptSubtotal;
-        private System.Windows.Forms.Label lblReceiptTaxLabel;
-        private System.Windows.Forms.Label lblReceiptTax;
         private System.Windows.Forms.Label lblReceiptTotalLabel;
         private System.Windows.Forms.Label lblReceiptTotal;
         private System.Windows.Forms.Label lblPaidVia;
         private System.Windows.Forms.Label lblThankYou;
+        private Guna.UI2.WinForms.Guna2Button btnPrintReceipt;
         private Guna.UI2.WinForms.Guna2Button btnExportPDF;
         private Guna.UI2.WinForms.Guna2Button btnEmailReceipt;
+        private System.Windows.Forms.Label lblReceiptCashierLabel;
+        private System.Windows.Forms.Label lblReceiptCashier;
+        private System.Windows.Forms.Label lblReceiptOrderTypeLabel;
+        private System.Windows.Forms.Label lblReceiptOrderType;
+        private System.Windows.Forms.Label lblReceiptCashTenderedLabel;
+        private System.Windows.Forms.Label lblReceiptCashTendered;
+        private System.Windows.Forms.Label lblReceiptChangeLabel;
+        private System.Windows.Forms.Label lblReceiptChange;
     }
 }

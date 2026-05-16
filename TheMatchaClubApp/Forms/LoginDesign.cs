@@ -59,7 +59,7 @@ namespace TheMatchaClubApp.Forms
             pnlBadge.BorderThickness = 1;
             pnlBadge.BorderColor = ColorTranslator.FromHtml("#E5E7EB");
             
-            lblBadge.Font = new Font("Segoe UI", 7F, FontStyle.Bold);
+            lblBadge.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblBadge.ForeColor = ColorTranslator.FromHtml("#6B7280");
             lblBadge.TextAlign = ContentAlignment.MiddleCenter;
 
@@ -116,45 +116,7 @@ namespace TheMatchaClubApp.Forms
             btnSignIn.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
             btnSignIn.Click += BtnSignIn_Click;
 
-            // Divider
-            pnlDividerLeft.FillColor = ColorTranslator.FromHtml("#F3F4F6");
-            pnlDividerRight.FillColor = ColorTranslator.FromHtml("#F3F4F6");
-            
-            lblOr.Font = new Font("Segoe UI", 7F, FontStyle.Bold);
-            lblOr.ForeColor = ColorTranslator.FromHtml("#9CA3AF");
-            lblOr.TextAlign = ContentAlignment.MiddleCenter;
-
-            // Clock In Button
-            btnClockIn.FillColor = Color.White;
-            btnClockIn.BorderColor = ColorTranslator.FromHtml("#E5E7EB");
-            btnClockIn.BorderThickness = 1;
-            btnClockIn.BorderRadius = 8;
-            btnClockIn.ForeColor = ColorTranslator.FromHtml("#374151");
-            btnClockIn.Font = new Font("Segoe UI", 9F);
-            btnClockIn.HoverState.FillColor = ColorTranslator.FromHtml("#F9FAFB");
-
-            // First Time Setup
-            pnlFirstTimeSetup.BackColor = Color.Transparent;
-            pnlFirstTimeSetup.FillColor = ColorTranslator.FromHtml("#F2FAEF");
-            pnlFirstTimeSetup.BorderColor = ColorTranslator.FromHtml("#E2F3DD");
-            pnlFirstTimeSetup.BorderThickness = 1;
-            pnlFirstTimeSetup.BorderRadius = 12;
-            pnlFirstTimeSetup.Paint += PnlFirstTimeSetup_Paint;
-
-            lblSetupTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblSetupTitle.ForeColor = ColorTranslator.FromHtml("#111827");
-            
-            lblSetupDesc.Font = new Font("Segoe UI", 8F, FontStyle.Regular);
-            lblSetupDesc.ForeColor = ColorTranslator.FromHtml("#6B7280");
-
-            lnkSetup.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            lnkSetup.LinkColor = ColorTranslator.FromHtml("#52B743");
-            lnkSetup.ActiveLinkColor = ColorTranslator.FromHtml("#46A037");
-            lnkSetup.LinkBehavior = LinkBehavior.HoverUnderline;
-            lnkSetup.Cursor = Cursors.Hand;
-            lnkSetup.Click += LnkSetup_Click;
-
-
+            btnSignIn.Click += BtnSignIn_Click;
         }
 
         private void PicLogo_Paint(object? sender, PaintEventArgs e)
@@ -180,23 +142,6 @@ namespace TheMatchaClubApp.Forms
             {
                 SizeF textSize = e.Graphics.MeasureString(leaf, font);
                 e.Graphics.DrawString(leaf, font, textBrush, (52 - textSize.Width) / 2, (52 - textSize.Height) / 2 + 2);
-            }
-        }
-
-        private void PnlFirstTimeSetup_Paint(object? sender, PaintEventArgs e)
-        {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            
-            // Draw info icon
-            using (SolidBrush brush = new SolidBrush(ColorTranslator.FromHtml("#52B743")))
-            {
-                e.Graphics.FillEllipse(brush, new Rectangle(12, 12, 18, 18));
-            }
-
-            using (Font font = new Font("Segoe UI", 10F, FontStyle.Bold))
-            using (SolidBrush textBrush = new SolidBrush(Color.White))
-            {
-                e.Graphics.DrawString("i", font, textBrush, 16, 11);
             }
         }
 
@@ -320,15 +265,6 @@ namespace TheMatchaClubApp.Forms
                 btnSignIn.Enabled = true;
                 btnSignIn.Text = "Sign In to Terminal";
             }
-        }
-
-        /// <summary>
-        /// Opens the Admin Setup form for creating additional accounts.
-        /// </summary>
-        private void LnkSetup_Click(object? sender, EventArgs e)
-        {
-            var setupForm = new AdminSetupForm(_serviceProvider);
-            setupForm.ShowDialog(this);
         }
 
         private void LoginForm_Resize(object? sender, EventArgs e)

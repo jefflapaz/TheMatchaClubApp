@@ -40,6 +40,17 @@ namespace TheMatchaClubApp
         public static ApplicationUser? CurrentUser { get; set; }
 
         /// <summary>
+        /// Centralized source of truth for the cashier identity.
+        /// Prioritizes the editable setting, fallbacks to logged-in user's full name.
+        /// </summary>
+        public static string GetCurrentCashierName()
+        {
+            var s = DataService.Settings;
+            if (!string.IsNullOrWhiteSpace(s.CashierName)) return s.CashierName;
+            return CurrentUser?.FullName ?? "Admin";
+        }
+
+        /// <summary>
         /// Connection string for the local SQL Server database.
         /// Uses the same database as the Infrastructure layer.
         /// </summary>
@@ -59,8 +70,7 @@ namespace TheMatchaClubApp
             Thread.CurrentThread.CurrentCulture = culture;
             Thread.CurrentThread.CurrentUICulture = culture;
 
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
+
             ApplicationConfiguration.Initialize();
 
             // ── Build DI container with Identity + EF ───────────────

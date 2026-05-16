@@ -23,6 +23,9 @@ namespace TheMatchaClubApp.Forms
         private List<Order> _allOrders = new();
         private string _activeFilter = "All"; // "All", "Dine-In", "Take-Out"
 
+        /// <summary>Raised when cashier clicks a customer name to navigate to their profile.</summary>
+        public event EventHandler<Guid>? NavigateToCustomer;
+
         public OrdersView()
         {
             SetStyle(
@@ -42,8 +45,10 @@ namespace TheMatchaClubApp.Forms
             txtSearch.TextChanged += (s, e) => ApplyFilter(_activeFilter);
 
             // Wire up actions
+            btnPrintReceipt.Click += BtnPrintReceipt_Click;
             btnExportPDF.Click += BtnExportPDF_Click;
             btnEmailReceipt.Click += BtnEmailReceipt_Click;
+            dgvOrders.CellDoubleClick += DgvOrders_CellDoubleClick;
             cmbDateFilter.SelectedIndexChanged += (s, e) => {
                 dtpCustomDate.Visible = cmbDateFilter.SelectedIndex == 4; // Custom Date
                 UpdateToolbarLayout();
@@ -97,6 +102,22 @@ namespace TheMatchaClubApp.Forms
 
             dgvOrders.CellFormatting += DgvOrders_CellFormatting;
             dgvOrders.SelectionChanged += DgvOrders_SelectionChanged;
+
+            // Clickable customer names
+            dgvOrders.CellClick += (s, e) =>
+            {
+                if (e.RowIndex < 0 || e.ColumnIndex != 2) return; // Column 2 = Customer
+                var order = _boundOrders[e.RowIndex];
+                if (order.CustomerId.HasValue && order.CustomerId != Guid.Empty)
+                    NavigateToCustomer?.Invoke(this, order.CustomerId.Value);
+            };
+            dgvOrders.CellMouseEnter += (s, e) =>
+            {
+                if (e.RowIndex < 0 || e.ColumnIndex != 2) return;
+                var order = _boundOrders[e.RowIndex];
+                dgvOrders.Cursor = (order.CustomerId.HasValue && order.CustomerId != Guid.Empty) ? Cursors.Hand : Cursors.Default;
+            };
+            dgvOrders.CellMouseLeave += (s, e) => dgvOrders.Cursor = Cursors.Default;
 
             dgvOrders.DataSource = _boundOrders;
         }
@@ -206,7 +227,8 @@ namespace TheMatchaClubApp.Forms
             {
                 filtered = filtered.Where(o => 
                     (o.OrderId != null && o.OrderId.ToLower().Contains(searchText)) || 
-                    (o.CustomerName != null && o.CustomerName.ToLower().Contains(searchText)));
+                    (o.CustomerName != null && o.CustomerName.ToLower().Contains(searchText)) ||
+                    (o.Items != null && o.Items.Any(i => i.ProductName != null && i.ProductName.ToLower().Contains(searchText))));
             }
 
             foreach (var o in filtered)
@@ -214,12 +236,39 @@ namespace TheMatchaClubApp.Forms
                 _boundOrders.Add(o);
             }
 
-            lblPaginationInfo.Text = $"Showing {_boundOrders.Count} results";
+            lblPaginationInfo.Text = $"Showing {_boundOrders.Count} of {_allOrders.Count} orders";
 
-            // If no items, clear receipt
+            // Empty state
+            var existingEmpty = pnlLeftArea.Controls["pnlEmptyState"];
             if (_boundOrders.Count == 0)
             {
                 ClearReceipt();
+                if (existingEmpty == null)
+                {
+                    var pnlEmpty = new Panel { Name = "pnlEmptyState", Dock = DockStyle.Fill, BackColor = Color.White };
+                    var icon = new Label { Text = "📋", Font = new Font("Segoe UI", 32F), Location = new Point(0, 0), AutoSize = true, BackColor = Color.Transparent };
+                    var msg = new Label { Text = "No Orders Found", Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#111827"), Location = new Point(0, 60), AutoSize = true, BackColor = Color.Transparent };
+                    var sub = new Label { Text = "Try adjusting your search or filters.", Font = new Font("Segoe UI", 9.5F), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(0, 88), AutoSize = true, BackColor = Color.Transparent };
+                    // Center on load
+                    pnlEmpty.Layout += (ls, le) =>
+                    {
+                        int cx = (pnlEmpty.Width - 200) / 2;
+                        int cy = (pnlEmpty.Height - 120) / 2;
+                        icon.Location = new Point(cx + 70, cy);
+                        msg.Location = new Point(cx + 10, cy + 60);
+                        sub.Location = new Point(cx, cy + 88);
+                    };
+                    pnlEmpty.Controls.AddRange(new Control[] { icon, msg, sub });
+                    pnlLeftArea.Controls.Add(pnlEmpty);
+                    pnlEmpty.BringToFront();
+                }
+                else { existingEmpty.Visible = true; existingEmpty.BringToFront(); }
+                dgvOrders.Visible = false;
+            }
+            else
+            {
+                if (existingEmpty != null) existingEmpty.Visible = false;
+                dgvOrders.Visible = true;
             }
         }
 
@@ -243,29 +292,75 @@ namespace TheMatchaClubApp.Forms
             lblReceiptItems.Visible = false;
             lblReceiptSubtotal.Text = "₱0.00";
             lblReceiptTotal.Text = "₱0.00";
+
+            // Remove old item panels
+            var oldItems = pnlReceiptBody.Controls.OfType<Panel>().Where(p => p.Name.StartsWith("item_")).ToList();
+            foreach (var p in oldItems) pnlReceiptBody.Controls.Remove(p);
         }
 
         private void RenderReceipt(Order order)
         {
+            pnlReceiptBody.SuspendLayout();
+            var settings = Program.DataService.Settings;
             lblReceiptItems.Visible = false;
-            lblStoreName.Text = Program.DataService.Settings.StoreName;
-            lblStoreAddress.Text = $"{Program.DataService.Settings.Address}\n{Program.DataService.Settings.Phone}\n{Program.DataService.Settings.Email}";
+            lblStoreName.Text = settings.StoreName;
 
-            lblStoreName.Location = new Point(16, 75);
-            lblStoreName.Width = 288;
+            string addressParts = settings.Address;
+            if (!string.IsNullOrWhiteSpace(settings.CurrentOperatingLocation))
+                addressParts = settings.CurrentOperatingLocation;
+            lblStoreAddress.Text = $"{addressParts}\n{settings.Phone}\n{settings.Email}";
+
+            int centerX = pnlReceiptBody.Width / 2;
+
+            // Logo Positioning - centered, clean
+            pnlReceiptLogo.Location = new Point(centerX - 22, 20);
+            lblReceiptLogo.Location = new Point(0, 0);
+
+            // Store Info - centered under logo
+            lblStoreName.Location = new Point(16, 70);
+            lblStoreName.Width = pnlReceiptBody.Width - 32;
             lblStoreName.TextAlign = ContentAlignment.MiddleCenter;
-            
-            lblStoreAddress.Location = new Point(16, 100);
-            lblStoreAddress.Width = 288;
-            lblStoreAddress.Height = 60;
+
+            lblStoreAddress.Location = new Point(16, 95);
+            lblStoreAddress.Width = pnlReceiptBody.Width - 32;
+            lblStoreAddress.Height = 55;
             lblStoreAddress.TextAlign = ContentAlignment.MiddleCenter;
 
-            lblReceiptOrderIdLabel.Top = 175;
-            lblReceiptOrderId.Top = 175;
-            lblReceiptDateLabel.Top = 195;
-            lblReceiptDate.Top = 195;
-            lblReceiptCustomerLabel.Top = 215;
-            lblReceiptCustomer.Top = 215;
+            // Order Metadata
+            int metaTop = 165;
+            lblReceiptOrderIdLabel.Top = metaTop;
+            lblReceiptOrderId.Top = metaTop;
+            lblReceiptOrderId.Left = pnlReceiptBody.Width - lblReceiptOrderId.Width - 16;
+
+            lblReceiptDateLabel.Top = metaTop + 20;
+            lblReceiptDate.Top = metaTop + 20;
+            lblReceiptDate.Left = pnlReceiptBody.Width - lblReceiptDate.Width - 16;
+
+            // Conditionally show customer
+            lblReceiptCustomerLabel.Visible = settings.ReceiptShowCustomerName;
+            lblReceiptCustomer.Visible = settings.ReceiptShowCustomerName;
+            int nextMeta = metaTop + 40;
+            if (settings.ReceiptShowCustomerName)
+            {
+                lblReceiptCustomerLabel.Top = nextMeta;
+                lblReceiptCustomer.Top = nextMeta;
+                lblReceiptCustomer.Left = pnlReceiptBody.Width - lblReceiptCustomer.Width - 16;
+                nextMeta += 20;
+            }
+
+            // Cashier
+            lblReceiptCashierLabel.Top = nextMeta;
+            lblReceiptCashier.Top = nextMeta;
+            lblReceiptCashier.Left = pnlReceiptBody.Width - lblReceiptCashier.Width - 16;
+            lblReceiptCashier.Text = order.CashierName ?? Program.GetCurrentCashierName();
+            nextMeta += 20;
+
+            // Order Type
+            lblReceiptOrderTypeLabel.Top = nextMeta;
+            lblReceiptOrderType.Top = nextMeta;
+            lblReceiptOrderType.Left = pnlReceiptBody.Width - lblReceiptOrderType.Width - 16;
+            lblReceiptOrderType.Text = order.OrderType ?? "Dine-In";
+            nextMeta += 20;
 
             lblReceiptOrderId.Text = order.OrderId;
             lblReceiptDate.Text = order.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
@@ -275,54 +370,95 @@ namespace TheMatchaClubApp.Forms
             var oldItems = pnlReceiptBody.Controls.OfType<Panel>().Where(p => p.Name.StartsWith("item_")).ToList();
             foreach (var p in oldItems) pnlReceiptBody.Controls.Remove(p);
 
-            // Add Header
-            int currentY = 250;
-            var pnlHeader = new Panel { Name = "item_header", Location = new Point(16, currentY), Width = 284, Height = 25 };
+            // Items Header
+            int currentY = nextMeta + 20;
+            var pnlHeader = new Panel { Name = "item_header", Location = new Point(16, currentY), Width = pnlReceiptBody.Width - 32, Height = 25 };
             var lblHItem = new Label { Text = "ITEM / QTY", Font = new Font("Segoe UI", 8F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(0, 0), AutoSize = true };
-            var lblHPrice = new Label { Text = "PRICE", Font = new Font("Segoe UI", 8F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(200, 0), Size = new Size(84, 15), TextAlign = ContentAlignment.MiddleRight };
+            var lblHPrice = new Label { Text = "TOTAL", Font = new Font("Segoe UI", 8F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(pnlHeader.Width - 84, 0), Size = new Size(84, 15), TextAlign = ContentAlignment.MiddleRight };
             pnlHeader.Controls.Add(lblHItem);
             pnlHeader.Controls.Add(lblHPrice);
             pnlReceiptBody.Controls.Add(pnlHeader);
             currentY += 30;
 
-            // Add Items
+            // Items
             foreach (var item in order.Items)
             {
-                var pnl = new Panel { Name = "item_" + Guid.NewGuid(), Location = new Point(16, currentY), Width = 284, Height = 40 };
+                var pnl = new Panel { Name = "item_" + Guid.NewGuid(), Location = new Point(16, currentY), Width = pnlReceiptBody.Width - 32, Height = 45 };
                 var lblName = new Label { Text = item.ProductName, Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#111827"), Location = new Point(0, 0), AutoSize = true };
                 var lblQty = new Label { Text = $"x{item.Quantity} @ {item.UnitPrice:C2}", Font = new Font("Segoe UI", 8F), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(0, 20), AutoSize = true };
-                var lblPrice = new Label { Text = item.LineTotal.ToString("C2"), Font = new Font("Segoe UI", 9F), ForeColor = ColorTranslator.FromHtml("#111827"), Location = new Point(200, 20), Size = new Size(84, 20), TextAlign = ContentAlignment.MiddleRight };
-                
+                var lblPrice = new Label { Text = item.LineTotal.ToString("C2"), Font = new Font("Segoe UI", 9F), ForeColor = ColorTranslator.FromHtml("#111827"), Location = new Point(pnl.Width - 84, 18), Size = new Size(84, 20), TextAlign = ContentAlignment.MiddleRight };
+
                 pnl.Controls.Add(lblName);
                 pnl.Controls.Add(lblQty);
                 pnl.Controls.Add(lblPrice);
-                
+
                 pnlReceiptBody.Controls.Add(pnl);
-                currentY += 48; // Give items some breathing room
+                currentY += 48;
             }
 
-            // Adjust positions of totals
+            // Totals
             int totalsY = currentY + 20;
             lblReceiptSubtotalLabel.Top = totalsY;
             lblReceiptSubtotal.Top = totalsY;
+            lblReceiptSubtotal.Left = pnlReceiptBody.Width - lblReceiptSubtotal.Width - 16;
+
             lblReceiptTotalLabel.Top = totalsY + 30;
             lblReceiptTotal.Top = totalsY + 30;
-            
-            lblPaidVia.Top = totalsY + 95;
-            lblPaidVia.Width = 288;
-            lblPaidVia.Location = new Point(16, lblPaidVia.Top);
-            
-            lblThankYou.Top = totalsY + 130;
-            lblThankYou.Width = 288;
-            lblThankYou.Location = new Point(16, lblThankYou.Top);
-            
-            btnExportPDF.Top = totalsY + 165;
-            btnEmailReceipt.Top = totalsY + 165;
+            lblReceiptTotal.Left = pnlReceiptBody.Width - lblReceiptTotal.Width - 16;
+
+            // Cash Tendered / Change
+            bool showCashDetails = order.CashTendered > 0;
+            lblReceiptCashTenderedLabel.Visible = showCashDetails;
+            lblReceiptCashTendered.Visible = showCashDetails;
+            lblReceiptChangeLabel.Visible = showCashDetails;
+            lblReceiptChange.Visible = showCashDetails;
+
+            int cashY = totalsY + 60;
+            if (showCashDetails)
+            {
+                lblReceiptCashTenderedLabel.Top = cashY;
+                lblReceiptCashTendered.Top = cashY;
+                lblReceiptCashTendered.Left = pnlReceiptBody.Width - lblReceiptCashTendered.Width - 16;
+                lblReceiptCashTendered.Text = order.CashTendered.ToString("C2");
+
+                lblReceiptChangeLabel.Top = cashY + 20;
+                lblReceiptChange.Top = cashY + 20;
+                lblReceiptChange.Left = pnlReceiptBody.Width - lblReceiptChange.Width - 16;
+                lblReceiptChange.Text = order.ChangeGiven.ToString("C2");
+                cashY += 45;
+            }
+
+            // Payment info
+            string paidViaText = $"Paid via {order.PaymentMethod}";
+            if (settings.ReceiptShowOrderType)
+                paidViaText += $"  •  {order.OrderType}";
+            if (settings.ReceiptShowCashierName && !string.IsNullOrWhiteSpace(order.CashierName))
+                paidViaText += $"\nServed by {order.CashierName}";
+            lblPaidVia.Text = paidViaText;
+            int paidY = showCashDetails ? cashY + 5 : totalsY + 70;
+            lblPaidVia.Top = paidY;
+            lblPaidVia.Width = pnlReceiptBody.Width - 32;
+            lblPaidVia.Location = new Point(16, paidY);
+
+            // Footer from settings
+            lblThankYou.Text = settings.ReceiptFooterMessage;
+            lblThankYou.Top = paidY + 40;
+            lblThankYou.Width = pnlReceiptBody.Width - 32;
+            lblThankYou.Location = new Point(16, paidY + 40);
+
+            int btnY = paidY + 75;
+            btnPrintReceipt.Top = btnY;
+            btnExportPDF.Top = btnY;
+            btnEmailReceipt.Top = btnY;
+            btnPrintReceipt.Left = 16;
+            btnExportPDF.Left = btnPrintReceipt.Right + 6;
+            btnEmailReceipt.Left = btnExportPDF.Right + 6;
 
             lblReceiptSubtotal.Text = order.Subtotal.ToString("C2");
             lblReceiptTotal.Text = order.Total.ToString("C2");
 
-            pnlReceiptBody.Invalidate(); // trigger dashed line repaint
+            pnlReceiptBody.ResumeLayout();
+            pnlReceiptBody.Invalidate();
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -334,6 +470,35 @@ namespace TheMatchaClubApp.Forms
             if (dgvOrders.SelectedRows.Count > 0 && dgvOrders.SelectedRows[0].DataBoundItem is Order order)
                 return order;
             return null;
+        }
+
+        private void BtnPrintReceipt_Click(object? sender, EventArgs e)
+        {
+            var order = GetSelectedOrder();
+            if (order == null) return;
+
+            try
+            {
+                var doc = new PrintDocument();
+                doc.DefaultPageSettings.PaperSize = new System.Drawing.Printing.PaperSize("Receipt", 300, 800);
+                doc.PrintPage += (ps, pe) => DrawReceipt(pe, order);
+
+                var dlg = new PrintPreviewDialog { Document = doc, Width = 500, Height = 700 };
+                dlg.ShowDialog(this.FindForm());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Print error: {ex.Message}", "Print Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void DgvOrders_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            var order = GetSelectedOrder();
+            if (order == null) return;
+            using var detail = new OrderDetailForm(order);
+            detail.ShowDialog(this.FindForm());
         }
 
         private void BtnExportPDF_Click(object? sender, EventArgs e)
@@ -349,120 +514,7 @@ namespace TheMatchaClubApp.Forms
                 string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
 
                 var settings = Program.DataService.Settings;
-                var accentColor = "#52B743"; // Matcha Green
-
-                Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A6);
-                        page.Margin(0.5f, QuestInfrastructure.Unit.Centimetre);
-                        page.PageColor(Colors.White);
-                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Verdana));
-
-                        // ── Header Section ───────────────────────────────────
-                        page.Header().Column(col =>
-                        {
-                            col.Item().Height(4).Background(accentColor);
-                            col.Item().PaddingTop(10).AlignCenter().Row(r =>
-                            {
-                                r.AutoItem().PaddingRight(5).Text("\U0001F375").FontSize(18).FontColor(accentColor);
-                                r.AutoItem().Text(settings.StoreName).FontSize(16).Bold().FontColor(accentColor);
-                            });
-                            col.Item().AlignCenter().Text(settings.Address).FontSize(8).FontColor(Colors.Grey.Medium);
-                            col.Item().AlignCenter().Text(settings.Phone).FontSize(8).FontColor(Colors.Grey.Medium);
-                            col.Item().PaddingTop(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
-                        });
-
-                        // ── Content Section ──────────────────────────────────
-                        page.Content().PaddingVertical(10).Column(col =>
-                        {
-                            // Order Metadata
-                            col.Item().Row(row =>
-                            {
-                                row.RelativeItem().Column(c =>
-                                {
-                                    c.Item().Text("ORDER ID").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                                    c.Item().Text(order.OrderId).Bold().FontSize(10);
-                                });
-                                row.RelativeItem().AlignRight().Column(c =>
-                                {
-                                    c.Item().Text("DATE").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                                    c.Item().Text(order.Timestamp.ToString("dd MMM yyyy HH:mm")).FontSize(9);
-                                });
-                            });
-
-                            col.Item().PaddingTop(8).Row(row =>
-                            {
-                                row.RelativeItem().Column(c =>
-                                {
-                                    c.Item().Text("CUSTOMER").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                                    c.Item().Text(order.CustomerName ?? "Walk-In").FontSize(9);
-                                });
-                                row.RelativeItem().AlignRight().Column(c =>
-                                {
-                                    c.Item().Text("TYPE").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                                    c.Item().Text(order.IsDineIn ? "Dine-In" : "Take-Out").FontSize(9);
-                                });
-                            });
-
-                            // Items Table
-                            col.Item().PaddingTop(15).Table(table =>
-                            {
-                                table.ColumnsDefinition(columns =>
-                                {
-                                    columns.RelativeColumn(3);
-                                    columns.RelativeColumn(1);
-                                    columns.RelativeColumn(2);
-                                });
-
-                                table.Header(header =>
-                                {
-                                    header.Cell().PaddingBottom(4).Text("ITEM").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                                    header.Cell().PaddingBottom(4).AlignCenter().Text("QTY").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                                    header.Cell().PaddingBottom(4).AlignRight().Text("TOTAL").FontSize(8).Bold().FontColor(Colors.Grey.Darken2);
-                                });
-
-                                foreach (var item in order.Items)
-                                {
-                                    table.Cell().PaddingVertical(2).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).Text(item.ProductName).FontSize(8);
-                                    table.Cell().PaddingVertical(2).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).AlignCenter().Text(item.Quantity.ToString()).FontSize(8);
-                                    table.Cell().PaddingVertical(2).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).AlignRight().Text(item.LineTotal.ToString("N2")).FontSize(8);
-                                }
-                            });
-
-                            // Totals Section
-                            col.Item().PaddingTop(10).AlignRight().Column(innerCol =>
-                            {
-                                innerCol.Item().Row(r =>
-                                {
-                                    r.RelativeItem().Text("Subtotal").FontSize(8).FontColor(Colors.Grey.Medium);
-                                    r.ConstantItem(60).AlignRight().Text(order.Subtotal.ToString("N2")).FontSize(8);
-                                });
-                                
-                                innerCol.Item().PaddingTop(4).Background(accentColor).PaddingHorizontal(8).PaddingVertical(4).Row(r =>
-                                {
-                                    r.RelativeItem().Text("TOTAL DUE").FontSize(11).Bold().FontColor(Colors.White);
-                                    r.ConstantItem(80).AlignRight().Text(order.Total.ToString("C2")).FontSize(11).Bold().FontColor(Colors.White);
-                                });
-                            });
-
-                            col.Item().PaddingTop(20).AlignCenter().Column(c =>
-                            {
-                                c.Item().Text($"Paid via {order.PaymentMethod}").FontSize(8).Bold().FontColor(Colors.Grey.Darken1);
-                                c.Item().Text($"Served by {order.CashierName}").FontSize(7).FontColor(Colors.Grey.Medium);
-                            });
-                        });
-
-                        // ── Footer Section ───────────────────────────────────
-                        page.Footer().PaddingTop(10).AlignCenter().Column(c =>
-                        {
-                            c.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
-                            c.Item().PaddingTop(5).Text("Thank you for choosing The Matcha Club!").FontSize(8).Italic().FontColor(Colors.Grey.Medium);
-                            c.Item().Text("Visit us again soon.").FontSize(7).FontColor(Colors.Grey.Lighten1);
-                        });
-                    });
-                }).GeneratePdf(filePath);
+                Core.ReceiptPdfGenerator.Generate(order, settings, filePath);
 
                 Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
             }
@@ -474,57 +526,8 @@ namespace TheMatchaClubApp.Forms
 
         private void DrawReceipt(PrintPageEventArgs e, Order order)
         {
-            var g = e.Graphics!;
-            float x = 20, y = 20;
-            float w = e.PageBounds.Width - 40;
-
-            using var titleFont = new Font("Segoe UI", 14F, FontStyle.Bold);
-            using var headerFont = new Font("Segoe UI", 10F, FontStyle.Bold);
-            using var bodyFont = new Font("Segoe UI", 9F);
-            using var smallFont = new Font("Segoe UI", 8F);
-            using var brush = new SolidBrush(Color.Black);
-            using var grayBrush = new SolidBrush(Color.Gray);
-            using var linePen = new Pen(Color.LightGray, 1);
-
-            var storeName = Program.DataService.Settings.StoreName;
-            var storeAddr = Program.DataService.Settings.Address;
-            var storePhone = Program.DataService.Settings.Phone;
-
-            g.DrawString(storeName, titleFont, brush, x, y); y += 30;
-            g.DrawString(storeAddr, smallFont, grayBrush, x, y); y += 16;
-            g.DrawString(storePhone, smallFont, grayBrush, x, y); y += 24;
-            g.DrawLine(linePen, x, y, w, y); y += 8;
-
-            g.DrawString($"Order: {order.OrderId}", headerFont, brush, x, y); y += 20;
-            g.DrawString($"Date: {order.Timestamp:dd/MM/yyyy HH:mm}", bodyFont, grayBrush, x, y); y += 18;
-            g.DrawString($"Type: {order.OrderType}", bodyFont, brush, x, y); y += 18;
-            g.DrawString($"Customer: {order.CustomerName}", bodyFont, brush, x, y); y += 24;
-            g.DrawLine(linePen, x, y, w, y); y += 8;
-
-            g.DrawString("ITEM", headerFont, brush, x, y);
-            g.DrawString("QTY", headerFont, brush, x + 200, y);
-            g.DrawString("TOTAL", headerFont, brush, x + 280, y);
-            y += 22;
-
-            foreach (var item in order.Items)
-            {
-                g.DrawString(item.ProductName, bodyFont, brush, x, y);
-                g.DrawString(item.Quantity.ToString(), bodyFont, brush, x + 210, y);
-                g.DrawString(item.LineTotal.ToString("C2"), bodyFont, brush, x + 270, y);
-                y += 18;
-            }
-
-            y += 8;
-            g.DrawLine(linePen, x, y, w, y); y += 8;
-
-            g.DrawString("Subtotal:", bodyFont, grayBrush, x, y);
-            g.DrawString(order.Subtotal.ToString("C2"), bodyFont, brush, x + 270, y); y += 18;
-            g.DrawString("TOTAL:", headerFont, brush, x, y);
-            g.DrawString(order.Total.ToString("C2"), headerFont, brush, x + 260, y); y += 30;
-
-            g.DrawLine(linePen, x, y, w, y); y += 12;
-            g.DrawString("Thank you for visiting!", bodyFont, grayBrush, x + 60, y);
-
+            var settings = Program.DataService.Settings;
+            Core.ReceiptRenderer.Render(e.Graphics!, e.PageBounds, order, settings);
             e.HasMorePages = false;
         }
 

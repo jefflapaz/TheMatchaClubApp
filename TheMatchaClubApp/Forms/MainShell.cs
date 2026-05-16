@@ -43,6 +43,21 @@ namespace TheMatchaClubApp.Forms
         {
             await Program.DataService.LoadAllAsync();
             UpdateBranding();
+
+            // ── Session Recovery: detect unclosed sessions from crashes ──
+            var activeSession = Program.SessionService.GetActiveSession();
+            if (activeSession != null)
+            {
+                var elapsed = DateTime.Now - activeSession.OpenedAt;
+                MessageBox.Show(
+                    $"An active session was recovered.\n\n" +
+                    $"Opened by: {activeSession.OpenedBy}\n" +
+                    $"Started: {activeSession.OpenedAt:g}\n" +
+                    $"Duration: {(int)elapsed.TotalHours}h {elapsed.Minutes:D2}m\n\n" +
+                    $"The session is still active. You can continue selling or close it from the Dashboard.",
+                    "Session Recovered",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void UpdateBranding()
@@ -92,6 +107,7 @@ namespace TheMatchaClubApp.Forms
                 _dashboard.NewSaleClicked += (_, __) => NavQuickSale_Click(this, EventArgs.Empty);
                 _dashboard.ViewReportsClicked += (_, __) => NavReports_Click(this, EventArgs.Empty);
                 _dashboard.AddProductClicked += (_, __) => NavItems_Click(this, EventArgs.Empty);
+                _dashboard.ViewOrderClicked += (_, orderId) => NavOrders_Click(this, EventArgs.Empty);
             }
             ShowView(_dashboard);
         }
@@ -101,12 +117,22 @@ namespace TheMatchaClubApp.Forms
             SetActiveNav(navQuickSale);
             _quickSale ??= new QuickSaleView();
             ShowView(_quickSale);
+            // Auto-focus search bar for cashier speed
+            _quickSale.FocusSearch();
         }
 
         private void NavOrders_Click(object? s, EventArgs e)
         {
             SetActiveNav(navOrders);
-            _orders ??= new OrdersView();
+            if (_orders == null)
+            {
+                _orders = new OrdersView();
+                _orders.NavigateToCustomer += (_, customerId) =>
+                {
+                    NavCustomers_Click(this, EventArgs.Empty);
+                    _customers?.SelectCustomerById(customerId);
+                };
+            }
             ShowView(_orders);
         }
 

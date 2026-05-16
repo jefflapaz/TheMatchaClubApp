@@ -112,24 +112,24 @@ namespace TheMatchaClubApp.Forms
 
             // Cart totals
             pnlCartTotals.BackColor = CardBg;
-            pnlCartTotals.Padding = new Padding(16, 8, 16, 8);
+            pnlCartTotals.Padding = new Padding(16, 12, 16, 12);
             pnlCartTotals.Paint += (s, e) =>
             {
                 using var pen = new Pen(BorderLight, 1);
                 // Top separator
                 e.Graphics.DrawLine(pen, 16, 0, pnlCartTotals.Width - 16, 0);
                 // Separator before total
-                e.Graphics.DrawLine(pen, 16, 52, pnlCartTotals.Width - 16, 52);
+                e.Graphics.DrawLine(pen, 16, 44, pnlCartTotals.Width - 16, 44);
             };
 
-            lblSubtotal.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            lblSubtotal.Font = new Font("Segoe UI", 9F);
             lblSubtotal.ForeColor = TextSecondary;
-            lblSubtotalValue.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            lblSubtotalValue.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             lblSubtotalValue.ForeColor = TextPrimary;
 
-            lblTotal.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            lblTotal.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             lblTotal.ForeColor = TextPrimary;
-            lblTotalValue.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblTotalValue.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
             lblTotalValue.ForeColor = Green;
 
             // Complete sale button

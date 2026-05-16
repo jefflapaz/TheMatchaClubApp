@@ -16,6 +16,8 @@ namespace TheMatchaClubApp.Core.Models
         public string CustomerEmail { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = "Cash";
         public string CashierName { get; set; } = "Admin";
+        public decimal CashTendered { get; set; }
+        public decimal ChangeGiven { get; set; }
         public Guid? SessionId { get; set; }
         public List<OrderItem> Items { get; set; } = new();
     }

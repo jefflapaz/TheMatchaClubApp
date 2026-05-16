@@ -54,8 +54,10 @@ namespace TheMatchaClubApp.Forms
             pnlFilters.BackColor = CCardBg;
             
             StyleFilterButton(btnFilterAll, true);
-            StyleFilterButton(btnFilterRegular, false);
             StyleFilterButton(btnFilterNew, false);
+            StyleFilterButton(btnFilterRegular, false);
+            StyleFilterButton(btnFilterLoyal, false);
+            StyleFilterButton(btnFilterFrequent, false);
 
             // Sort dropdown
             cmbSort.BorderRadius = 6;

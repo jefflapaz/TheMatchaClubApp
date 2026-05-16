@@ -44,14 +44,6 @@ namespace TheMatchaClubApp.Forms
             btnMaximize = new Guna.UI2.WinForms.Guna2ControlBox();
             btnClose = new Guna.UI2.WinForms.Guna2ControlBox();
             pnlCard = new Guna.UI2.WinForms.Guna2Panel();
-            pnlFirstTimeSetup = new Guna.UI2.WinForms.Guna2Panel();
-            lnkSetup = new LinkLabel();
-            lblSetupDesc = new Label();
-            lblSetupTitle = new Label();
-            btnClockIn = new Guna.UI2.WinForms.Guna2Button();
-            lblOr = new Label();
-            pnlDividerRight = new Guna.UI2.WinForms.Guna2Panel();
-            pnlDividerLeft = new Guna.UI2.WinForms.Guna2Panel();
             btnSignIn = new Guna.UI2.WinForms.Guna2Button();
             txtPassword = new Guna.UI2.WinForms.Guna2TextBox();
             lblForgotPassword = new Label();
@@ -65,7 +57,6 @@ namespace TheMatchaClubApp.Forms
             lblBadge = new Label();
             pnlTitleBar.SuspendLayout();
             pnlCard.SuspendLayout();
-            pnlFirstTimeSetup.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picLogo).BeginInit();
             pnlBadge.SuspendLayout();
             SuspendLayout();
@@ -125,11 +116,6 @@ namespace TheMatchaClubApp.Forms
             // 
             // pnlCard
             // 
-            pnlCard.Controls.Add(pnlFirstTimeSetup);
-            pnlCard.Controls.Add(btnClockIn);
-            pnlCard.Controls.Add(lblOr);
-            pnlCard.Controls.Add(pnlDividerRight);
-            pnlCard.Controls.Add(pnlDividerLeft);
             pnlCard.Controls.Add(btnSignIn);
             pnlCard.Controls.Add(txtPassword);
             pnlCard.Controls.Add(lblForgotPassword);
@@ -145,100 +131,16 @@ namespace TheMatchaClubApp.Forms
             pnlCard.Margin = new Padding(4, 5, 4, 5);
             pnlCard.Name = "pnlCard";
             pnlCard.ShadowDecoration.CustomizableEdges = customizableEdges24;
-            pnlCard.Size = new Size(587, 831);
+            pnlCard.Size = new Size(587, 615);
             pnlCard.TabIndex = 1;
             // 
-            // pnlFirstTimeSetup
-            // 
-            pnlFirstTimeSetup.Controls.Add(lnkSetup);
-            pnlFirstTimeSetup.Controls.Add(lblSetupDesc);
-            pnlFirstTimeSetup.Controls.Add(lblSetupTitle);
-            pnlFirstTimeSetup.CustomizableEdges = customizableEdges7;
-            pnlFirstTimeSetup.Location = new Point(32, 742);
-            pnlFirstTimeSetup.Margin = new Padding(4, 5, 4, 5);
-            pnlFirstTimeSetup.Name = "pnlFirstTimeSetup";
-            pnlFirstTimeSetup.ShadowDecoration.CustomizableEdges = customizableEdges8;
-            pnlFirstTimeSetup.Size = new Size(523, 65);
-            pnlFirstTimeSetup.TabIndex = 14;
-            // 
-            // lnkSetup
-            // 
-            lnkSetup.Location = new Point(293, 22);
-            lnkSetup.Margin = new Padding(4, 0, 4, 0);
-            lnkSetup.Name = "lnkSetup";
-            lnkSetup.Size = new Size(200, 22);
-            lnkSetup.TabIndex = 2;
-            lnkSetup.TabStop = true;
-            lnkSetup.Text = "Begin One-Time Setup →";
-            lnkSetup.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // lblSetupDesc
-            // 
-            lblSetupDesc.Location = new Point(48, 34);
-            lblSetupDesc.Margin = new Padding(4, 0, 4, 0);
-            lblSetupDesc.Name = "lblSetupDesc";
-            lblSetupDesc.Size = new Size(200, 22);
-            lblSetupDesc.TabIndex = 1;
-            lblSetupDesc.Text = "Configure your store info...";
-            // 
-            // lblSetupTitle
-            // 
-            lblSetupTitle.Location = new Point(48, 9);
-            lblSetupTitle.Margin = new Padding(4, 0, 4, 0);
-            lblSetupTitle.Name = "lblSetupTitle";
-            lblSetupTitle.Size = new Size(200, 25);
-            lblSetupTitle.TabIndex = 0;
-            lblSetupTitle.Text = "First time setting up?";
-            // 
-            // btnClockIn
-            // 
-            btnClockIn.CustomizableEdges = customizableEdges9;
-            btnClockIn.Font = new Font("Segoe UI", 9F);
-            btnClockIn.ForeColor = Color.White;
-            btnClockIn.Location = new Point(32, 658);
-            btnClockIn.Margin = new Padding(4, 5, 4, 5);
-            btnClockIn.Name = "btnClockIn";
-            btnClockIn.ShadowDecoration.CustomizableEdges = customizableEdges10;
-            btnClockIn.Size = new Size(523, 65);
-            btnClockIn.TabIndex = 13;
-            btnClockIn.Text = "🖥 Clock In Only";
-            // 
-            // lblOr
-            // 
-            lblOr.Location = new Point(272, 615);
-            lblOr.Margin = new Padding(4, 0, 4, 0);
-            lblOr.Name = "lblOr";
-            lblOr.Size = new Size(43, 31);
-            lblOr.TabIndex = 11;
-            lblOr.Text = "Or";
-            lblOr.TextAlign = ContentAlignment.MiddleCenter;
-            // 
-            // pnlDividerRight
-            // 
-            pnlDividerRight.CustomizableEdges = customizableEdges11;
-            pnlDividerRight.Location = new Point(315, 631);
-            pnlDividerRight.Margin = new Padding(4, 5, 4, 5);
-            pnlDividerRight.Name = "pnlDividerRight";
-            pnlDividerRight.ShadowDecoration.CustomizableEdges = customizableEdges12;
-            pnlDividerRight.Size = new Size(240, 2);
-            pnlDividerRight.TabIndex = 12;
-            // 
-            // pnlDividerLeft
-            // 
-            pnlDividerLeft.CustomizableEdges = customizableEdges13;
-            pnlDividerLeft.Location = new Point(32, 631);
-            pnlDividerLeft.Margin = new Padding(4, 5, 4, 5);
-            pnlDividerLeft.Name = "pnlDividerLeft";
-            pnlDividerLeft.ShadowDecoration.CustomizableEdges = customizableEdges14;
-            pnlDividerLeft.Size = new Size(240, 2);
-            pnlDividerLeft.TabIndex = 10;
             // 
             // btnSignIn
             // 
             btnSignIn.CustomizableEdges = customizableEdges15;
-            btnSignIn.Font = new Font("Segoe UI", 9F);
+            btnSignIn.Font = new Font("Segoe UI", 10F);
             btnSignIn.ForeColor = Color.White;
-            btnSignIn.Location = new Point(32, 532);
+            btnSignIn.Location = new Point(32, 515);
             btnSignIn.Margin = new Padding(4, 5, 4, 5);
             btnSignIn.Name = "btnSignIn";
             btnSignIn.ShadowDecoration.CustomizableEdges = customizableEdges16;
@@ -251,7 +153,7 @@ namespace TheMatchaClubApp.Forms
             txtPassword.CustomizableEdges = customizableEdges17;
             txtPassword.DefaultText = "";
             txtPassword.Font = new Font("Segoe UI", 9F);
-            txtPassword.Location = new Point(32, 431);
+            txtPassword.Location = new Point(32, 420);
             txtPassword.Margin = new Padding(4, 6, 4, 6);
             txtPassword.Name = "txtPassword";
             txtPassword.PlaceholderText = "";
@@ -262,7 +164,7 @@ namespace TheMatchaClubApp.Forms
             // 
             // lblForgotPassword
             // 
-            lblForgotPassword.Location = new Point(293, 400);
+            lblForgotPassword.Location = new Point(293, 390);
             lblForgotPassword.Margin = new Padding(4, 0, 4, 0);
             lblForgotPassword.Name = "lblForgotPassword";
             lblForgotPassword.Size = new Size(261, 25);
@@ -271,7 +173,7 @@ namespace TheMatchaClubApp.Forms
             // 
             // lblPassword
             // 
-            lblPassword.Location = new Point(32, 400);
+            lblPassword.Location = new Point(32, 390);
             lblPassword.Margin = new Padding(4, 0, 4, 0);
             lblPassword.Name = "lblPassword";
             lblPassword.Size = new Size(261, 25);
@@ -283,7 +185,7 @@ namespace TheMatchaClubApp.Forms
             txtEmail.CustomizableEdges = customizableEdges19;
             txtEmail.DefaultText = "";
             txtEmail.Font = new Font("Segoe UI", 9F);
-            txtEmail.Location = new Point(32, 311);
+            txtEmail.Location = new Point(32, 305);
             txtEmail.Margin = new Padding(4, 6, 4, 6);
             txtEmail.Name = "txtEmail";
             txtEmail.PlaceholderText = "";
@@ -294,7 +196,7 @@ namespace TheMatchaClubApp.Forms
             // 
             // lblEmail
             // 
-            lblEmail.Location = new Point(32, 280);
+            lblEmail.Location = new Point(32, 275);
             lblEmail.Margin = new Padding(4, 0, 4, 0);
             lblEmail.Name = "lblEmail";
             lblEmail.Size = new Size(523, 25);
@@ -303,7 +205,7 @@ namespace TheMatchaClubApp.Forms
             // 
             // lblSubtitle
             // 
-            lblSubtitle.Location = new Point(0, 225);
+            lblSubtitle.Location = new Point(0, 230);
             lblSubtitle.Margin = new Padding(4, 0, 4, 0);
             lblSubtitle.Name = "lblSubtitle";
             lblSubtitle.Size = new Size(587, 31);
@@ -346,13 +248,13 @@ namespace TheMatchaClubApp.Forms
             lblBadge.Name = "lblBadge";
             lblBadge.Size = new Size(187, 37);
             lblBadge.TabIndex = 0;
-            lblBadge.Text = "PRODUCTION READY";
+            lblBadge.Text = "THE MATCHA CLUB";
             // 
             // LoginForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(693, 1046);
+            ClientSize = new Size(693, 850);
             Controls.Add(pnlCard);
             Controls.Add(pnlTitleBar);
             Margin = new Padding(4, 5, 4, 5);
@@ -361,7 +263,6 @@ namespace TheMatchaClubApp.Forms
             Resize += LoginForm_Resize;
             pnlTitleBar.ResumeLayout(false);
             pnlCard.ResumeLayout(false);
-            pnlFirstTimeSetup.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)picLogo).EndInit();
             pnlBadge.ResumeLayout(false);
             ResumeLayout(false);
@@ -373,14 +274,6 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2ControlBox btnMaximize;
         private Guna.UI2.WinForms.Guna2ControlBox btnMinimize;
         private Guna.UI2.WinForms.Guna2Panel pnlCard;
-        private Guna.UI2.WinForms.Guna2Panel pnlFirstTimeSetup;
-        private System.Windows.Forms.LinkLabel lnkSetup;
-        private System.Windows.Forms.Label lblSetupDesc;
-        private System.Windows.Forms.Label lblSetupTitle;
-        private Guna.UI2.WinForms.Guna2Button btnClockIn;
-        private System.Windows.Forms.Label lblOr;
-        private Guna.UI2.WinForms.Guna2Panel pnlDividerRight;
-        private Guna.UI2.WinForms.Guna2Panel pnlDividerLeft;
         private Guna.UI2.WinForms.Guna2Button btnSignIn;
         private Guna.UI2.WinForms.Guna2TextBox txtPassword;
         private System.Windows.Forms.Label lblForgotPassword;

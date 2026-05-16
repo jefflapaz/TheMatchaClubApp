@@ -61,8 +61,10 @@ namespace TheMatchaClubApp.Forms
         {
             txtSearch.TextChanged += (s, e) => LoadDirectory();
             btnFilterAll.Click += (s, e) => { SetFilter("All"); LoadDirectory(); };
-            btnFilterRegular.Click += (s, e) => { SetFilter("Regular"); LoadDirectory(); };
             btnFilterNew.Click += (s, e) => { SetFilter("New"); LoadDirectory(); };
+            btnFilterRegular.Click += (s, e) => { SetFilter("Regular"); LoadDirectory(); };
+            btnFilterLoyal.Click += (s, e) => { SetFilter("Loyal"); LoadDirectory(); };
+            btnFilterFrequent.Click += (s, e) => { SetFilter("Frequent"); LoadDirectory(); };
             
             cmbSort.SelectedIndexChanged += (s, e) =>
             {
@@ -99,19 +101,39 @@ namespace TheMatchaClubApp.Forms
         {
             _currentFilter = filter;
             StyleFilterButton(btnFilterAll, filter == "All");
-            StyleFilterButton(btnFilterRegular, filter == "Regular");
             StyleFilterButton(btnFilterNew, filter == "New");
+            StyleFilterButton(btnFilterRegular, filter == "Regular");
+            StyleFilterButton(btnFilterLoyal, filter == "Loyal");
+            StyleFilterButton(btnFilterFrequent, filter == "Frequent");
         }
 
         /// <summary>
-        /// Dynamic classification: New = ≤1 order AND member for less than 30 days. Otherwise Regular.
+        /// Dynamic classification using configurable thresholds from Settings.
+        /// New → Regular → Loyal → Frequent (by order count or lifetime spend).
         /// </summary>
         private string GetDynamicStatus(Customer c)
         {
-            int orderCount = Program.DataService.Orders.Count(o => o.CustomerId == c.Id);
-            bool isRecent = (DateTime.Now - c.MemberSince).TotalDays <= 30;
-            return (orderCount <= 1 && isRecent) ? "New" : "Regular";
+            var settings = Program.DataService.Settings;
+            var orders = Program.DataService.Orders.Where(o => o.CustomerId == c.Id).ToList();
+            int orderCount = orders.Count;
+            decimal lifetimeSpend = orders.Sum(o => o.Total);
+
+            if (orderCount >= settings.CustomerTierFrequentMin || lifetimeSpend >= settings.CustomerTierFrequentSpend)
+                return "Frequent";
+            if (orderCount >= settings.CustomerTierLoyalMin)
+                return "Loyal";
+            if (orderCount >= settings.CustomerTierRegularMin)
+                return "Regular";
+            return "New";
         }
+
+        private Color GetTierColor(string tier) => tier switch
+        {
+            "Frequent" => ColorTranslator.FromHtml("#52B743"),
+            "Loyal" => ColorTranslator.FromHtml("#3B82F6"),
+            "Regular" => ColorTranslator.FromHtml("#6B7280"),
+            _ => ColorTranslator.FromHtml("#D946EF") // New
+        };
 
         private void LoadDirectory()
         {
@@ -122,13 +144,14 @@ namespace TheMatchaClubApp.Forms
             
             var allCustomers = Program.DataService.Customers;
 
-            // Compute dynamic status for each customer
-            int regularCount = allCustomers.Count(c => GetDynamicStatus(c) == "Regular");
-            int newCount = allCustomers.Count(c => GetDynamicStatus(c) == "New");
+            // Compute dynamic status counts
+            var tierCounts = allCustomers.GroupBy(c => GetDynamicStatus(c)).ToDictionary(g => g.Key, g => g.Count());
             
             btnFilterAll.Text = $"All ({allCustomers.Count})";
-            btnFilterRegular.Text = $"Regular ({regularCount})";
-            btnFilterNew.Text = $"New ({newCount})";
+            btnFilterNew.Text = $"New ({tierCounts.GetValueOrDefault("New", 0)})";
+            btnFilterRegular.Text = $"Regular ({tierCounts.GetValueOrDefault("Regular", 0)})";
+            btnFilterLoyal.Text = $"Loyal ({tierCounts.GetValueOrDefault("Loyal", 0)})";
+            btnFilterFrequent.Text = $"Frequent ({tierCounts.GetValueOrDefault("Frequent", 0)})";
             
             var filtered = allCustomers.AsEnumerable();
             if (_currentFilter != "All")
@@ -239,7 +262,7 @@ namespace TheMatchaClubApp.Forms
                 Location = new Point(cardWidth - 100, 34),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 7F, FontStyle.Bold),
-                ForeColor = dynamicStatus == "Regular" ? ColorTranslator.FromHtml("#3B82F6") : ColorTranslator.FromHtml("#D946EF"),
+                ForeColor = GetTierColor(dynamicStatus),
                 BackColor = Color.Transparent
             };
             pnl.Controls.Add(lblStatus);
@@ -253,6 +276,19 @@ namespace TheMatchaClubApp.Forms
             _currentCustomer = c;
             pnlCalendarPopup.Visible = false;
             PopulateProfile(c);
+        }
+
+        /// <summary>Navigate to a specific customer by ID (used for cross-module navigation).</summary>
+        public void SelectCustomerById(Guid customerId)
+        {
+            var customer = Program.DataService.Customers.FirstOrDefault(c => c.Id == customerId);
+            if (customer != null)
+            {
+                txtSearch.Text = "";
+                SetFilter("All");
+                LoadDirectory();
+                SelectCustomer(customer);
+            }
         }
 
         private void PopulateProfile(Customer c)
@@ -518,18 +554,8 @@ namespace TheMatchaClubApp.Forms
 
         private void ViewReceipt(Order order)
         {
-            var items = string.Join("\n", order.Items.Select(i => $"  {i.Quantity}x {i.ProductName} — {FormatCurrency(i.LineTotal)}"));
-            MessageBox.Show(
-                $"═══ VIRTUAL RECEIPT ═══\n" +
-                $"Order: {order.OrderId}\n" +
-                $"Date:  {order.Timestamp:dd/MM/yyyy hh:mm tt}\n" +
-                $"Type:  {(order.IsDineIn ? "Dine-In" : "Take-Out")}\n" +
-                $"───────────────────\n" +
-                $"{items}\n" +
-                $"───────────────────\n" +
-                $"Subtotal: {FormatCurrency(order.Subtotal)}\n" +
-                $"TOTAL:    {FormatCurrency(order.Total)}",
-                "Receipt", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            using var dlg = new OrderDetailForm(order);
+            dlg.ShowDialog(this.FindForm());
         }
 
         private async void BtnSaveNote_Click(object? sender, EventArgs e)

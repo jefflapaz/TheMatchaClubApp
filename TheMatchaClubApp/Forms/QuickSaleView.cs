@@ -56,7 +56,7 @@ namespace TheMatchaClubApp.Forms
             {
                 if (!IsDisposed) BeginInvoke(new Action(() => 
                 {
-                    if (_activeCategory != "All" && !Program.DataService.Categories.Contains(_activeCategory))
+                    if (_activeCategory != "All" && !Program.DataService.Categories.Any(c => c.Name == _activeCategory))
                     {
                         _activeCategory = "All";
                         PopulateProducts(_activeCategory);
@@ -81,18 +81,40 @@ namespace TheMatchaClubApp.Forms
             };
         }
 
+        /// <summary>
+        /// Focus the product search bar for fast cashier input.
+        /// </summary>
+        public void FocusSearch()
+        {
+            if (txtSearch != null && !txtSearch.IsDisposed)
+                BeginInvoke(new Action(() => txtSearch.Focus()));
+        }
+
         private void UpdateSessionState()
         {
             bool isActive = Program.SessionService.HasActiveSession();
-            pnlSessionOverlay.Visible = !isActive;
-            pnlProductGrid.Enabled = isActive;
-            pnlCategoryRow.Enabled = isActive;
-            btnCompleteSale.Enabled = isActive;
-            
-            if (!isActive)
+            bool lockIfNoSession = Program.DataService.Settings.AutoLockQuickSaleIfNoSession;
+
+            if (lockIfNoSession)
             {
-                pnlSessionOverlay.BringToFront();
-                CenterOverlayControls();
+                pnlSessionOverlay.Visible = !isActive;
+                pnlProductGrid.Enabled = isActive;
+                pnlCategoryRow.Enabled = isActive;
+                btnCompleteSale.Enabled = isActive;
+
+                if (!isActive)
+                {
+                    pnlSessionOverlay.BringToFront();
+                    CenterOverlayControls();
+                }
+            }
+            else
+            {
+                // Allow sales without session
+                pnlSessionOverlay.Visible = false;
+                pnlProductGrid.Enabled = true;
+                pnlCategoryRow.Enabled = true;
+                btnCompleteSale.Enabled = true;
             }
         }
 
@@ -109,11 +131,12 @@ namespace TheMatchaClubApp.Forms
         {
             if (Program.SessionService.HasActiveSession()) return;
 
+            string defCash = Program.DataService.Settings.DefaultStartingCash.ToString("F0");
             using var dlg = new Form { Text = "Open Store Session", Size = new Size(340, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.White };
             var lblP = new Label { Text = "Starting cash in register:", Location = new Point(20, 20), Size = new Size(280, 24), Font = new Font("Segoe UI", 10F) };
-            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = "200", Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = "₱200.00" };
-            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = "₱200 Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
-            btnD.Click += (s2, e2) => txtC.Text = "200";
+            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = defCash, Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = $"₱{defCash}" };
+            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = $"₱{defCash} Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
+            btnD.Click += (s2, e2) => txtC.Text = defCash;
             var btnO = new Guna.UI2.WinForms.Guna2Button { Text = "Open Session", Location = new Point(160, 100), Size = new Size(140, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 9F, FontStyle.Bold), BorderThickness = 0 };
             
             btnO.Click += (s2, e2) => 
@@ -127,16 +150,33 @@ namespace TheMatchaClubApp.Forms
                 dlg.Close();
             };
 
+            // ENTER key confirms
+            txtC.KeyDown += (s2, ke) =>
+            {
+                if (ke.KeyCode == Keys.Enter) { ke.SuppressKeyPress = true; btnO.PerformClick(); }
+            };
+
             dlg.Controls.AddRange(new Control[] { lblP, txtC, btnD, btnO });
+            dlg.AcceptButton = null; // We handle Enter manually
             if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
             
             if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal cash)) cash = 200m;
+
+            // Confirmation
+            string cashierName = Program.GetCurrentCashierName();
+            var confirm = MessageBox.Show(
+                $"Open a new store session?\n\nCashier: {cashierName}\nStarting Cash: ₱{cash:#,##0.00}",
+                "Confirm Open Session",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes) return;
+
+            btnQuickOpenSession.Enabled = false;
             try 
             { 
-                var newSession = await Program.SessionService.OpenSessionAsync(Program.CurrentUser?.FullName ?? "Main Counter", cash); 
-                MessageBox.Show($"Store Session Opened successfully.\nStarting Cash: ₱{cash:#,##0.00}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await Program.SessionService.OpenSessionAsync(cashierName, cash); 
             }
             catch (InvalidOperationException ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            finally { btnQuickOpenSession.Enabled = true; }
         }
 
         private int _categoryScrollPos = 0;
@@ -194,8 +234,9 @@ namespace TheMatchaClubApp.Forms
 
             var categories = new List<string> { "All" };
             var customCats = Program.DataService.Categories
-                .Where(c => c != "All Items" && c != "All") // Normalize "All" vs "All Items"
-                .Distinct()
+                .Where(c => c.Name != "All Items" && c.Name != "All")
+                .OrderBy(c => c.DisplayOrder)
+                .Select(c => c.Name)
                 .ToList();
             categories.AddRange(customCats);
 
@@ -283,7 +324,7 @@ namespace TheMatchaClubApp.Forms
             
             // Update Order Number Placeholder
             string nextOrderNum = Program.DataService.GenerateOrderNumber();
-            lblOrderMeta.Text = $"Order {nextOrderNum} \u2022 Cashier: {Program.CurrentUser?.FullName ?? "Admin"}";
+            lblOrderMeta.Text = $"Order {nextOrderNum} \u2022 Cashier: {Program.GetCurrentCashierName()}";
 
             if (_cart.Count == 0)
             {
@@ -340,9 +381,10 @@ namespace TheMatchaClubApp.Forms
         private void UpdateCartTotals()
         {
             decimal total = _cart.Sum(c => c.Total);
-            lblSubtotalValue.Text = total.ToString("C2");
-            lblTotalValue.Text = total.ToString("C2");
-            btnCompleteSale.Text = $"\u20B1 Complete Sale ({total:C2})";
+            string formattedTotal = "\u20B1" + total.ToString("#,##0.00");
+            lblSubtotalValue.Text = formattedTotal;
+            lblTotalValue.Text = formattedTotal;
+            btnCompleteSale.Text = $"\u20B1 Complete Sale ({formattedTotal})";
         }
 
         // ══════════════════════════════════════════════════════════════
@@ -359,15 +401,18 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
+        private bool _isProcessingSale; // Prevent duplicate sales
+
         private async void BtnCompleteSale_Click(object? sender, EventArgs e)
         {
+            if (_isProcessingSale) return; // Guard against rapid clicks
             if (_cart.Count == 0) return;
 
             // ── Session Gate: block checkout if no active session ────
             if (!Program.SessionService.HasActiveSession())
             {
                 MessageBox.Show(
-                    "No active store session.\n\nPlease open a store session from the Reports page before processing orders.",
+                    "No active store session.\n\nPlease open a store session before processing orders.",
                     "Store Session Required",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -380,60 +425,81 @@ namespace TheMatchaClubApp.Forms
             using var dlg = new CheckoutDialogForm(total);
             if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
 
-            bool isDineIn = dlg.IsDineIn;
-            string orderType = dlg.SelectedOrderType;
-            var customer = dlg.SelectedCustomer;
-            decimal cashReceived = dlg.CashReceived;
-            decimal changeDue = dlg.ChangeDue;
+            // Lock processing
+            _isProcessingSale = true;
+            btnCompleteSale.Enabled = false;
+            btnCompleteSale.Text = "Processing...";
 
-            // ── Step 2: Build the Order ───────────────────────────────
-            var order = new Order
+            try
             {
-                OrderId = Program.DataService.GenerateOrderNumber(),
-                Timestamp = DateTime.Now,
-                Subtotal = total,
-                Total = total,
-                IsDineIn = isDineIn,
-                OrderType = orderType,
-                CustomerId = customer?.Id,
-                CustomerName = customer?.Name ?? "Walk-In",
-                CustomerEmail = customer?.Email ?? string.Empty,
-                PaymentMethod = "Cash", // Currently only cash supported
-                CashierName = "Admin", // Fallback or linked to logged user
-                Items = _cart.Select(c => new OrderItem
-                {
-                    ProductId = c.Product.Id,
-                    ProductName = c.Product.Name,
-                    CategoryName = c.Product.CategoryName,
-                    UnitPrice = c.Product.Price,
-                    Quantity = c.Qty
-                }).ToList()
-            };
+                bool isDineIn = dlg.IsDineIn;
+                string orderType = dlg.SelectedOrderType;
+                var customer = dlg.SelectedCustomer;
+                decimal cashReceived = dlg.CashReceived;
+                decimal changeDue = dlg.ChangeDue;
 
-            // ── Step 3: Increment Sales ────────────
-            foreach (var line in _cart)
-            {
-                var dbProduct = Program.DataService.Products.FirstOrDefault(p => p.Id == line.Product.Id);
-                if (dbProduct != null)
+                // ── Step 2: Build the Order ───────────────────────────────
+                string cashierName = Program.GetCurrentCashierName();
+                var order = new Order
                 {
-                    dbProduct.SalesCount += line.Qty;
+                    OrderId = Program.DataService.GenerateOrderNumber(),
+                    Timestamp = DateTime.Now,
+                    Subtotal = total,
+                    Total = total,
+                    IsDineIn = isDineIn,
+                    OrderType = orderType,
+                    CustomerId = customer?.Id,
+                    CustomerName = customer?.Name ?? "Walk-In",
+                    CustomerEmail = customer?.Email ?? string.Empty,
+                    PaymentMethod = "Cash",
+                    CashierName = cashierName,
+                    CashTendered = cashReceived,
+                    ChangeGiven = changeDue,
+                    Items = _cart.Select(c => new OrderItem
+                    {
+                        ProductId = c.Product.Id,
+                        ProductName = c.Product.Name,
+                        CategoryName = c.Product.CategoryName,
+                        UnitPrice = c.Product.Price,
+                        Quantity = c.Qty
+                    }).ToList()
+                };
+
+                // ── Step 3: Increment Sales ────────────
+                foreach (var line in _cart)
+                {
+                    var dbProduct = Program.DataService.Products.FirstOrDefault(p => p.Id == line.Product.Id);
+                    if (dbProduct != null)
+                    {
+                        dbProduct.SalesCount += line.Qty;
+                    }
                 }
+
+                // ── Step 4: Link to active session & Persist ─────────────
+                Program.SessionService.AttachOrderToSession(order);
+                Program.DataService.Orders.Add(order);
+                await Program.DataService.SaveOrdersAsync();
+                await Program.DataService.SaveProductsAsync();
+
+                // ── Step 5: Success UI ───────────────────────────────────
+                _lastOrder = order;
+                ShowSaleCompleteDialog(order, cashReceived, changeDue);
+
+                // ── Step 6: UI Reset ─────────────────────────────────────
+                _cart.Clear();
+                RefreshCartUI();
+                PopulateProducts(_activeCategory);
             }
-
-            // ── Step 4: Link to active session & Persist ─────────────
-            Program.SessionService.AttachOrderToSession(order);
-            Program.DataService.Orders.Add(order);
-            await Program.DataService.SaveOrdersAsync();
-            await Program.DataService.SaveProductsAsync();
-
-            // ── Step 5: Success UI ───────────────────────────────────
-            _lastOrder = order;
-            ShowSaleCompleteDialog(order, cashReceived, changeDue);
-
-            // ── Step 6: UI Reset ─────────────────────────────────────
-            _cart.Clear();
-            RefreshCartUI();
-            PopulateProducts(_activeCategory);
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error processing sale:\n{ex.Message}", "Sale Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                _isProcessingSale = false;
+                btnCompleteSale.Enabled = true;
+                btnCompleteSale.Text = "Complete Sale";
+            }
         }
 
         /// <summary>

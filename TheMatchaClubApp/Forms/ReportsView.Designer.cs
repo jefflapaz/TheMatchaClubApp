@@ -18,6 +18,12 @@ namespace TheMatchaClubApp.Forms
             btnTabSales = new Guna.UI2.WinForms.Guna2Button();
             btnTabHistory = new Guna.UI2.WinForms.Guna2Button();
 
+            // Session History filters
+            pnlSessionHistoryFilters = new System.Windows.Forms.Panel();
+            cmbHistoryMonth = new Guna.UI2.WinForms.Guna2ComboBox();
+            cmbHistoryYear = new Guna.UI2.WinForms.Guna2ComboBox();
+            lblSessionCount = new System.Windows.Forms.Label();
+
             // Session selector
             pnlSessionHeader = new System.Windows.Forms.Panel();
             lblTitle = new System.Windows.Forms.Label();
@@ -41,11 +47,9 @@ namespace TheMatchaClubApp.Forms
             lblBarChartTitle = new System.Windows.Forms.Label();
             pnlTableCard = new Guna.UI2.WinForms.Guna2Panel();
             lblTableHeader = new System.Windows.Forms.Label();
-            dgvTopItems = new Guna.UI2.WinForms.Guna2DataGridView();
             btnPrintReport = new Guna.UI2.WinForms.Guna2Button();
             pnlRecentTx = new Guna.UI2.WinForms.Guna2Panel();
             lblRecentTxTitle = new System.Windows.Forms.Label();
-            dgvRecentTx = new Guna.UI2.WinForms.Guna2DataGridView();
             pnlInsightsRow = new System.Windows.Forms.FlowLayoutPanel();
 
             // Sales page controls
@@ -201,33 +205,30 @@ namespace TheMatchaClubApp.Forms
             pnlTabBar.Controls.Add(btnTabOverview);
             pnlTabBar.Controls.Add(btnTabSales);
             pnlTabBar.Controls.Add(btnTabHistory);
-            btnTabOverview.Size = new System.Drawing.Size(140, 30);
-            btnTabOverview.Text = "\u2726 Performance";
+            btnTabOverview.Size = new System.Drawing.Size(160, 30);
+            btnTabOverview.Text = "\u2726 Current Performance";
             btnTabOverview.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
-            btnTabSales.Size = new System.Drawing.Size(130, 30);
-            btnTabSales.Text = "\u2630 Sales Summary";
+            btnTabSales.Size = new System.Drawing.Size(150, 30);
+            btnTabSales.Text = "\u2398 Session History";
             btnTabSales.Margin = new System.Windows.Forms.Padding(0, 0, 6, 0);
-            btnTabHistory.Size = new System.Drawing.Size(140, 30);
-            btnTabHistory.Text = "\u2398 Previous Reports";
+            btnTabHistory.Size = new System.Drawing.Size(160, 30);
+            btnTabHistory.Text = "\U0001F4CA Previous Reports";
 
             // Session header
             pnlSessionHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlSessionHeader.Height = 56;
             pnlSessionHeader.Padding = new System.Windows.Forms.Padding(20, 8, 20, 4);
             pnlSessionHeader.Controls.Add(pnlExportButtons);
-            pnlSessionHeader.Controls.Add(btnSessionCalendar);
             pnlSessionHeader.Controls.Add(lblSelectedSession);
             pnlSessionHeader.Controls.Add(lblTitle);
 
             lblTitle.Dock = System.Windows.Forms.DockStyle.Left;
             lblTitle.Width = 200;
-            lblTitle.Text = "Performance Overview";
+            lblTitle.Text = "Current Performance";
             lblSelectedSession.Dock = System.Windows.Forms.DockStyle.Left;
-            lblSelectedSession.Width = 220;
-            lblSelectedSession.Text = "No sessions yet";
-            btnSessionCalendar.Dock = System.Windows.Forms.DockStyle.Left;
-            btnSessionCalendar.Size = new System.Drawing.Size(110, 32);
-            btnSessionCalendar.Text = "\U0001F4C5 Calendar";
+            lblSelectedSession.Width = 260;
+            lblSelectedSession.Text = "";
+            btnSessionCalendar.Visible = false;
 
             pnlExportButtons.Dock = System.Windows.Forms.DockStyle.Right;
             pnlExportButtons.Width = 200;
@@ -289,80 +290,53 @@ namespace TheMatchaClubApp.Forms
             pnlTableCard.Dock = System.Windows.Forms.DockStyle.Top;
             pnlTableCard.Height = 280;
             pnlTableCard.Padding = new System.Windows.Forms.Padding(20, 12, 20, 12);
-            pnlTableCard.Controls.Add(dgvTopItems);
             pnlTableCard.Controls.Add(lblTableHeader);
             lblTableHeader.Dock = System.Windows.Forms.DockStyle.Top;
             lblTableHeader.Height = 28;
             lblTableHeader.Text = "Top 5 Performing Items";
-            dgvTopItems.Dock = System.Windows.Forms.DockStyle.Fill;
-            dgvTopItems.AllowUserToAddRows = false;
-            dgvTopItems.AllowUserToDeleteRows = false;
-            dgvTopItems.ReadOnly = true;
-            dgvTopItems.RowHeadersVisible = false;
-            dgvTopItems.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            lblTableHeader.Text = "Top 5 Performing Items";
 
             pnlRecentTx.Dock = System.Windows.Forms.DockStyle.Top;
             pnlRecentTx.Height = 400;
             pnlRecentTx.Padding = new System.Windows.Forms.Padding(20, 12, 20, 20);
-            pnlRecentTx.Controls.Add(dgvRecentTx);
             pnlRecentTx.Controls.Add(lblRecentTxTitle);
             lblRecentTxTitle.Dock = System.Windows.Forms.DockStyle.Top;
             lblRecentTxTitle.Height = 28;
             lblRecentTxTitle.Text = "Recent Transactions";
-            dgvRecentTx.Dock = System.Windows.Forms.DockStyle.Fill;
-            dgvRecentTx.AllowUserToAddRows = false;
-            dgvRecentTx.AllowUserToDeleteRows = false;
-            dgvRecentTx.ReadOnly = true;
-            dgvRecentTx.RowHeadersVisible = false;
-            dgvRecentTx.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            lblRecentTxTitle.Text = "Recent Transactions";
 
-            // ═══ PAGE: SALES SUMMARY ═══
+            // ═══ PAGE: SESSION HISTORY ═══
             pnlPageSales.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlPageSales.Visible = false;
-            pnlPageSales.Controls.Add(dgvAllSales);
-            pnlPageSales.Controls.Add(pnlSalesHeader);
-            pnlSalesHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlSalesHeader.Height = 50;
-            pnlSalesHeader.Padding = new System.Windows.Forms.Padding(20, 10, 20, 4);
-            pnlSalesHeader.Controls.Add(txtSalesSearch);
-            pnlSalesHeader.Controls.Add(lblSalesTitle);
-            lblSalesTitle.Dock = System.Windows.Forms.DockStyle.Left;
-            lblSalesTitle.Width = 260;
-            lblSalesTitle.Text = "Product Sales Breakdown";
-            txtSalesSearch.Dock = System.Windows.Forms.DockStyle.Right;
-            txtSalesSearch.Size = new System.Drawing.Size(240, 34);
-            txtSalesSearch.PlaceholderText = "\U0001F50D Search products...";
-            dgvAllSales.Dock = System.Windows.Forms.DockStyle.Fill;
-            dgvAllSales.AllowUserToAddRows = false;
-            dgvAllSales.AllowUserToDeleteRows = false;
-            dgvAllSales.ReadOnly = true;
-            dgvAllSales.RowHeadersVisible = false;
-            dgvAllSales.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            pnlPageSales.Controls.Add(pnlHistoryTableCard);
+            pnlPageSales.Controls.Add(pnlSessionHistoryFilters);
 
-            // ═══ PAGE: PREVIOUS REPORTS ═══
-            pnlPageHistory.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlPageHistory.Visible = false;
-            pnlPageHistory.AutoScroll = true;
-            pnlPageHistory.Controls.Add(pnlHistoryTableCard);
-            pnlPageHistory.Controls.Add(pnlHistoryCharts);
-            pnlHistoryCharts.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlHistoryCharts.Height = 220;
-            pnlHistoryCharts.Padding = new System.Windows.Forms.Padding(20, 8, 20, 8);
-            pnlHistoryCharts.Controls.Add(pnlTxChart);
-            pnlHistoryCharts.Controls.Add(pnlRevenueChart);
-            pnlRevenueChart.Dock = System.Windows.Forms.DockStyle.Left;
-            pnlRevenueChart.Width = 340;
-            pnlRevenueChart.Padding = new System.Windows.Forms.Padding(12);
-            pnlRevenueChart.Controls.Add(lblRevenueChartTitle);
-            lblRevenueChartTitle.Dock = System.Windows.Forms.DockStyle.Top;
-            lblRevenueChartTitle.Height = 24;
-            lblRevenueChartTitle.Text = "Revenue by Session";
-            pnlTxChart.Dock = System.Windows.Forms.DockStyle.Fill;
-            pnlTxChart.Padding = new System.Windows.Forms.Padding(12);
-            pnlTxChart.Controls.Add(lblTxChartTitle);
-            lblTxChartTitle.Dock = System.Windows.Forms.DockStyle.Top;
-            lblTxChartTitle.Height = 24;
-            lblTxChartTitle.Text = "Transactions by Session";
+            pnlSessionHistoryFilters.Dock = System.Windows.Forms.DockStyle.Top;
+            pnlSessionHistoryFilters.Height = 48;
+            pnlSessionHistoryFilters.Padding = new System.Windows.Forms.Padding(20, 10, 20, 4);
+            pnlSessionHistoryFilters.Controls.Add(lblSessionCount);
+            pnlSessionHistoryFilters.Controls.Add(cmbHistoryYear);
+            pnlSessionHistoryFilters.Controls.Add(cmbHistoryMonth);
+
+            cmbHistoryMonth.Dock = System.Windows.Forms.DockStyle.Left;
+            cmbHistoryMonth.Width = 130;
+            cmbHistoryMonth.Items.AddRange(new object[] { "All Months", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" });
+            cmbHistoryMonth.SelectedIndex = 0;
+            cmbHistoryMonth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cmbHistoryMonth.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+
+            cmbHistoryYear.Dock = System.Windows.Forms.DockStyle.Left;
+            cmbHistoryYear.Width = 100;
+            cmbHistoryYear.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cmbHistoryYear.Margin = new System.Windows.Forms.Padding(0, 0, 12, 0);
+            int currentYear = System.DateTime.Now.Year;
+            for (int y = currentYear; y >= currentYear - 3; y--)
+                cmbHistoryYear.Items.Add(y.ToString());
+            cmbHistoryYear.SelectedIndex = 0;
+
+            lblSessionCount.Dock = System.Windows.Forms.DockStyle.Fill;
+            lblSessionCount.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            lblSessionCount.Text = "";
 
             pnlHistoryTableCard.Dock = System.Windows.Forms.DockStyle.Fill;
             pnlHistoryTableCard.Padding = new System.Windows.Forms.Padding(20, 8, 20, 8);
@@ -370,13 +344,37 @@ namespace TheMatchaClubApp.Forms
             pnlHistoryTableCard.Controls.Add(lblHistoryTableTitle);
             lblHistoryTableTitle.Dock = System.Windows.Forms.DockStyle.Top;
             lblHistoryTableTitle.Height = 28;
-            lblHistoryTableTitle.Text = "Session History";
+            lblHistoryTableTitle.Text = "Session Archive";
             dgvSessionHistory.Dock = System.Windows.Forms.DockStyle.Fill;
             dgvSessionHistory.AllowUserToAddRows = false;
             dgvSessionHistory.AllowUserToDeleteRows = false;
             dgvSessionHistory.ReadOnly = true;
             dgvSessionHistory.RowHeadersVisible = false;
             dgvSessionHistory.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+
+            // ═══ PAGE: PREVIOUS REPORTS (charts only) ═══
+            pnlPageHistory.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlPageHistory.Visible = false;
+            pnlPageHistory.AutoScroll = true;
+            pnlPageHistory.Controls.Add(pnlHistoryCharts);
+            pnlHistoryCharts.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlHistoryCharts.Padding = new System.Windows.Forms.Padding(20, 16, 20, 16);
+            pnlHistoryCharts.Controls.Add(pnlTxChart);
+            pnlHistoryCharts.Controls.Add(pnlRevenueChart);
+            pnlRevenueChart.Dock = System.Windows.Forms.DockStyle.Top;
+            pnlRevenueChart.Height = 260;
+            pnlRevenueChart.Padding = new System.Windows.Forms.Padding(16);
+            pnlRevenueChart.Controls.Add(lblRevenueChartTitle);
+            lblRevenueChartTitle.Dock = System.Windows.Forms.DockStyle.Top;
+            lblRevenueChartTitle.Height = 24;
+            lblRevenueChartTitle.Text = "Revenue by Session";
+            pnlTxChart.Dock = System.Windows.Forms.DockStyle.Top;
+            pnlTxChart.Height = 260;
+            pnlTxChart.Padding = new System.Windows.Forms.Padding(16);
+            pnlTxChart.Controls.Add(lblTxChartTitle);
+            lblTxChartTitle.Dock = System.Windows.Forms.DockStyle.Top;
+            lblTxChartTitle.Height = 24;
+            lblTxChartTitle.Text = "Transactions by Session";
 
             // ═══ MAIN ═══
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -416,15 +414,17 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblBarChartTitle;
         private Guna.UI2.WinForms.Guna2Panel pnlTableCard;
         private System.Windows.Forms.Label lblTableHeader;
-        private Guna.UI2.WinForms.Guna2DataGridView dgvTopItems;
         private Guna.UI2.WinForms.Guna2Panel pnlRecentTx;
         private System.Windows.Forms.Label lblRecentTxTitle;
-        private Guna.UI2.WinForms.Guna2DataGridView dgvRecentTx;
         private System.Windows.Forms.FlowLayoutPanel pnlInsightsRow;
         private System.Windows.Forms.Panel pnlSalesHeader;
         private System.Windows.Forms.Label lblSalesTitle;
         private Guna.UI2.WinForms.Guna2TextBox txtSalesSearch;
         private Guna.UI2.WinForms.Guna2DataGridView dgvAllSales;
+        private System.Windows.Forms.Panel pnlSessionHistoryFilters;
+        private Guna.UI2.WinForms.Guna2ComboBox cmbHistoryMonth;
+        private Guna.UI2.WinForms.Guna2ComboBox cmbHistoryYear;
+        private System.Windows.Forms.Label lblSessionCount;
         private System.Windows.Forms.Panel pnlHistoryCharts;
         private Guna.UI2.WinForms.Guna2Panel pnlRevenueChart;
         private System.Windows.Forms.Label lblRevenueChartTitle;

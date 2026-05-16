@@ -1,7 +1,10 @@
 using System;
 using System.Drawing;
+using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using TheMatchaClubApp.Core;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -9,6 +12,8 @@ namespace TheMatchaClubApp.Forms
     {
         private string _activeTab = "Store Profile";
         private Guna.UI2.WinForms.Guna2Button[] _tabButtons = Array.Empty<Guna.UI2.WinForms.Guna2Button>();
+
+        private readonly Panel[] _sectionPanels;
 
         public SettingsView()
         {
@@ -19,38 +24,184 @@ namespace TheMatchaClubApp.Forms
             DoubleBuffered = true;
 
             InitializeComponent();
+
+            _sectionPanels = new Panel[]
+            {
+                pnlStoreProfile, pnlSessionCash, pnlReceiptEditor, pnlAppearance,
+                pnlProductsCats, pnlCustomers, pnlExportBackup, pnlSecurity
+            };
+
             InitializeDesign();
             ShowTab("Store Profile");
-
             LoadSettings();
+
             btnSaveAll.Click += async (s, e) => await SaveSettings();
+            pnlLogoUpload.Click += PnlLogoUpload_Click;
+            lblUploadText.Click += PnlLogoUpload_Click;
+
+            // Receipt editor toggle changes refresh live preview
+            chkShowCashier.CheckedChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            chkShowCustomer.CheckedChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            chkShowOrderType.CheckedChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            chkShowSessionNum.CheckedChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            txtReceiptFooterEditor.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
+
+            // Store name changes also update preview
+            txtStoreName.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            txtOperatingLocation.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            txtPhone.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            txtSupportEmail.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
+            txtCashierName.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
         }
 
         // ── Load Settings ────────────────────────────────────────────
         private void LoadSettings()
         {
-            var settings = Program.DataService.Settings;
-            txtStoreName.Text = settings.StoreName;
-            txtSupportEmail.Text = settings.Email;
-            txtPhone.Text = settings.Phone;
-            txtAddress.Text = settings.Address;
+            var s = Program.DataService.Settings;
+
+            // Store Profile
+            txtStoreName.Text = s.StoreName;
+            txtSupportEmail.Text = s.Email;
+            txtPhone.Text = s.Phone;
+            txtCashierName.Text = string.IsNullOrWhiteSpace(s.CashierName) 
+                ? (Program.CurrentUser?.FullName ?? "Admin") 
+                : s.CashierName;
+
+            // Location
+            txtPopupLocation.Text = s.PopupLocationName;
+            txtOperatingLocation.Text = s.CurrentOperatingLocation;
+
+            // SMTP
+            txtSmtpServer.Text = s.SmtpServer;
+            txtSmtpPort.Text = s.SmtpPort.ToString();
+            txtSmtpPassword.Text = s.SmtpPassword;
+
+            // Session & Cash
+            txtDefaultCash.Text = s.DefaultStartingCash.ToString("F2");
+            txtSessionTimeout.Text = s.SessionTimeoutMinutes.ToString();
+            chkRequireCashCount.Checked = s.RequireCashCountOnClose;
+            chkOverShortWarnings.Checked = s.EnableOverShortWarnings;
+            chkAutoZReport.Checked = s.AutoGenerateZReport;
+            chkAutoLockQuickSale.Checked = s.AutoLockQuickSaleIfNoSession;
+
+            // Receipt Editor
+            chkShowCashier.Checked = s.ReceiptShowCashierName;
+            chkShowCustomer.Checked = s.ReceiptShowCustomerName;
+            chkShowOrderType.Checked = s.ReceiptShowOrderType;
+            chkShowSessionNum.Checked = s.ReceiptShowSessionNumber;
+            cmbPaperWidth.SelectedItem = s.ReceiptPaperWidth;
+            if (cmbPaperWidth.SelectedIndex < 0) cmbPaperWidth.SelectedIndex = 1; // default 80mm
+            txtReceiptFooterEditor.Text = s.ReceiptFooterMessage;
+
+            // Appearance
+            chkDarkMode.Checked = s.IsDarkMode;
+            chkAnimations.Checked = s.EnableAnimations;
+            cmbFontScale.SelectedItem = s.FontScale;
+            if (cmbFontScale.SelectedIndex < 0) cmbFontScale.SelectedIndex = 1; // Normal
+
+            // Logo preview
+            UpdateLogoPreview(s.StoreLogoPath);
         }
 
-        // ── Save Settings with Global Event ──────────────────────────
+        // ── Save Settings ────────────────────────────────────────────
         private async Task SaveSettings()
         {
-            var settings = Program.DataService.Settings;
-            settings.StoreName = txtStoreName.Text;
-            settings.Email = txtSupportEmail.Text;
-            settings.Phone = txtPhone.Text;
-            settings.Address = txtAddress.Text;
+            var s = Program.DataService.Settings;
+
+            s.StoreName = txtStoreName.Text.Trim();
+            s.Email = txtSupportEmail.Text.Trim();
+            s.Phone = txtPhone.Text.Trim();
+            s.CashierName = txtCashierName.Text.Trim();
+
+            // Location
+            s.PopupLocationName = txtPopupLocation.Text.Trim();
+            s.CurrentOperatingLocation = txtOperatingLocation.Text.Trim();
+
+            // SMTP
+            s.SmtpServer = txtSmtpServer.Text.Trim();
+            if (int.TryParse(txtSmtpPort.Text.Trim(), out int port)) s.SmtpPort = port;
+            s.SmtpPassword = txtSmtpPassword.Text;
+
+            // Session & Cash
+            if (decimal.TryParse(txtDefaultCash.Text.Trim(), out decimal cash)) s.DefaultStartingCash = cash;
+            if (int.TryParse(txtSessionTimeout.Text.Trim(), out int timeout)) s.SessionTimeoutMinutes = timeout;
+            s.RequireCashCountOnClose = chkRequireCashCount.Checked;
+            s.EnableOverShortWarnings = chkOverShortWarnings.Checked;
+            s.AutoGenerateZReport = chkAutoZReport.Checked;
+            s.AutoLockQuickSaleIfNoSession = chkAutoLockQuickSale.Checked;
+
+            // Receipt Editor
+            s.ReceiptShowCashierName = chkShowCashier.Checked;
+            s.ReceiptShowCustomerName = chkShowCustomer.Checked;
+            s.ReceiptShowOrderType = chkShowOrderType.Checked;
+            s.ReceiptShowSessionNumber = chkShowSessionNum.Checked;
+            s.ReceiptPaperWidth = cmbPaperWidth.SelectedItem?.ToString() ?? "80mm";
+            s.ReceiptFooterMessage = txtReceiptFooterEditor.Text.Trim();
+
+            // Appearance
+            s.IsDarkMode = chkDarkMode.Checked;
+            s.EnableAnimations = chkAnimations.Checked;
+            s.FontScale = cmbFontScale.SelectedItem?.ToString() ?? "Normal";
 
             await Program.DataService.SaveSettingsAsync();
 
-            var msg = new Guna.UI2.WinForms.Guna2MessageDialog();
-            msg.Style = Guna.UI2.WinForms.MessageDialogStyle.Light;
-            msg.Caption = "Settings Saved";
-            msg.Show("All changes saved successfully.\nBranding and receipt headers updated globally.");
+            // Toast notification
+            ShowSaveToast();
+        }
+
+        private void ShowSaveToast()
+        {
+            var toast = new Label
+            {
+                Text = "  ✅  Settings saved successfully",
+                Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = ColorTranslator.FromHtml("#52B743"),
+                AutoSize = false,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Size = new Size(320, 44),
+                Padding = new Padding(12)
+            };
+            toast.Location = new Point((this.Width - toast.Width) / 2, this.Height - 80);
+            this.Controls.Add(toast);
+            toast.BringToFront();
+
+            var timer = new System.Windows.Forms.Timer { Interval = 2500 };
+            timer.Tick += (s, e) =>
+            {
+                timer.Stop();
+                this.Controls.Remove(toast);
+                toast.Dispose();
+                timer.Dispose();
+            };
+            timer.Start();
+        }
+
+        // ── Logo Upload ──────────────────────────────────────────────
+        private void PnlLogoUpload_Click(object? sender, EventArgs e)
+        {
+            using var ofd = new OpenFileDialog { Filter = "Images|*.png;*.jpg;*.jpeg;*.bmp", Title = "Select Store Logo" };
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                string destPath = Program.DataService.CopyImageToLocal(ofd.FileName);
+                Program.DataService.Settings.StoreLogoPath = destPath;
+                UpdateLogoPreview(destPath);
+            }
+        }
+
+        private void UpdateLogoPreview(string path)
+        {
+            string fullPath = Program.DataService.GetFullImagePath(path);
+            if (!string.IsNullOrWhiteSpace(fullPath) && File.Exists(fullPath))
+            {
+                lblUploadText.Text = "✅";
+                try
+                {
+                    pnlLogoUpload.BackgroundImage = Image.FromFile(fullPath);
+                    pnlLogoUpload.BackgroundImageLayout = ImageLayout.Zoom;
+                }
+                catch { lblUploadText.Text = "📷\nUPLOAD\nPNG/JPG"; }
+            }
         }
 
         // ── Tab Navigation ───────────────────────────────────────────
@@ -58,17 +209,30 @@ namespace TheMatchaClubApp.Forms
         {
             if (sender is Guna.UI2.WinForms.Guna2Button btn)
             {
-                ShowTab(btn.Text.Trim());
+                // Extract tab name (strip emoji prefix)
+                for (int i = 0; i < _tabButtons.Length; i++)
+                {
+                    if (_tabButtons[i] == btn)
+                    {
+                        string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor", "Appearance",
+                                              "Products & Categories", "Customers", "Export & Backup", "Security" };
+                        ShowTab(tabNames[i]);
+                        break;
+                    }
+                }
             }
         }
 
         private void ShowTab(string tabName)
         {
             _activeTab = tabName;
-            pnlStoreProfile.Visible = tabName == "Store Profile";
-            pnlPlaceholder.Visible = tabName != "Store Profile";
-            if (tabName != "Store Profile")
-                lblPlaceholderText.Text = $"{tabName} configuration panel loading...";
+            string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor", "Appearance",
+                                  "Products & Categories", "Customers", "Export & Backup", "Security" };
+
+            for (int i = 0; i < _sectionPanels.Length; i++)
+                _sectionPanels[i].Visible = tabNames[i] == tabName;
+
+            lblSettingsTitle.Text = tabName;
             UpdateTabStyles();
         }
 

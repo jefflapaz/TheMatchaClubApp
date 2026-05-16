@@ -20,6 +20,8 @@ namespace TheMatchaClubApp.Forms
             btnFilterAll = new Guna.UI2.WinForms.Guna2Button();
             btnFilterRegular = new Guna.UI2.WinForms.Guna2Button();
             btnFilterNew = new Guna.UI2.WinForms.Guna2Button();
+            btnFilterLoyal = new Guna.UI2.WinForms.Guna2Button();
+            btnFilterFrequent = new Guna.UI2.WinForms.Guna2Button();
             flpCustomers = new System.Windows.Forms.FlowLayoutPanel();
             
             pnlProfile = new System.Windows.Forms.Panel();
@@ -133,23 +135,35 @@ namespace TheMatchaClubApp.Forms
             pnlFilters.Dock = System.Windows.Forms.DockStyle.Top;
             pnlFilters.Height = 36;
             pnlFilters.Padding = new System.Windows.Forms.Padding(0, 6, 0, 6);
+            pnlFilters.Controls.Add(btnFilterFrequent);
+            pnlFilters.Controls.Add(btnFilterLoyal);
             pnlFilters.Controls.Add(btnFilterNew);
             pnlFilters.Controls.Add(btnFilterRegular);
             pnlFilters.Controls.Add(btnFilterAll);
 
-            btnFilterAll.Width = 80;
+            btnFilterAll.Width = 60;
             btnFilterAll.Dock = System.Windows.Forms.DockStyle.Left;
             btnFilterAll.Text = "All";
             
-            btnFilterRegular.Width = 100;
+            btnFilterRegular.Width = 80;
             btnFilterRegular.Dock = System.Windows.Forms.DockStyle.Left;
             btnFilterRegular.Text = "Regular";
-            btnFilterRegular.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
+            btnFilterRegular.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
 
-            btnFilterNew.Width = 80;
+            btnFilterNew.Width = 60;
             btnFilterNew.Dock = System.Windows.Forms.DockStyle.Left;
             btnFilterNew.Text = "New";
-            btnFilterNew.Margin = new System.Windows.Forms.Padding(6, 0, 0, 0);
+            btnFilterNew.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+
+            btnFilterLoyal.Width = 70;
+            btnFilterLoyal.Dock = System.Windows.Forms.DockStyle.Left;
+            btnFilterLoyal.Text = "Loyal";
+            btnFilterLoyal.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+
+            btnFilterFrequent.Width = 80;
+            btnFilterFrequent.Dock = System.Windows.Forms.DockStyle.Left;
+            btnFilterFrequent.Text = "Frequent";
+            btnFilterFrequent.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
 
             flpCustomers.Dock = System.Windows.Forms.DockStyle.Fill;
             flpCustomers.AutoScroll = true;
@@ -376,6 +390,8 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2Button btnFilterAll;
         private Guna.UI2.WinForms.Guna2Button btnFilterRegular;
         private Guna.UI2.WinForms.Guna2Button btnFilterNew;
+        private Guna.UI2.WinForms.Guna2Button btnFilterLoyal;
+        private Guna.UI2.WinForms.Guna2Button btnFilterFrequent;
         private System.Windows.Forms.FlowLayoutPanel flpCustomers;
         
         private System.Windows.Forms.Panel pnlProfile;

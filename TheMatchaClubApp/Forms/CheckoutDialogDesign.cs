@@ -39,6 +39,40 @@ namespace TheMatchaClubApp.Forms
             btnClose.Text = "✕";
             btnClose.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
 
+            // Form border and shadow
+            this.Paint += (s, e) =>
+            {
+                using var borderPen = new Pen(DlgBorder, 1);
+                e.Graphics.DrawRectangle(borderPen, 0, 0, this.Width - 1, this.Height - 1);
+                // Subtle shadow line on bottom and right
+                using var shadowPen = new Pen(Color.FromArgb(30, 0, 0, 0), 2);
+                e.Graphics.DrawLine(shadowPen, 2, this.Height, this.Width, this.Height);
+                e.Graphics.DrawLine(shadowPen, this.Width, 2, this.Width, this.Height);
+            };
+
+            // Drag-to-move via header
+            Point _dragStart = Point.Empty;
+            pnlHeader.MouseDown += (s, me) => { if (me.Button == MouseButtons.Left) _dragStart = me.Location; };
+            pnlHeader.MouseMove += (s, me) =>
+            {
+                if (me.Button == MouseButtons.Left && _dragStart != Point.Empty)
+                {
+                    this.Left += me.X - _dragStart.X;
+                    this.Top += me.Y - _dragStart.Y;
+                }
+            };
+            pnlHeader.MouseUp += (s, me) => _dragStart = Point.Empty;
+            lblTitle.MouseDown += (s, me) => { if (me.Button == MouseButtons.Left) _dragStart = me.Location; };
+            lblTitle.MouseMove += (s, me) =>
+            {
+                if (me.Button == MouseButtons.Left && _dragStart != Point.Empty)
+                {
+                    this.Left += me.X - _dragStart.X;
+                    this.Top += me.Y - _dragStart.Y;
+                }
+            };
+            lblTitle.MouseUp += (s, me) => _dragStart = Point.Empty;
+
             // Order Type Labels
             lblOrderTypeLabel.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
             lblOrderTypeLabel.ForeColor = DlgMuted;

@@ -19,6 +19,8 @@ namespace TheMatchaClubApp.Forms
         private Dictionary<int, decimal> _hourlySalesData = new();
         private List<(string Label, decimal Value)>? _historyRevenue;
         private List<(string Label, decimal Value)>? _historyTxCounts;
+        private List<(string Name, string Category, int Units, decimal Revenue)>? _topProducts;
+        private List<Order>? _recentOrders;
 
         public ReportsView()
         {
@@ -31,31 +33,15 @@ namespace TheMatchaClubApp.Forms
             InitializeDesign();
             WireEvents();
 
-            _selectedSession = Program.SessionService.GetLatestSession();
+            _selectedSession = Program.SessionService.GetActiveSession();
             LoadAllPages();
             UpdateSessionUI();
         }
 
+        private System.Windows.Forms.Timer tmrLiveRefresh = new() { Interval = 5000 };
+
         private void SetupColumns()
         {
-            dgvTopItems.Columns.AddRange(
-                new DataGridViewTextBoxColumn { HeaderText = "Product", FillWeight = 35 },
-                new DataGridViewTextBoxColumn { HeaderText = "Category", FillWeight = 20 },
-                new DataGridViewTextBoxColumn { HeaderText = "Units Sold", FillWeight = 20, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter } },
-                new DataGridViewTextBoxColumn { HeaderText = "Revenue", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } }
-            );
-            dgvRecentTx.Columns.AddRange(
-                new DataGridViewTextBoxColumn { HeaderText = "Order ID", FillWeight = 25 },
-                new DataGridViewTextBoxColumn { HeaderText = "Customer", FillWeight = 25 },
-                new DataGridViewTextBoxColumn { HeaderText = "Amount", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } },
-                new DataGridViewTextBoxColumn { HeaderText = "Time", FillWeight = 25 }
-            );
-            dgvAllSales.Columns.AddRange(
-                new DataGridViewTextBoxColumn { HeaderText = "Product", FillWeight = 35 },
-                new DataGridViewTextBoxColumn { HeaderText = "Category", FillWeight = 20 },
-                new DataGridViewTextBoxColumn { HeaderText = "Units Sold", FillWeight = 20, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter } },
-                new DataGridViewTextBoxColumn { HeaderText = "Revenue", FillWeight = 25, DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight } }
-            );
             dgvSessionHistory.Columns.AddRange(
                 new DataGridViewTextBoxColumn { HeaderText = "Date", FillWeight = 14 },
                 new DataGridViewTextBoxColumn { HeaderText = "Time", FillWeight = 14 },
@@ -71,94 +57,110 @@ namespace TheMatchaClubApp.Forms
         private void WireEvents()
         {
             btnTabOverview.Click += (s, e) => ShowPage("overview");
-            btnTabSales.Click += (s, e) => ShowPage("sales");
+            btnTabSales.Click += (s, e) => ShowPage("sessions");
             btnTabHistory.Click += (s, e) => ShowPage("history");
-            btnSessionCalendar.Click += BtnSessionCalendar_Click;
             btnCloseDay.Click += BtnCloseDay_Click;
             btnOpenStore.Click += BtnOpenStore_Click;
             btnExportCsv.Click += BtnExportCsv_Click;
             btnExportPdf.Click += BtnExportPdf_Click;
             btnPrintReport.Click += BtnExportPdf_Click;
             txtActualCash.TextChanged += (s, e) => UpdateOverShort();
-            txtSalesSearch.TextChanged += (s, e) => FilterSalesDgv();
+
+            // Month/Year filter events
+            cmbHistoryMonth.SelectedIndexChanged += (s, e) => LoadSessionHistoryPage();
+            cmbHistoryYear.SelectedIndexChanged += (s, e) => LoadSessionHistoryPage();
+
+            // Auto-refresh for live performance
+            tmrLiveRefresh.Tick += (s, e) =>
+            {
+                if (_selectedSession != null && !IsDisposed)
+                {
+                    _selectedSessionOrders = Program.SessionService.GetSessionOrders(_selectedSession.SessionId);
+                    LoadOverviewPage();
+                    UpdateSessionUI();
+                }
+            };
+            tmrLiveRefresh.Start();
 
             Program.DataService.OrdersChanged += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { LoadAllPages(); UpdateSessionUI(); })); };
-            Program.DataService.DataLoaded += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { _selectedSession = Program.SessionService.GetLatestSession(); LoadAllPages(); UpdateSessionUI(); })); };
-            Program.SessionService.SessionOpened += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { _selectedSession = Program.SessionService.GetActiveSession(); LoadAllPages(); UpdateSessionUI(); })); };
+            Program.DataService.DataLoaded += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { LoadAllPages(); UpdateSessionUI(); })); };
+            Program.SessionService.SessionOpened += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { LoadAllPages(); UpdateSessionUI(); })); };
             Program.SessionService.SessionClosed += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { LoadAllPages(); UpdateSessionUI(); })); };
 
             dgvSessionHistory.CellDoubleClick += DgvSessionHistory_CellDoubleClick;
+            dgvSessionHistory.CellFormatting += DgvSessionHistory_CellFormatting;
+        }
+
+        private void DgvSessionHistory_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || dgvSessionHistory.Columns.Count < 8) return;
+            var statusVal = dgvSessionHistory.Rows[e.RowIndex].Cells[7].Value?.ToString() ?? "";
+            if (statusVal.Contains("Active"))
+            {
+                dgvSessionHistory.Rows[e.RowIndex].DefaultCellStyle.ForeColor = ColorTranslator.FromHtml("#52B743");
+            }
         }
 
         // ── Tab Navigation ─────────────────────────────────────
         private void ShowPage(string page)
         {
             pnlPageOverview.Visible = page == "overview";
-            pnlPageSales.Visible = page == "sales";
+            pnlPageSales.Visible = page == "sessions";
             pnlPageHistory.Visible = page == "history";
             StyleTabBtn(btnTabOverview, page == "overview");
-            StyleTabBtn(btnTabSales, page == "sales");
+            StyleTabBtn(btnTabSales, page == "sessions");
             StyleTabBtn(btnTabHistory, page == "history");
-            lblTitle.Text = page switch { "sales" => "Sales Summary", "history" => "Previous Reports", _ => "Performance Overview" };
+            lblTitle.Text = page switch { "sessions" => "Session History", "history" => "Previous Reports", _ => "Current Performance" };
+
+            if (page == "overview" && _selectedSession != null)
+                lblSelectedSession.Text = "●  LIVE SESSION";
+            else
+                lblSelectedSession.Text = "";
         }
 
-        // ── Session Calendar ───────────────────────────────────
-        private void BtnSessionCalendar_Click(object? sender, EventArgs e)
-        {
-            var sessionDates = Program.SessionService.GetSessionDates();
-            using var dlg = new Form
-            {
-                Text = "Select Session Date", Size = new Size(320, 320),
-                StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog,
-                MaximizeBox = false, MinimizeBox = false, BackColor = Color.White
-            };
-            
-            var lblH = new Label { Text = "Operating Dates", Font = new Font("Segoe UI", 12F, FontStyle.Bold), Location = new Point(20, 15), AutoSize = true, ForeColor = ColorTranslator.FromHtml("#111827") };
-            var lblS = new Label { Text = "Bold dates have recorded sessions.", Font = new Font("Segoe UI", 8.5F), Location = new Point(20, 42), AutoSize = true, ForeColor = ColorTranslator.FromHtml("#6B7280") };
-            
-            var cal = new MonthCalendar { MaxSelectionCount = 1, Location = new Point(20, 75) };
-            cal.BoldedDates = sessionDates.ToArray();
-            
-            cal.DateSelected += (s, ev) =>
-            {
-                var session = Program.SessionService.GetSessionByDate(ev.Start.Date);
-                if (session != null) { _selectedSession = session; dlg.Close(); }
-                else lblS.Text = "No session found on this date."; 
-            };
-            
-            dlg.Controls.AddRange(new Control[] { lblH, lblS, cal });
-            dlg.ShowDialog(this.FindForm());
-            LoadAllPages();
-        }
+
 
         // ── Load All Pages ─────────────────────────────────────
         private List<Order> _selectedSessionOrders = new();
 
         private void LoadAllPages()
         {
+            _selectedSession = Program.SessionService.GetActiveSession();
             if (_selectedSession != null)
             {
-                lblSelectedSession.Text = $"{_selectedSession.OpenedAt:MMM dd, yyyy} \u2022 {(_selectedSession.IsClosed ? "Closed" : "Active")}";
-                // Cache orders for the selected session once
+                lblSelectedSession.Text = "●  LIVE SESSION";
                 _selectedSessionOrders = Program.SessionService.GetSessionOrders(_selectedSession.SessionId);
             }
             else
             {
-                lblSelectedSession.Text = "No sessions yet";
+                lblSelectedSession.Text = "";
                 _selectedSessionOrders = new List<Order>();
             }
 
             LoadOverviewPage();
-            LoadSalesSummaryPage();
-            LoadHistoryPage();
+            LoadSessionHistoryPage();
+            LoadHistoryCharts();
         }
 
-        // ── OVERVIEW PAGE ──────────────────────────────────────
+        // ── OVERVIEW PAGE (Current Performance) ────────────────
         private void LoadOverviewPage()
         {
-            if (_selectedSession == null) { pnlKpiRow.Controls.Clear(); pnlInsightsRow.Controls.Clear(); dgvTopItems.Rows.Clear(); dgvRecentTx.Rows.Clear(); return; }
+            bool hasSession = _selectedSession != null;
 
-            var sid = _selectedSession.SessionId;
+            // Show/hide analytics based on session state
+            pnlChartsRow.Visible = hasSession;
+            pnlInsightsRow.Visible = hasSession;
+            pnlTableCard.Visible = hasSession;
+            pnlRecentTx.Visible = hasSession;
+
+            if (!hasSession)
+            {
+                pnlKpiRow.Controls.Clear();
+                pnlKpiRow.Controls.Add(CreateEmptyStatePanel());
+                return;
+            }
+
+            var sid = _selectedSession!.SessionId;
             var orders = _selectedSessionOrders;
             
             // Use frozen totals if session is closed to ensure historical integrity
@@ -195,18 +197,23 @@ namespace TheMatchaClubApp.Forms
             var largest = orders.OrderByDescending(o => o.Total).FirstOrDefault();
             pnlInsightsRow.Controls.Add(CreateInsightCard("\U0001F4B0 Largest Order", largest != null ? Fmt(largest.Total) : "\u2014"));
 
-            // Top 5
-            dgvTopItems.Rows.Clear();
-            foreach (var item in Program.SessionService.GetTopItems(sid, 5))
-                dgvTopItems.Rows.Add(item.Name, item.Category, item.Units.ToString(), Fmt(item.Revenue));
+            // Top 5 Performing Items
+            _topProducts = Program.SessionService.GetTopItems(sid, 5);
+            pnlTableCard.Invalidate();
 
-            // Recent Tx
-            dgvRecentTx.Rows.Clear();
-            foreach (var o in orders.OrderByDescending(o => o.Timestamp).Take(8))
-            {
-                var cust = Program.DataService.Customers.FirstOrDefault(c => c.Id == o.CustomerId);
-                dgvRecentTx.Rows.Add(o.OrderId, cust?.Name ?? "Walk-in", Fmt(o.Total), o.Timestamp.ToString("hh:mm tt"));
-            }
+            // Recent Transactions
+            _recentOrders = orders.OrderByDescending(o => o.Timestamp).Take(6).ToList();
+            pnlRecentTx.Invalidate();
+        }
+
+        private Panel CreateEmptyStatePanel()
+        {
+            var pnl = new Panel { Size = new Size(700, 100), Margin = new Padding(20, 10, 0, 0) };
+            var icon = new Label { Text = "⏸", Font = new Font("Segoe UI", 22F), Location = new Point(0, 8), AutoSize = true, BackColor = Color.Transparent };
+            var msg = new Label { Text = "No Active Session", Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold), ForeColor = ColorTranslator.FromHtml("#111827"), Location = new Point(50, 10), AutoSize = true, BackColor = Color.Transparent };
+            var sub = new Label { Text = "Open a store session from the sidebar to start tracking live performance.", Font = new Font("Segoe UI", 9.5F), ForeColor = ColorTranslator.FromHtml("#6B7280"), Location = new Point(50, 42), AutoSize = true, BackColor = Color.Transparent };
+            pnl.Controls.AddRange(new Control[] { icon, msg, sub });
+            return pnl;
         }
 
         private Guna.UI2.WinForms.Guna2Panel CreateKpiCard(string title, string value)
@@ -231,45 +238,25 @@ namespace TheMatchaClubApp.Forms
             return pnl;
         }
 
-        // ── SALES SUMMARY PAGE ─────────────────────────────────
-        private List<(string Name, string Category, int Units, decimal Revenue)> _allSalesData = new();
-
-        private void LoadSalesSummaryPage()
-        {
-            if (_selectedSession == null) { dgvAllSales.Rows.Clear(); return; }
-            _allSalesData = Program.SessionService.GetAllItemSales(_selectedSession.SessionId);
-            PopulateSalesDgv(_allSalesData);
-        }
-
-        private void PopulateSalesDgv(List<(string Name, string Category, int Units, decimal Revenue)> data)
-        {
-            dgvAllSales.Rows.Clear();
-            foreach (var item in data)
-                dgvAllSales.Rows.Add(item.Name, item.Category, item.Units.ToString(), Fmt(item.Revenue));
-        }
-
-        private void FilterSalesDgv()
-        {
-            var q = txtSalesSearch.Text.Trim().ToLower();
-            if (string.IsNullOrEmpty(q)) { PopulateSalesDgv(_allSalesData); return; }
-            PopulateSalesDgv(_allSalesData.Where(x => x.Name.ToLower().Contains(q) || x.Category.ToLower().Contains(q)).ToList());
-        }
-
-        // ── HISTORY PAGE ───────────────────────────────────────
+        // ── SESSION HISTORY PAGE (month/year filter) ──────────
         private List<BusinessSession> _historySessions = new();
 
-        private void LoadHistoryPage()
+        private void LoadSessionHistoryPage()
         {
-            _historySessions = Program.SessionService.GetAllSessions();
+            var allSessions = Program.SessionService.GetAllSessions();
 
-            // Charts data (last 10 sessions)
-            var recent = _historySessions.Where(s => s.IsClosed).Take(10).Reverse().ToList();
-            _historyRevenue = recent.Select(s => (s.OpenedAt.ToString("MMM dd"), s.TotalRevenue)).ToList();
-            _historyTxCounts = recent.Select(s => (s.OpenedAt.ToString("MMM dd"), (decimal)s.TotalTransactions)).ToList();
-            pnlRevenueChart.Invalidate();
-            pnlTxChart.Invalidate();
+            int selectedMonth = cmbHistoryMonth.SelectedIndex; // 0 = All
+            int selectedYear = int.TryParse(cmbHistoryYear.SelectedItem?.ToString(), out int y) ? y : DateTime.Now.Year;
 
-            // Table
+            _historySessions = allSessions.Where(s =>
+            {
+                if (s.OpenedAt.Year != selectedYear) return false;
+                if (selectedMonth > 0 && s.OpenedAt.Month != selectedMonth) return false;
+                return true;
+            }).OrderByDescending(s => s.OpenedAt).ToList();
+
+            lblSessionCount.Text = $"{_historySessions.Count} session{(_historySessions.Count != 1 ? "s" : "")}";
+
             dgvSessionHistory.Rows.Clear();
             foreach (var s in _historySessions)
             {
@@ -284,12 +271,23 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
+        // ── PREVIOUS REPORTS (charts only) ────────────────────
+        private void LoadHistoryCharts()
+        {
+            var allSessions = Program.SessionService.GetAllSessions();
+            var recent = allSessions.Where(s => s.IsClosed).Take(12).Reverse().ToList();
+            _historyRevenue = recent.Select(s => (s.OpenedAt.ToString("MMM dd"), s.TotalRevenue)).ToList();
+            _historyTxCounts = recent.Select(s => (s.OpenedAt.ToString("MMM dd"), (decimal)s.TotalTransactions)).ToList();
+            pnlRevenueChart.Invalidate();
+            pnlTxChart.Invalidate();
+        }
+
         private void DgvSessionHistory_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.RowIndex >= _historySessions.Count) return;
-            _selectedSession = _historySessions[e.RowIndex];
-            ShowPage("overview");
-            LoadAllPages();
+            var session = _historySessions[e.RowIndex];
+            using var detail = new SessionDetailForm(session);
+            detail.ShowDialog(this.FindForm());
         }
 
         // ── Over/Short ─────────────────────────────────────────
@@ -315,18 +313,33 @@ namespace TheMatchaClubApp.Forms
             if (session == null) { MessageBox.Show("No active session.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             decimal actualCash = 0;
             if (decimal.TryParse(txtActualCash.Text.Replace("₱", "").Replace(",", ""), out decimal parsed)) actualCash = parsed;
-            
-            if (actualCash <= 0)
+            var settings = Program.DataService.Settings;
+
+            if (settings.RequireCashCountOnClose)
             {
-                MessageBox.Show("Please enter the actual cash counted before closing the store session.", "Actual Cash Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                if (actualCash <= 0)
+                {
+                    MessageBox.Show("Please enter the actual cash counted before closing the store session.", "Actual Cash Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+            else
+            {
+                if (actualCash <= 0) actualCash = 0;
             }
 
-            if (MessageBox.Show($"Close this session?\n\nOpened: {session.OpenedAt:MMM dd, hh:mm tt}\nActual cash: {Fmt(actualCash)}", "Close Session", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+            // Compute expected for confirmation dialog
+            Program.SessionService.ComputeSessionTotals(session);
+            decimal expectedCash = session.StartingCash + session.TotalRevenue;
 
+            if (MessageBox.Show(
+                $"Close this session?\n\nOpened: {session.OpenedAt:MMM dd, hh:mm tt}\nRevenue: {Fmt(session.TotalRevenue)}\nExpected Cash: {Fmt(expectedCash)}\nActual Cash: {Fmt(actualCash)}",
+                "Close Session", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+
+            btnCloseDay.Enabled = false;
             try 
             {
-                var closed = await Program.SessionService.CloseSessionAsync(actualCash, Program.CurrentUser?.FullName ?? session.OpenedBy);
+                var closed = await Program.SessionService.CloseSessionAsync(actualCash, Program.GetCurrentCashierName());
                 decimal overShort = closed.ActualCash - closed.ExpectedCash;
                 var best = Program.SessionService.GetSessionOrders(closed.SessionId).SelectMany(o => o.Items).GroupBy(i => i.ProductName).OrderByDescending(g => g.Sum(i => i.Quantity)).FirstOrDefault();
 
@@ -343,17 +356,22 @@ namespace TheMatchaClubApp.Forms
             {
                 MessageBox.Show($"An unexpected error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                btnCloseDay.Enabled = true;
+            }
         }
 
         // ── Open Session ───────────────────────────────────────
         private async void BtnOpenStore_Click(object? sender, EventArgs e)
         {
             if (Program.SessionService.HasActiveSession()) { MessageBox.Show("Session already active.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+            string defCash = Program.DataService.Settings.DefaultStartingCash.ToString("F0");
             using var dlg = new Form { Text = "Open Store Session", Size = new Size(340, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.White };
             var lblP = new Label { Text = "Starting cash in register:", Location = new Point(20, 20), Size = new Size(280, 24), Font = new Font("Segoe UI", 10F) };
-            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = "200", Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = "₱200.00" };
-            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = "₱200 Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
-            btnD.Click += (s2, e2) => txtC.Text = "200";
+            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = defCash, Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = $"₱{defCash}" };
+            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = $"₱{defCash} Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
+            btnD.Click += (s2, e2) => txtC.Text = defCash;
             var btnO = new Guna.UI2.WinForms.Guna2Button { Text = "Open Session", Location = new Point(160, 100), Size = new Size(140, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 9F, FontStyle.Bold), BorderThickness = 0 };
             
             btnO.Click += (s2, e2) => 
@@ -367,16 +385,32 @@ namespace TheMatchaClubApp.Forms
                 dlg.Close();
             };
 
+            // ENTER key confirms
+            txtC.KeyDown += (s2, ke) =>
+            {
+                if (ke.KeyCode == Keys.Enter) { ke.SuppressKeyPress = true; btnO.PerformClick(); }
+            };
+
             dlg.Controls.AddRange(new Control[] { lblP, txtC, btnD, btnO });
             if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
             
             if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal cash)) cash = 200m;
+
+            // Confirmation
+            string cashierName = Program.GetCurrentCashierName();
+            var confirm = MessageBox.Show(
+                $"Open a new store session?\n\nCashier: {cashierName}\nStarting Cash: ₱{cash:#,##0.00}",
+                "Confirm Open Session",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirm != DialogResult.Yes) return;
+
+            btnOpenStore.Enabled = false;
             try 
             { 
-                var newSession = await Program.SessionService.OpenSessionAsync(Program.CurrentUser?.FullName ?? "Main Counter", cash); 
-                MessageBox.Show($"Store Session Opened successfully.\nStarting Cash: ₱{cash:#,##0.00}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                await Program.SessionService.OpenSessionAsync(cashierName, cash); 
             }
             catch (InvalidOperationException ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            finally { btnOpenStore.Enabled = true; }
         }
 
         // ── Session UI ─────────────────────────────────────────
@@ -459,6 +493,8 @@ namespace TheMatchaClubApp.Forms
                     col.Item().Text("The Matcha Club \u2014 Session Report").Bold().FontSize(18).FontColor("#52B743");
                     col.Item().Text($"Session ID: {_selectedSession.SessionId}").FontSize(8).FontColor("#9CA3AF");
                     col.Item().Text($"Opened: {_selectedSession.OpenedAt:MMM dd, yyyy hh:mm tt} by {_selectedSession.OpenedBy}").FontSize(9).FontColor("#6B7280");
+                    if (!string.IsNullOrWhiteSpace(Program.DataService.Settings.CurrentOperatingLocation))
+                        col.Item().Text($"Location: {Program.DataService.Settings.CurrentOperatingLocation}").FontSize(9).FontColor("#6B7280");
                     if (_selectedSession.IsClosed)
                         col.Item().Text($"Closed: {_selectedSession.ClosedAt:MMM dd, yyyy hh:mm tt} by {_selectedSession.ClosedBy}").FontSize(9).FontColor("#6B7280");
                     
@@ -481,6 +517,6 @@ namespace TheMatchaClubApp.Forms
 
         private string Fmt(decimal amount) => $"\u20b1{amount:#,##0.00}";
 
-        protected override void Dispose(bool disposing) { if (disposing) components?.Dispose(); base.Dispose(disposing); }
+        protected override void Dispose(bool disposing) { if (disposing) { tmrLiveRefresh.Stop(); tmrLiveRefresh.Dispose(); components?.Dispose(); } base.Dispose(disposing); }
     }
 }
