@@ -35,7 +35,6 @@ namespace TheMatchaClubApp.Core.Models
 
         // ── Appearance ───────────────────────────────────────────────
         public string AccentColor { get; set; } = "#52B743";
-        public bool IsDarkMode { get; set; } = false;
         public bool EnableAnimations { get; set; } = true;
         public string FontScale { get; set; } = "Normal"; // "Small", "Normal", "Large"
 

@@ -115,8 +115,6 @@ namespace TheMatchaClubApp.Forms
             btnSignIn.ForeColor = Color.White;
             btnSignIn.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
             btnSignIn.Click += BtnSignIn_Click;
-
-            btnSignIn.Click += BtnSignIn_Click;
         }
 
         private void PicLogo_Paint(object? sender, PaintEventArgs e)

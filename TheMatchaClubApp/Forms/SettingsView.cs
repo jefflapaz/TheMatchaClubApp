@@ -94,7 +94,6 @@ namespace TheMatchaClubApp.Forms
             txtReceiptFooterEditor.Text = s.ReceiptFooterMessage;
 
             // Appearance
-            chkDarkMode.Checked = s.IsDarkMode;
             chkAnimations.Checked = s.EnableAnimations;
             cmbFontScale.SelectedItem = s.FontScale;
             if (cmbFontScale.SelectedIndex < 0) cmbFontScale.SelectedIndex = 1; // Normal
@@ -139,7 +138,6 @@ namespace TheMatchaClubApp.Forms
             s.ReceiptFooterMessage = txtReceiptFooterEditor.Text.Trim();
 
             // Appearance
-            s.IsDarkMode = chkDarkMode.Checked;
             s.EnableAnimations = chkAnimations.Checked;
             s.FontScale = cmbFontScale.SelectedItem?.ToString() ?? "Normal";
 

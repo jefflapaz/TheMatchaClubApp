@@ -39,8 +39,7 @@ namespace TheMatchaClub.Infrastructure.Data.Configurations
                 StoreLogoPath = "",
                 Email = "info@thematchaclub.ph",
                 Phone = "+63 912 345 6789",
-                Address = "Makati City, Metro Manila",
-                IsDarkMode = false
+                Address = "Makati City, Metro Manila"
             });
         }
     }
