@@ -48,11 +48,6 @@ namespace TheMatchaClubApp.Forms
             txtSearch.IconLeft = null; // No icon for simplicity unless we have one
             txtSearch.TextOffset = new Point(4, 0);
 
-            btnAlert.FillColor = Color.Transparent;
-            btnAlert.ForeColor = TextSecondary;
-            btnAlert.BorderThickness = 0;
-            btnAlert.Font = new Font("Segoe UI", 12F);
-            btnAlert.HoverState.FillColor = ColorTranslator.FromHtml("#F3F4F6");
 
             // ── Category Row ──
             pnlCategoryRow.BackColor = CardBg;

@@ -188,8 +188,10 @@ namespace TheMatchaClubApp.Forms
 
 
 
+            // ── Export & Backup section ──
+            BuildExportBackupSection();
+
             // ── Placeholder styling for other sections ──
-            StylePlaceholderSection(pnlExportBackup, "💾", "Export & Backup", "Export your data or create a full backup.");
             StylePlaceholderSection(pnlSecurity, "🔒", "Security", "Password and authentication settings.");
         }
 
@@ -341,5 +343,232 @@ namespace TheMatchaClubApp.Forms
 
             ReceiptRenderer.Render(e.Graphics, pnlReceiptPreview.ClientRectangle, null, liveSettings);
         }
+
+        // ══════════════════════════════════════════════════════════════
+        //  EXPORT & BACKUP SECTION — FULL UI BUILD
+        // ══════════════════════════════════════════════════════════════
+
+        private void BuildExportBackupSection()
+        {
+            // ── Card 1: Export Data ──
+            var cardExport = new Guna2Panel
+            {
+                Location = new Point(24, 8),
+                Size = new Size(720, 220),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(cardExport);
+
+            var lblExportTitle = new Label
+            {
+                Text = "Export Data", Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold),
+                ForeColor = STextPrimary, Location = new Point(24, 20), Size = new Size(300, 24), BackColor = Color.Transparent
+            };
+            var lblExportSub = new Label
+            {
+                Text = "Export your POS data as CSV spreadsheet files for external analysis.",
+                Font = new Font("Segoe UI", 8F), ForeColor = STextSecondary,
+                Location = new Point(24, 44), Size = new Size(660, 18), BackColor = Color.Transparent
+            };
+
+            btnExportSales = CreateExportButton("📊  Export Sales CSV", new Point(24, 80));
+            btnExportCustomers = CreateExportButton("👥  Export Customers CSV", new Point(24, 130));
+            btnExportProducts = CreateExportButton("📦  Export Products CSV", new Point(260, 80));
+
+            // Record counts
+            var lblSalesCount = new Label
+            {
+                Text = $"{Program.DataService.Orders.Count} orders available",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
+                Location = new Point(24, 118), AutoSize = true, BackColor = Color.Transparent
+            };
+            var lblCustCount = new Label
+            {
+                Text = $"{Program.DataService.Customers.Count} customers available",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
+                Location = new Point(24, 168), AutoSize = true, BackColor = Color.Transparent
+            };
+            var lblProdCount = new Label
+            {
+                Text = $"{Program.DataService.Products.Count} products available",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
+                Location = new Point(260, 118), AutoSize = true, BackColor = Color.Transparent
+            };
+
+            // Export folder info
+            var lblExportFolder = new Label
+            {
+                Text = $"📁 Export folder: Documents/MatchaPOS/Exports",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
+                Location = new Point(24, 192), AutoSize = true, BackColor = Color.Transparent
+            };
+
+            cardExport.Controls.AddRange(new Control[] {
+                lblExportTitle, lblExportSub,
+                btnExportSales, btnExportCustomers, btnExportProducts,
+                lblSalesCount, lblCustCount, lblProdCount, lblExportFolder
+            });
+
+            // ── Card 2: Backup System ──
+            var cardBackup = new Guna2Panel
+            {
+                Location = new Point(24, 244),
+                Size = new Size(720, 180),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(cardBackup);
+
+            var lblBackupTitle = new Label
+            {
+                Text = "Backup System", Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold),
+                ForeColor = STextPrimary, Location = new Point(24, 20), Size = new Size(300, 24), BackColor = Color.Transparent
+            };
+            var lblBackupSub = new Label
+            {
+                Text = "Create a full local backup or restore from a previous backup file.",
+                Font = new Font("Segoe UI", 8F), ForeColor = STextSecondary,
+                Location = new Point(24, 44), Size = new Size(660, 18), BackColor = Color.Transparent
+            };
+
+            btnCreateBackup = new Guna2Button
+            {
+                Text = "🔒  Create Full Backup",
+                Size = new Size(220, 42),
+                Location = new Point(24, 76),
+                BorderRadius = 10,
+                Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold),
+                ForeColor = Color.White,
+                FillColor = SGreen,
+                HoverState = { FillColor = ColorTranslator.FromHtml("#46A037") },
+                BorderThickness = 0,
+                Cursor = Cursors.Hand
+            };
+
+            btnRestoreBackup = new Guna2Button
+            {
+                Text = "📂  Restore Backup",
+                Size = new Size(220, 42),
+                Location = new Point(260, 76),
+                BorderRadius = 10,
+                Font = new Font("Segoe UI Semibold", 9.5F, FontStyle.Bold),
+                ForeColor = STextPrimary,
+                FillColor = Color.White,
+                HoverState = { FillColor = ColorTranslator.FromHtml("#F9FAFB") },
+                BorderColor = SBorder,
+                BorderThickness = 1,
+                Cursor = Cursors.Hand
+            };
+
+            var lblBackupWarning = new Label
+            {
+                Text = "⚠️  Restoring a backup will overwrite all current data. A confirmation will be shown first.",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = ColorTranslator.FromHtml("#D97706"),
+                Location = new Point(24, 130), Size = new Size(660, 18), BackColor = Color.Transparent
+            };
+            var lblBackupFolder = new Label
+            {
+                Text = "📁 Backup folder: Documents/MatchaPOS/Backups",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
+                Location = new Point(24, 152), AutoSize = true, BackColor = Color.Transparent
+            };
+
+            cardBackup.Controls.AddRange(new Control[] {
+                lblBackupTitle, lblBackupSub,
+                btnCreateBackup, btnRestoreBackup,
+                lblBackupWarning, lblBackupFolder
+            });
+
+            // ── Card 3: Backup Information ──
+            var cardInfo = new Guna2Panel
+            {
+                Location = new Point(24, 440),
+                Size = new Size(720, 200),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(cardInfo);
+
+            var lblInfoTitle = new Label
+            {
+                Text = "Backup Information", Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold),
+                ForeColor = STextPrimary, Location = new Point(24, 20), Size = new Size(300, 24), BackColor = Color.Transparent
+            };
+            var lblInfoSub = new Label
+            {
+                Text = "Current system and backup status overview.",
+                Font = new Font("Segoe UI", 8F), ForeColor = STextSecondary,
+                Location = new Point(24, 44), Size = new Size(660, 18), BackColor = Color.Transparent
+            };
+
+            // Status rows
+            int iy = 76;
+            int igap = 34;
+
+            lblInfoLastBackup = CreateInfoRow(cardInfo, "Last Backup", "—", ref iy);
+            iy += igap;
+            lblInfoBackupSize = CreateInfoRow(cardInfo, "Backup File Size", "—", ref iy);
+            iy += igap;
+            lblInfoDbStatus = CreateInfoRow(cardInfo, "Database Status", "—", ref iy);
+            iy += igap;
+            lblInfoDbSize = CreateInfoRow(cardInfo, "Database Size", "—", ref iy);
+
+            cardInfo.Controls.AddRange(new Control[] { lblInfoTitle, lblInfoSub });
+
+            // Add all cards to the panel
+            pnlExportBackup.Controls.AddRange(new Control[] { cardExport, cardBackup, cardInfo });
+        }
+
+        private Guna2Button CreateExportButton(string text, Point location)
+        {
+            return new Guna2Button
+            {
+                Text = text,
+                Size = new Size(220, 34),
+                Location = location,
+                BorderRadius = 8,
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = STextPrimary,
+                FillColor = ColorTranslator.FromHtml("#F3F4F6"),
+                HoverState = { FillColor = ColorTranslator.FromHtml("#E5E7EB") },
+                BorderThickness = 0,
+                Cursor = Cursors.Hand,
+                TextAlign = HorizontalAlignment.Left
+            };
+        }
+
+        private Label CreateInfoRow(Control parent, string label, string value, ref int y)
+        {
+            var lblLabel = new Label
+            {
+                Text = label,
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = STextSecondary,
+                Location = new Point(24, y),
+                Size = new Size(180, 20),
+                BackColor = Color.Transparent
+            };
+            var lblValue = new Label
+            {
+                Text = value,
+                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold),
+                ForeColor = STextPrimary,
+                Location = new Point(210, y),
+                Size = new Size(480, 20),
+                BackColor = Color.Transparent
+            };
+            parent.Controls.Add(lblLabel);
+            parent.Controls.Add(lblValue);
+            return lblValue; // Return the value label for dynamic updates
+        }
+
+        // ── Export & Backup control fields ──
+        internal Guna2Button btnExportSales = null!;
+        internal Guna2Button btnExportCustomers = null!;
+        internal Guna2Button btnExportProducts = null!;
+        internal Guna2Button btnCreateBackup = null!;
+        internal Guna2Button btnRestoreBackup = null!;
+        internal Label lblInfoLastBackup = null!;
+        internal Label lblInfoBackupSize = null!;
+        internal Label lblInfoDbStatus = null!;
+        internal Label lblInfoDbSize = null!;
     }
 }

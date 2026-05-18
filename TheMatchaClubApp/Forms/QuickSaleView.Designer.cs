@@ -12,7 +12,6 @@ namespace TheMatchaClubApp.Forms
             pnlTopHeader = new System.Windows.Forms.Panel();
             lblChevron = new System.Windows.Forms.Label();
             lblViewName = new System.Windows.Forms.Label();
-            btnAlert = new Guna.UI2.WinForms.Guna2Button();
             pnlCategoryRow = new System.Windows.Forms.Panel();
             btnCatLeft = new Guna.UI2.WinForms.Guna2Button();
             pnlCategoryScroll = new System.Windows.Forms.Panel();
@@ -56,6 +55,7 @@ namespace TheMatchaClubApp.Forms
             btnQuickOpenSession.BorderRadius = 12;
             
             btnClearCart = new Guna.UI2.WinForms.Guna2Button();
+            btnEndSession = new Guna.UI2.WinForms.Guna2Button();
             SuspendLayout();
 
             // tlpMain
@@ -90,11 +90,10 @@ namespace TheMatchaClubApp.Forms
             pnlLeftArea.Name = "pnlLeftArea";
             pnlLeftArea.Margin = new System.Windows.Forms.Padding(0);
 
-            // pnlTopHeader
             pnlTopHeader.Controls.Add(lblChevron);
             pnlTopHeader.Controls.Add(lblViewName);
             pnlTopHeader.Controls.Add(txtSearch);
-            pnlTopHeader.Controls.Add(btnAlert);
+            pnlTopHeader.Controls.Add(btnEndSession);
             pnlTopHeader.Dock = System.Windows.Forms.DockStyle.Top;
             pnlTopHeader.Size = new System.Drawing.Size(604, 64);
 
@@ -109,11 +108,6 @@ namespace TheMatchaClubApp.Forms
             txtSearch.Location = new System.Drawing.Point(160, 14);
             txtSearch.Size = new System.Drawing.Size(240, 36);
             txtSearch.PlaceholderText = "Search products...";
-
-            btnAlert.Location = new System.Drawing.Point(556, 16);
-            btnAlert.Size = new System.Drawing.Size(32, 32);
-            btnAlert.Text = "\u26A0";
-            btnAlert.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
 
             // pnlCategoryRow
             pnlCategoryRow.Controls.Add(pnlCategoryScroll); // Fill center
@@ -173,6 +167,17 @@ namespace TheMatchaClubApp.Forms
             lblOrderMeta.Location = new System.Drawing.Point(16, 34);
             lblOrderMeta.Size = new System.Drawing.Size(260, 18);
             lblOrderMeta.Text = "Order #— \u2022 Cashier: —";
+
+            btnEndSession.Location = new System.Drawing.Point(488, 16);
+            btnEndSession.Size = new System.Drawing.Size(100, 32);
+            btnEndSession.Text = "Close Session";
+            btnEndSession.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnEndSession.FillColor = System.Drawing.Color.Transparent;
+            btnEndSession.ForeColor = System.Drawing.Color.FromArgb(239, 68, 68); // Red color for close
+            btnEndSession.BorderColor = System.Drawing.Color.FromArgb(239, 68, 68);
+            btnEndSession.BorderThickness = 1;
+            btnEndSession.BorderRadius = 4;
+            btnEndSession.Font = new System.Drawing.Font("Segoe UI", 8.5F);
 
             btnClearCart.Location = new System.Drawing.Point(290, 16);
             btnClearCart.Size = new System.Drawing.Size(95, 32);
@@ -238,7 +243,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Panel pnlTopHeader;
         private System.Windows.Forms.Label lblChevron;
         private System.Windows.Forms.Label lblViewName;
-        private Guna.UI2.WinForms.Guna2Button btnAlert;
         private System.Windows.Forms.Panel pnlCategoryRow;
         private Guna.UI2.WinForms.Guna2Button btnCatLeft;
         private System.Windows.Forms.Panel pnlCategoryScroll;
@@ -261,6 +265,7 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblSessionWarning;
         private Guna.UI2.WinForms.Guna2Button btnQuickOpenSession;
         private Guna.UI2.WinForms.Guna2Button btnClearCart;
+        private Guna.UI2.WinForms.Guna2Button btnEndSession;
         private System.Windows.Forms.Label lblCashNote;
         private Guna.UI2.WinForms.Guna2TextBox txtSearch;
     }

@@ -339,21 +339,30 @@ namespace TheMatchaClubApp.Forms
             }
 
             string cashierName = Program.GetCurrentCashierName();
-            string defaultCash = Program.DataService.Settings.DefaultStartingCash.ToString("F2");
-            string? input = ShowInputDialog("Enter starting cash amount:", "Open Store Session", defaultCash);
-            if (string.IsNullOrWhiteSpace(input)) return;
-            if (!decimal.TryParse(input, out decimal startingCash) || startingCash < 0)
-            {
-                MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            decimal defaultCash = Program.DataService.Settings.DefaultStartingCash;
 
-            // Confirmation
-            var confirm = MessageBox.Show(
-                $"Open a new store session?\n\nCashier: {cashierName}\nStarting Cash: ₱{startingCash:#,##0.00}",
-                "Confirm Open Session",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (confirm != DialogResult.Yes) return;
+            using var openDialog = new OpenSessionDialogForm(cashierName, defaultCash);
+            
+            // Dim background
+            Form bg = new Form();
+            bg.StartPosition = FormStartPosition.Manual;
+            bg.FormBorderStyle = FormBorderStyle.None;
+            bg.Opacity = 0.50d;
+            bg.BackColor = Color.Black;
+            bg.WindowState = FormWindowState.Maximized;
+            bg.TopMost = false;
+            bg.Location = this.Location;
+            bg.ShowInTaskbar = false;
+            bg.Show();
+
+            openDialog.Owner = bg;
+            var result = openDialog.ShowDialog();
+            
+            bg.Dispose();
+
+            if (result != DialogResult.OK) return;
+
+            decimal startingCash = openDialog.StartingCash;
 
             _isSessionProcessing = true;
             btnQuickOpenSession.Enabled = false;
@@ -386,62 +395,34 @@ namespace TheMatchaClubApp.Forms
             decimal actualCash = 0;
             if (settings.RequireCashCountOnClose)
             {
-                string? input = ShowInputDialog(
-                    $"CLOSE SESSION - CASH COUNT\n\nPlease count and enter the actual cash in the register drawer:\n(Expected: ₱{expectedCash:#,##0.00})", 
-                    "Close Store Session", 
-                    "");
+                using var closeDialog = new CloseSessionDialogForm(activeSession);
                 
-                if (input == null) return; // User clicked Cancel or closed the dialog
+                // Dim background
+                Form bg = new Form();
+                bg.StartPosition = FormStartPosition.Manual;
+                bg.FormBorderStyle = FormBorderStyle.None;
+                bg.Opacity = 0.50d;
+                bg.BackColor = Color.Black;
+                bg.WindowState = FormWindowState.Maximized;
+                bg.TopMost = false;
+                bg.Location = this.Location;
+                bg.ShowInTaskbar = false;
+                bg.Show();
+
+                closeDialog.Owner = bg;
+                var result = closeDialog.ShowDialog();
                 
-                if (string.IsNullOrWhiteSpace(input) || !decimal.TryParse(input, out actualCash) || actualCash < 0)
-                {
-                    MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+                bg.Dispose();
+
+                if (result != DialogResult.OK) return; // User canceled
+
+                actualCash = closeDialog.ActualCashCounted;
             }
             else
             {
-                actualCash = expectedCash; // If count not required, assume actual equals expected
-            }
-
-            decimal diff = actualCash - expectedCash;
-
-            // Warning if over/short warnings are enabled and discrepancy exists
-            if (settings.EnableOverShortWarnings && diff != 0)
-            {
-                string statusText = diff > 0 
-                    ? $"🟢 OVER by ₱{diff:#,##0.00} (Extra cash in register)" 
-                    : $"🔴 SHORT by ₱{Math.Abs(diff):#,##0.00} (Missing cash)";
-
-                var warnResult = MessageBox.Show(
-                    $"⚠️ CASH DISCREPANCY DETECTED!\n\n" +
-                    $"Expected Cash: ₱{expectedCash:#,##0.00}\n" +
-                    $"Actual Counted: ₱{actualCash:#,##0.00}\n\n" +
-                    $"{statusText}\n\n" +
-                    "Are you absolutely sure you want to close this session with this discrepancy?",
-                    "Warning: Cash Discrepancy",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-                if (warnResult != DialogResult.Yes) return;
-            }
-            else
-            {
-                // Normal closing confirmation
-                string discrepancyInfo = settings.RequireCashCountOnClose 
-                    ? $"\nActual Cash: ₱{actualCash:#,##0.00}" 
-                    : "";
-
-                var confirm = MessageBox.Show(
-                    $"Are you sure you want to close the store session?\n\n" +
-                    $"Revenue: ₱{activeSession.TotalRevenue:#,##0.00}\n" +
-                    $"Transactions: {activeSession.TotalTransactions}\n" +
-                    $"Expected Cash: ₱{expectedCash:#,##0.00}" + 
-                    discrepancyInfo,
-                    "Confirm Close Session",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-                if (confirm != DialogResult.Yes) return;
+                // If count not required, assume actual equals expected
+                Program.SessionService.ComputeSessionTotals(activeSession);
+                actualCash = activeSession.StartingCash + activeSession.TotalRevenue;
             }
 
             _isSessionProcessing = true;
@@ -450,16 +431,6 @@ namespace TheMatchaClubApp.Forms
             {
                 var session = await Program.SessionService.CloseSessionAsync(actualCash, Program.GetCurrentCashierName());
                 
-                // Show final success notification
-                string finalMessage = $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}";
-                if (diff != 0)
-                {
-                    finalMessage += diff > 0 
-                        ? $"\nOver: +₱{diff:#,##0.00}" 
-                        : $"\nShort: -₱{Math.Abs(diff):#,##0.00}";
-                }
-                MessageBox.Show(finalMessage, "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
                 // Auto-generate Z-Report if enabled
                 if (settings.AutoGenerateZReport)
                 {

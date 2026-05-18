@@ -64,7 +64,6 @@ namespace TheMatchaClubApp.Forms
             btnExportCsv.Click += BtnExportCsv_Click;
             btnExportPdf.Click += BtnExportPdf_Click;
             btnPrintReport.Click += BtnExportPdf_Click;
-            txtActualCash.TextChanged += (s, e) => UpdateOverShort();
 
             // Month/Year filter events
             cmbHistoryMonth.SelectedIndexChanged += (s, e) => LoadSessionHistoryPage();
@@ -291,50 +290,46 @@ namespace TheMatchaClubApp.Forms
         }
 
         // ── Over/Short ─────────────────────────────────────────
-        private void UpdateOverShort()
-        {
-            var session = Program.SessionService.GetActiveSession();
-            if (session == null) return;
-            var orders = Program.SessionService.GetSessionOrders(session.SessionId);
-            decimal expected = session.StartingCash + orders.Sum(o => o.Total);
-            if (decimal.TryParse(txtActualCash.Text.Replace("₱", "").Replace(",", ""), out decimal actual))
-            {
-                decimal diff = actual - expected;
-                lblOverShortValue.Text = Fmt(diff);
-                lblOverShortValue.ForeColor = diff >= 0 ? ColorTranslator.FromHtml("#52B743") : ColorTranslator.FromHtml("#EF4444");
-            }
-            else { lblOverShortValue.Text = "₱0.00"; lblOverShortValue.ForeColor = ColorTranslator.FromHtml("#9CA3AF"); }
-        }
+
 
         // ── Close Session ──────────────────────────────────────
         private async void BtnCloseDay_Click(object? sender, EventArgs e)
         {
-            var session = Program.SessionService.GetActiveSession();
-            if (session == null) { MessageBox.Show("No active session.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-            decimal actualCash = 0;
-            if (decimal.TryParse(txtActualCash.Text.Replace("₱", "").Replace(",", ""), out decimal parsed)) actualCash = parsed;
+            var activeSession = Program.SessionService.GetActiveSession();
+            if (activeSession == null) { MessageBox.Show("No active session.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
             var settings = Program.DataService.Settings;
+            decimal actualCash = 0;
 
             if (settings.RequireCashCountOnClose)
             {
-                if (actualCash <= 0)
-                {
-                    MessageBox.Show("Please enter the actual cash counted before closing the store session.", "Actual Cash Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+                using var closeDialog = new CloseSessionDialogForm(activeSession);
+                
+                // Dim background
+                Form bg = new Form();
+                bg.StartPosition = FormStartPosition.Manual;
+                bg.FormBorderStyle = FormBorderStyle.None;
+                bg.Opacity = 0.50d;
+                bg.BackColor = Color.Black;
+                bg.WindowState = FormWindowState.Maximized;
+                bg.TopMost = false;
+                bg.Location = this.FindForm()!.Location;
+                bg.ShowInTaskbar = false;
+                bg.Show();
+
+                closeDialog.Owner = bg;
+                var result = closeDialog.ShowDialog();
+                
+                bg.Dispose();
+
+                if (result != DialogResult.OK) return; // User canceled
+
+                actualCash = closeDialog.ActualCashCounted;
             }
             else
             {
-                if (actualCash <= 0) actualCash = 0;
+                Program.SessionService.ComputeSessionTotals(activeSession);
+                actualCash = activeSession.StartingCash + activeSession.TotalRevenue;
             }
-
-            // Compute expected for confirmation dialog
-            Program.SessionService.ComputeSessionTotals(session);
-            decimal expectedCash = session.StartingCash + session.TotalRevenue;
-
-            if (MessageBox.Show(
-                $"Close this session?\n\nOpened: {session.OpenedAt:MMM dd, hh:mm tt}\nRevenue: {Fmt(session.TotalRevenue)}\nExpected Cash: {Fmt(expectedCash)}\nActual Cash: {Fmt(actualCash)}",
-                "Close Session", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
             btnCloseDay.Enabled = false;
             try 
@@ -365,49 +360,36 @@ namespace TheMatchaClubApp.Forms
         // ── Open Session ───────────────────────────────────────
         private async void BtnOpenStore_Click(object? sender, EventArgs e)
         {
-            if (Program.SessionService.HasActiveSession()) { MessageBox.Show("Session already active.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-            string defCash = Program.DataService.Settings.DefaultStartingCash.ToString("F0");
-            using var dlg = new Form { Text = "Open Store Session", Size = new Size(340, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.White };
-            var lblP = new Label { Text = "Starting cash in register:", Location = new Point(20, 20), Size = new Size(280, 24), Font = new Font("Segoe UI", 10F) };
-            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = defCash, Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = $"₱{defCash}" };
-            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = $"₱{defCash} Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
-            btnD.Click += (s2, e2) => txtC.Text = defCash;
-            var btnO = new Guna.UI2.WinForms.Guna2Button { Text = "Open Session", Location = new Point(160, 100), Size = new Size(140, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 9F, FontStyle.Bold), BorderThickness = 0 };
-            
-            btnO.Click += (s2, e2) => 
-            {
-                if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal val) || val < 0)
-                {
-                    MessageBox.Show("Please enter a valid starting cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                dlg.DialogResult = DialogResult.OK;
-                dlg.Close();
-            };
-
-            // ENTER key confirms
-            txtC.KeyDown += (s2, ke) =>
-            {
-                if (ke.KeyCode == Keys.Enter) { ke.SuppressKeyPress = true; btnO.PerformClick(); }
-            };
-
-            dlg.Controls.AddRange(new Control[] { lblP, txtC, btnD, btnO });
-            if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
-            
-            if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal cash)) cash = 200m;
-
-            // Confirmation
+            if (Program.SessionService.HasActiveSession()) return;
             string cashierName = Program.GetCurrentCashierName();
-            var confirm = MessageBox.Show(
-                $"Open a new store session?\n\nCashier: {cashierName}\nStarting Cash: ₱{cash:#,##0.00}",
-                "Confirm Open Session",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (confirm != DialogResult.Yes) return;
+            decimal defaultCash = Program.DataService.Settings.DefaultStartingCash;
+
+            using var openDialog = new OpenSessionDialogForm(cashierName, defaultCash);
+            
+            Form bg = new Form();
+            bg.StartPosition = FormStartPosition.Manual;
+            bg.FormBorderStyle = FormBorderStyle.None;
+            bg.Opacity = 0.50d;
+            bg.BackColor = Color.Black;
+            bg.WindowState = FormWindowState.Maximized;
+            bg.TopMost = false;
+            bg.Location = this.FindForm()!.Location;
+            bg.ShowInTaskbar = false;
+            bg.Show();
+
+            openDialog.Owner = bg;
+            var result = openDialog.ShowDialog();
+            
+            bg.Dispose();
+
+            if (result != DialogResult.OK) return;
+
+            decimal startingCash = openDialog.StartingCash;
 
             btnOpenStore.Enabled = false;
             try 
             { 
-                await Program.SessionService.OpenSessionAsync(cashierName, cash); 
+                await Program.SessionService.OpenSessionAsync(cashierName, startingCash);
             }
             catch (InvalidOperationException ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
             finally { btnOpenStore.Enabled = true; }
@@ -421,11 +403,13 @@ namespace TheMatchaClubApp.Forms
             btnOpenStore.Visible = !isActive;
             btnCloseDay.Visible = isActive;
             btnPrintReport.Visible = isActive;
-            txtActualCash.Visible = isActive;
-            lblActualCashLabel.Visible = isActive;
-            lblOverShortLabel.Visible = isActive;
-            lblOverShortValue.Visible = isActive;
-            pnlInfoBox.Visible = isActive;
+            
+            // Permanently hide redundant inline cash count controls since we use CloseSessionDialogForm now
+            txtActualCash.Visible = false;
+            lblActualCashLabel.Visible = false;
+            lblOverShortLabel.Visible = false;
+            lblOverShortValue.Visible = false;
+            pnlInfoBox.Visible = false;
 
             if (isActive)
             {

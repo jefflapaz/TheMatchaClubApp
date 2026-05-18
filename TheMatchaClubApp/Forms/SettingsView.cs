@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheMatchaClubApp.Core;
+using TheMatchaClubApp.Helpers;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -93,6 +95,16 @@ namespace TheMatchaClubApp.Forms
                     txtSessionTimeout.Text = "0";
                 }
             };
+
+            // ── Export & Backup handlers ──
+            btnExportSales.Click += async (s, e) => await HandleExportSales();
+            btnExportCustomers.Click += async (s, e) => await HandleExportCustomers();
+            btnExportProducts.Click += async (s, e) => await HandleExportProducts();
+            btnCreateBackup.Click += async (s, e) => await HandleCreateBackup();
+            btnRestoreBackup.Click += async (s, e) => await HandleRestoreBackup();
+
+            // Refresh backup info when Export & Backup tab is shown
+            RefreshBackupInfo();
         }
 
         // ── Load Settings ────────────────────────────────────────────
@@ -266,6 +278,195 @@ namespace TheMatchaClubApp.Forms
 
             lblSettingsTitle.Text = tabName;
             UpdateTabStyles();
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  EXPORT & BACKUP HANDLERS
+        // ══════════════════════════════════════════════════════════════
+
+        private async Task HandleExportSales()
+        {
+            try
+            {
+                btnExportSales.Text = "⏳  Exporting...";
+                btnExportSales.Enabled = false;
+                string path = await BackupService.ExportSalesCsvAsync(Program.DataService.Orders);
+                btnExportSales.Text = "📊  Export Sales CSV";
+                btnExportSales.Enabled = true;
+                ShowExportSuccess($"Sales export completed successfully.\n\n📁 {path}", path);
+            }
+            catch (Exception ex)
+            {
+                btnExportSales.Text = "📊  Export Sales CSV";
+                btnExportSales.Enabled = true;
+                MessageBox.Show($"Export failed: {ex.Message}", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task HandleExportCustomers()
+        {
+            try
+            {
+                btnExportCustomers.Text = "⏳  Exporting...";
+                btnExportCustomers.Enabled = false;
+                string path = await BackupService.ExportCustomersCsvAsync(Program.DataService.Customers, Program.DataService.Orders);
+                btnExportCustomers.Text = "👥  Export Customers CSV";
+                btnExportCustomers.Enabled = true;
+                ShowExportSuccess($"Customers export completed successfully.\n\n📁 {path}", path);
+            }
+            catch (Exception ex)
+            {
+                btnExportCustomers.Text = "👥  Export Customers CSV";
+                btnExportCustomers.Enabled = true;
+                MessageBox.Show($"Export failed: {ex.Message}", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task HandleExportProducts()
+        {
+            try
+            {
+                btnExportProducts.Text = "⏳  Exporting...";
+                btnExportProducts.Enabled = false;
+                string path = await BackupService.ExportProductsCsvAsync(Program.DataService.Products);
+                btnExportProducts.Text = "📦  Export Products CSV";
+                btnExportProducts.Enabled = true;
+                ShowExportSuccess($"Products export completed successfully.\n\n📁 {path}", path);
+            }
+            catch (Exception ex)
+            {
+                btnExportProducts.Text = "📦  Export Products CSV";
+                btnExportProducts.Enabled = true;
+                MessageBox.Show($"Export failed: {ex.Message}", "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task HandleCreateBackup()
+        {
+            try
+            {
+                btnCreateBackup.Text = "⏳  Creating backup...";
+                btnCreateBackup.Enabled = false;
+                string path = await BackupService.CreateFullBackupAsync();
+                btnCreateBackup.Text = "🔒  Create Full Backup";
+                btnCreateBackup.Enabled = true;
+                RefreshBackupInfo();
+
+                var result = MessageBox.Show(
+                    $"✅ Backup created successfully!\n\n📁 {path}\n\nWould you like to open the backup folder?",
+                    "Backup Complete", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+                if (result == DialogResult.Yes)
+                {
+                    Process.Start("explorer.exe", Path.GetDirectoryName(path)!);
+                }
+            }
+            catch (Exception ex)
+            {
+                btnCreateBackup.Text = "🔒  Create Full Backup";
+                btnCreateBackup.Enabled = true;
+                MessageBox.Show($"Backup failed: {ex.Message}", "Backup Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task HandleRestoreBackup()
+        {
+            using var ofd = new OpenFileDialog
+            {
+                Title = "Select Backup File to Restore",
+                Filter = "ZIP Backup Files|*.zip",
+                InitialDirectory = BackupService.GetDefaultBackupFolder()
+            };
+
+            if (ofd.ShowDialog() != DialogResult.OK) return;
+
+            // Validate backup
+            try
+            {
+                var files = BackupService.ValidateBackup(ofd.FileName);
+                bool hasData = files.Any(f => f.EndsWith(".json"));
+                if (!hasData)
+                {
+                    MessageBox.Show("This file does not appear to be a valid MatchaPOS backup.\nNo data files found.",
+                        "Invalid Backup", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not read backup file: {ex.Message}",
+                    "Invalid File", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Confirm restore
+            var confirm = MessageBox.Show(
+                "⚠️ WARNING: RESTORE BACKUP\n\n" +
+                "This will OVERWRITE all current data including:\n" +
+                "• Orders & Sales History\n" +
+                "• Customer Records\n" +
+                "• Products & Categories\n" +
+                "• Session History\n" +
+                "• Store Settings\n\n" +
+                "This action cannot be undone.\n\n" +
+                "Are you sure you want to proceed?",
+                "Confirm Restore", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (confirm != DialogResult.Yes) return;
+
+            try
+            {
+                btnRestoreBackup.Text = "⏳  Restoring...";
+                btnRestoreBackup.Enabled = false;
+
+                await BackupService.RestoreBackupAsync(ofd.FileName);
+
+                // Reload all data
+                await Program.DataService.LoadAllAsync();
+                LoadSettings();
+                RefreshBackupInfo();
+
+                btnRestoreBackup.Text = "📂  Restore Backup";
+                btnRestoreBackup.Enabled = true;
+
+                MessageBox.Show("✅ Backup restored successfully!\n\nAll data has been reloaded.",
+                    "Restore Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                btnRestoreBackup.Text = "📂  Restore Backup";
+                btnRestoreBackup.Enabled = true;
+                MessageBox.Show($"Restore failed: {ex.Message}", "Restore Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ShowExportSuccess(string message, string filePath)
+        {
+            var result = MessageBox.Show(
+                $"{message}\n\nWould you like to open the export folder?",
+                "Export Successful", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+            if (result == DialogResult.Yes)
+            {
+                Process.Start("explorer.exe", Path.GetDirectoryName(filePath)!);
+            }
+        }
+
+        private void RefreshBackupInfo()
+        {
+            var (backupPath, backupDate, backupSize) = BackupService.GetLastBackupInfo();
+
+            lblInfoLastBackup.Text = backupDate.HasValue
+                ? backupDate.Value.ToString("MMM dd, yyyy  hh:mm tt")
+                : "No backups yet";
+
+            lblInfoBackupSize.Text = backupSize.HasValue
+                ? BackupService.FormatSize(backupSize.Value)
+                : "—";
+
+            long dbSize = BackupService.GetDatabaseSizeBytes();
+            lblInfoDbStatus.Text = "✅ Connected — Local JSON Store";
+            lblInfoDbSize.Text = BackupService.FormatSize(dbSize);
         }
 
         protected override void Dispose(bool disposing)

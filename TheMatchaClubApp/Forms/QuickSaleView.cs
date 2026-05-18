@@ -37,6 +37,7 @@ namespace TheMatchaClubApp.Forms
             btnCompleteSale.Click += BtnCompleteSale_Click;
             btnQuickOpenSession.Click += BtnQuickOpenSession_Click;
             btnClearCart.Click += BtnClearCart_Click;
+            btnEndSession.Click += BtnEndSession_Click;
             txtSearch.TextChanged += (s, e) => PopulateProducts(_activeCategory);
             
             pnlSessionOverlay.Resize += (s, e) => CenterOverlayControls();
@@ -95,6 +96,8 @@ namespace TheMatchaClubApp.Forms
             bool isActive = Program.SessionService.HasActiveSession();
             bool lockIfNoSession = Program.DataService.Settings.AutoLockQuickSaleIfNoSession;
 
+            btnEndSession.Visible = isActive;
+
             if (lockIfNoSession)
             {
                 pnlSessionOverlay.Visible = !isActive;
@@ -130,53 +133,105 @@ namespace TheMatchaClubApp.Forms
         private async void BtnQuickOpenSession_Click(object? sender, EventArgs e)
         {
             if (Program.SessionService.HasActiveSession()) return;
-
-            string defCash = Program.DataService.Settings.DefaultStartingCash.ToString("F0");
-            using var dlg = new Form { Text = "Open Store Session", Size = new Size(340, 200), StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, BackColor = Color.White };
-            var lblP = new Label { Text = "Starting cash in register:", Location = new Point(20, 20), Size = new Size(280, 24), Font = new Font("Segoe UI", 10F) };
-            var txtC = new Guna.UI2.WinForms.Guna2TextBox { Text = defCash, Location = new Point(20, 50), Size = new Size(280, 40), Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 8, PlaceholderText = $"₱{defCash}" };
-            var btnD = new Guna.UI2.WinForms.Guna2Button { Text = $"₱{defCash} Default", Location = new Point(20, 100), Size = new Size(130, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 8.5F), BorderThickness = 0 };
-            btnD.Click += (s2, e2) => txtC.Text = defCash;
-            var btnO = new Guna.UI2.WinForms.Guna2Button { Text = "Open Session", Location = new Point(160, 100), Size = new Size(140, 32), BorderRadius = 8, FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 9F, FontStyle.Bold), BorderThickness = 0 };
-            
-            btnO.Click += (s2, e2) => 
-            {
-                if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal val) || val < 0)
-                {
-                    MessageBox.Show("Please enter a valid starting cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                dlg.DialogResult = DialogResult.OK;
-                dlg.Close();
-            };
-
-            // ENTER key confirms
-            txtC.KeyDown += (s2, ke) =>
-            {
-                if (ke.KeyCode == Keys.Enter) { ke.SuppressKeyPress = true; btnO.PerformClick(); }
-            };
-
-            dlg.Controls.AddRange(new Control[] { lblP, txtC, btnD, btnO });
-            dlg.AcceptButton = null; // We handle Enter manually
-            if (dlg.ShowDialog(this.FindForm()) != DialogResult.OK) return;
-            
-            if (!decimal.TryParse(txtC.Text.Replace("₱", "").Replace(",", ""), out decimal cash)) cash = 200m;
-
-            // Confirmation
             string cashierName = Program.GetCurrentCashierName();
-            var confirm = MessageBox.Show(
-                $"Open a new store session?\n\nCashier: {cashierName}\nStarting Cash: ₱{cash:#,##0.00}",
-                "Confirm Open Session",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (confirm != DialogResult.Yes) return;
+            decimal defaultCash = Program.DataService.Settings.DefaultStartingCash;
+
+            using var openDialog = new OpenSessionDialogForm(cashierName, defaultCash);
+            
+            Form bg = new Form();
+            bg.StartPosition = FormStartPosition.Manual;
+            bg.FormBorderStyle = FormBorderStyle.None;
+            bg.Opacity = 0.50d;
+            bg.BackColor = Color.Black;
+            bg.WindowState = FormWindowState.Maximized;
+            bg.TopMost = false;
+            bg.Location = this.FindForm()!.Location;
+            bg.ShowInTaskbar = false;
+            bg.Show();
+
+            openDialog.Owner = bg;
+            var result = openDialog.ShowDialog();
+            
+            bg.Dispose();
+
+            if (result != DialogResult.OK) return;
+
+            decimal startingCash = openDialog.StartingCash;
 
             btnQuickOpenSession.Enabled = false;
             try 
             { 
-                await Program.SessionService.OpenSessionAsync(cashierName, cash); 
+                await Program.SessionService.OpenSessionAsync(cashierName, startingCash); 
+                UpdateSessionState();
             }
             catch (InvalidOperationException ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { btnQuickOpenSession.Enabled = true; }
+        }
+
+        private async void BtnEndSession_Click(object? sender, EventArgs e)
+        {
+            var activeSession = Program.SessionService.GetActiveSession();
+            if (activeSession == null) 
+            { 
+                MessageBox.Show("No active session.", "Session", MessageBoxButtons.OK, MessageBoxIcon.Warning); 
+                return; 
+            }
+            
+            var settings = Program.DataService.Settings;
+            decimal actualCash = 0;
+
+            if (settings.RequireCashCountOnClose)
+            {
+                using var closeDialog = new CloseSessionDialogForm(activeSession);
+                
+                // Dim background
+                Form bg = new Form();
+                bg.StartPosition = FormStartPosition.Manual;
+                bg.FormBorderStyle = FormBorderStyle.None;
+                bg.Opacity = 0.50d;
+                bg.BackColor = Color.Black;
+                bg.WindowState = FormWindowState.Maximized;
+                bg.TopMost = false;
+                bg.Location = this.FindForm()!.Location;
+                bg.ShowInTaskbar = false;
+                bg.Show();
+
+                closeDialog.Owner = bg;
+                var result = closeDialog.ShowDialog();
+                
+                bg.Dispose();
+
+                if (result != DialogResult.OK) return; // User canceled
+
+                actualCash = closeDialog.ActualCashCounted;
+            }
+            else
+            {
+                Program.SessionService.ComputeSessionTotals(activeSession);
+                actualCash = activeSession.StartingCash + activeSession.TotalRevenue;
+            }
+
+            btnEndSession.Enabled = false;
+            try 
+            {
+                var closed = await Program.SessionService.CloseSessionAsync(actualCash, Program.GetCurrentCashierName());
+                decimal overShort = closed.ActualCash - closed.ExpectedCash;
+                
+                MessageBox.Show(
+                    $"Session closed successfully.\n\nTransactions: {closed.TotalTransactions}\nRevenue: ₱{closed.TotalRevenue:#,##0.00}",
+                    "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    
+                UpdateSessionState();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to close session: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnEndSession.Enabled = true;
+            }
         }
 
         private int _categoryScrollPos = 0;
