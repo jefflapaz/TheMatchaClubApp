@@ -16,6 +16,7 @@ namespace TheMatchaClubApp.Forms
 
         public event EventHandler? CategoryClicked;
         public event EventHandler? EditClicked;
+        public event EventHandler? DeleteClicked;
 
         private Point _mouseDownLocation;
         private bool _isSwiping;
@@ -35,6 +36,7 @@ namespace TheMatchaClubApp.Forms
 
             btnCancel.Click += (s, e) => HideActions();
             btnEdit.Click += (s, e) => EditClicked?.Invoke(this, EventArgs.Empty);
+            btnDelete.Click += (s, e) => DeleteClicked?.Invoke(this, EventArgs.Empty);
         }
 
         private void StyleControls()
@@ -65,6 +67,12 @@ namespace TheMatchaClubApp.Forms
             btnEdit.FillColor = ColorTranslator.FromHtml("#3B82F6"); // Blue
             btnEdit.ForeColor = Color.White;
             btnEdit.Cursor = Cursors.Hand;
+            
+            btnDelete.BorderRadius = 4;
+            btnDelete.Font = new Font("Segoe UI", 10F);
+            btnDelete.FillColor = ColorTranslator.FromHtml("#EF4444"); // Red
+            btnDelete.ForeColor = Color.White;
+            btnDelete.Cursor = Cursors.Hand;
             
             pnlActions.BackColor = Color.Transparent;
         }

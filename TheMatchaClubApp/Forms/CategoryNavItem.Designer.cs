@@ -19,6 +19,7 @@ namespace TheMatchaClubApp.Forms
             pnlActions = new System.Windows.Forms.Panel();
             btnEdit = new Guna.UI2.WinForms.Guna2Button();
             btnCancel = new Guna.UI2.WinForms.Guna2Button();
+            btnDelete = new Guna.UI2.WinForms.Guna2Button();
             pnlActions.SuspendLayout();
             SuspendLayout();
             // 
@@ -34,11 +35,12 @@ namespace TheMatchaClubApp.Forms
             // pnlActions
             // 
             pnlActions.Controls.Add(btnCancel);
+            pnlActions.Controls.Add(btnDelete);
             pnlActions.Controls.Add(btnEdit);
             pnlActions.Dock = System.Windows.Forms.DockStyle.Right;
-            pnlActions.Location = new System.Drawing.Point(100, 0);
+            pnlActions.Location = new System.Drawing.Point(54, 0);
             pnlActions.Name = "pnlActions";
-            pnlActions.Size = new System.Drawing.Size(96, 40);
+            pnlActions.Size = new System.Drawing.Size(142, 40);
             pnlActions.TabIndex = 1;
             pnlActions.Visible = false;
             // 
@@ -50,9 +52,17 @@ namespace TheMatchaClubApp.Forms
             btnCancel.TabIndex = 0;
             btnCancel.Text = "✕";
             // 
+            // btnDelete
+            // 
+            btnDelete.Location = new System.Drawing.Point(50, 4);
+            btnDelete.Name = "btnDelete";
+            btnDelete.Size = new System.Drawing.Size(42, 32);
+            btnDelete.TabIndex = 1;
+            btnDelete.Text = "🗑";
+            // 
             // btnEdit
             // 
-            btnEdit.Location = new System.Drawing.Point(50, 4);
+            btnEdit.Location = new System.Drawing.Point(96, 4);
             btnEdit.Name = "btnEdit";
             btnEdit.Size = new System.Drawing.Size(42, 32);
             btnEdit.TabIndex = 2;
@@ -74,6 +84,7 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2Button btnCategory;
         private System.Windows.Forms.Panel pnlActions;
         private Guna.UI2.WinForms.Guna2Button btnEdit;
+        private Guna.UI2.WinForms.Guna2Button btnDelete;
         private Guna.UI2.WinForms.Guna2Button btnCancel;
     }
 }

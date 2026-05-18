@@ -110,12 +110,40 @@ namespace TheMatchaClubApp.Forms
                     {
                         if (Program.DataService.Categories.Any(c => string.Equals(c.Name, newName, StringComparison.OrdinalIgnoreCase)))
                         {
-                            MessageBox.Show("Category already exists.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Error", Text = "Category already exists.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Error };
+                            msg.Show();
                             return;
                         }
                         await Program.DataService.RenameCategoryAsync(cat, newName);
                         PopulateCategories();
                         if (_activeCategory == cat.Name) PopulateItems(newName);
+                    }
+                };
+
+                navItem.DeleteClicked += async (s, e) =>
+                {
+                    // Check if category is empty
+                    bool hasProducts = Program.DataService.Products.Any(p => string.Equals(p.CategoryName, cat.Name, StringComparison.OrdinalIgnoreCase));
+                    if (hasProducts)
+                    {
+                        var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Cannot Delete", Text = $"You cannot delete '{cat.Name}' because there are still products assigned to it. Please remove or reassign all products first.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Warning };
+                        msg.Show();
+                    }
+                    else
+                    {
+                        var confirmMsg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Confirm Delete", Text = $"Are you sure you want to delete the empty category '{cat.Name}'?", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.YesNo, Icon = Guna.UI2.WinForms.MessageDialogIcon.Question };
+                        var confirm = confirmMsg.Show();
+                        if (confirm == DialogResult.Yes)
+                        {
+                            Program.DataService.Categories.Remove(cat);
+                            await Program.DataService.SaveCategoriesAsync();
+                            if (_activeCategory == cat.Name)
+                            {
+                                _activeCategory = "All Items";
+                            }
+                            PopulateCategories();
+                            PopulateItems(_activeCategory);
+                        }
                     }
                 };
 
@@ -311,26 +339,52 @@ namespace TheMatchaClubApp.Forms
             if (!isNew && categories.Contains(product.CategoryName)) cmbCat.SelectedItem = product.CategoryName;
 
             var btnAddCat = new Guna.UI2.WinForms.Guna2Button { Text = "+", Location = new Point(390, 152), Size = new Size(40, 40), FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 14F, FontStyle.Bold), BorderRadius = 6 };
-            btnAddCat.Click += async (s, e) =>
+
+            // ── Inline New Category Panel ──
+            var pnlNewCategory = new Guna.UI2.WinForms.Guna2Panel
             {
-                string newCat = Microsoft.VisualBasic.Interaction.InputBox("Enter new category name:", "New Category", "");
-                if (string.IsNullOrWhiteSpace(newCat)) return;
-                
-                if (Program.DataService.Categories.Any(c => string.Equals(c.Name, newCat, StringComparison.OrdinalIgnoreCase)))
-                {
-                    var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Caption = "Error", Text = "Error: This category already exists.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Error };
-                    msg.Show();
-                }
-                else
-                {
-                    var catObj = new Category { Name = newCat, DisplayOrder = Program.DataService.Categories.Count };
-                    Program.DataService.Categories.Add(catObj);
-                    await Program.DataService.SaveCategoriesAsync();
-                    cmbCat.Items.Add(newCat);
-                    cmbCat.SelectedItem = newCat;
-                    PopulateCategories();
-                }
+                Location = new Point(20, 200),
+                Size = new Size(410, 80),
+                FillColor = ColorTranslator.FromHtml("#F9FAFB"),
+                BorderColor = ColorTranslator.FromHtml("#E5E7EB"),
+                BorderThickness = 1,
+                BorderRadius = 8,
+                Visible = false
             };
+            
+            var txtNewCat = new Guna.UI2.WinForms.Guna2TextBox
+            {
+                PlaceholderText = "New Category Name",
+                Location = new Point(10, 20),
+                Size = new Size(250, 40),
+                BorderRadius = 6
+            };
+            
+            var btnSaveCat = new Guna.UI2.WinForms.Guna2Button
+            {
+                Text = "Add",
+                Location = new Point(270, 20),
+                Size = new Size(60, 40),
+                FillColor = ColorTranslator.FromHtml("#52B743"),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BorderRadius = 6
+            };
+            
+            var btnCancelCat = new Guna.UI2.WinForms.Guna2Button
+            {
+                Text = "X",
+                Location = new Point(340, 20),
+                Size = new Size(60, 40),
+                FillColor = ColorTranslator.FromHtml("#F3F4F6"),
+                ForeColor = ColorTranslator.FromHtml("#6B7280"),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                BorderRadius = 6
+            };
+            
+            var lblCatError = new Label { Text = "", ForeColor = ColorTranslator.FromHtml("#EF4444"), Font = new Font("Segoe UI", 8F), Location = new Point(10, 62), AutoSize = true, Visible = false, BackColor = Color.Transparent };
+
+            pnlNewCategory.Controls.AddRange(new Control[] { txtNewCat, btnSaveCat, btnCancelCat, lblCatError });
 
             var lblPrice = new Label { Text = "Price (₱)", Location = new Point(20, 200), AutoSize = true };
             var txtPrice = new Guna.UI2.WinForms.Guna2TextBox { Text = isNew ? "" : product.Price.ToString("F2"), Location = new Point(20, 222), Size = new Size(410, 40) };
@@ -354,7 +408,66 @@ namespace TheMatchaClubApp.Forms
             var btnCancel = new Guna.UI2.WinForms.Guna2Button { Text = "Cancel", Location = new Point(20, 410), Size = new Size(195, 45), FillColor = ColorTranslator.FromHtml("#F3F4F6"), ForeColor = ColorTranslator.FromHtml("#374151"), Font = new Font("Segoe UI", 10F, FontStyle.Bold), BorderRadius = 8 };
             btnCancel.Click += (s, e) => dlg.Close();
 
+            // Shift elements logic for inline category
+            int shiftAmount = 90;
+            var shiftableControls = new Control[] { lblPrice, txtPrice, lblImage, picPreview, txtImagePath, btnBrowse, btnCancel };
+
+            void ToggleNewCategoryPanel(bool show)
+            {
+                pnlNewCategory.Visible = show;
+                btnAddCat.Enabled = !show;
+                int shift = show ? shiftAmount : -shiftAmount;
+                dlg.Height += shift;
+                foreach (var ctrl in shiftableControls)
+                {
+                    ctrl.Top += shift;
+                }
+                if (show)
+                {
+                    txtNewCat.Text = "";
+                    lblCatError.Visible = false;
+                    txtNewCat.Focus();
+                }
+            }
+
+            btnAddCat.Click += (s, e) => ToggleNewCategoryPanel(true);
+            btnCancelCat.Click += (s, e) => ToggleNewCategoryPanel(false);
+
+            Action saveCategory = async () =>
+            {
+                string newCat = txtNewCat.Text.Trim();
+                if (string.IsNullOrWhiteSpace(newCat))
+                {
+                    lblCatError.Text = "Category name cannot be empty.";
+                    lblCatError.Visible = true;
+                    return;
+                }
+                if (Program.DataService.Categories.Any(c => string.Equals(c.Name, newCat, StringComparison.OrdinalIgnoreCase)))
+                {
+                    lblCatError.Text = "Category already exists.";
+                    lblCatError.Visible = true;
+                    return;
+                }
+
+                var catObj = new Category { Name = newCat, DisplayOrder = Program.DataService.Categories.Count };
+                Program.DataService.Categories.Add(catObj);
+                await Program.DataService.SaveCategoriesAsync();
+                
+                cmbCat.Items.Add(newCat);
+                cmbCat.SelectedItem = newCat;
+                PopulateCategories();
+                
+                ToggleNewCategoryPanel(false);
+            };
+
+            btnSaveCat.Click += (s, e) => saveCategory();
+            txtNewCat.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; saveCategory(); } };
+
             var btnSave = new Guna.UI2.WinForms.Guna2Button { Text = "Save", Location = new Point(235, 410), Size = new Size(195, 45), FillColor = ColorTranslator.FromHtml("#52B743"), ForeColor = Color.White, Font = new Font("Segoe UI", 10F, FontStyle.Bold), BorderRadius = 8 };
+            
+            // Add btnSave to the shiftable controls
+            var tempShiftable = new List<Control>(shiftableControls) { btnSave };
+            shiftableControls = tempShiftable.ToArray();
 
             btnSave.Click += async (s, e) =>
             {
@@ -380,7 +493,7 @@ namespace TheMatchaClubApp.Forms
                 dlg.Close();
             };
 
-            dlg.Controls.AddRange(new Control[] { pnlHead, lblName, txtName, lblCat, cmbCat, btnAddCat, lblPrice, txtPrice, lblImage, picPreview, txtImagePath, btnBrowse, btnCancel, btnSave });
+            dlg.Controls.AddRange(new Control[] { pnlHead, lblName, txtName, lblCat, cmbCat, btnAddCat, pnlNewCategory, lblPrice, txtPrice, lblImage, picPreview, txtImagePath, btnBrowse, btnCancel, btnSave });
             dlg.ShowDialog();
         }
 
