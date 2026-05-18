@@ -342,28 +342,92 @@ namespace TheMatchaClubApp.Forms
             flpProducts.Controls.Clear();
 
             var all = Program.DataService.Products;
-            var filtered = category == "All"
-                ? all
-                : all.Where(p => p.CategoryName.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
-
             string query = txtSearch.Text.Trim();
-            if (!string.IsNullOrWhiteSpace(query))
+            bool isSearching = !string.IsNullOrWhiteSpace(query);
+
+            var filtered = all;
+
+            if (isSearching)
             {
                 filtered = filtered.Where(p => p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
-            foreach (var product in filtered)
+            if (category == "All" && !isSearching)
             {
-                var card = new ProductCard
+                // Find Top 8 Items sold
+                var topSellingProductIds = Program.DataService.Orders
+                    .SelectMany(o => o.Items)
+                    .GroupBy(i => i.ProductId)
+                    .OrderByDescending(g => g.Sum(i => i.Quantity))
+                    .Take(8)
+                    .Select(g => g.Key)
+                    .ToList();
+
+                var topProducts = all.Where(p => topSellingProductIds.Contains(p.Id)).ToList();
+                if (topProducts.Any())
                 {
-                    ProductData = product,
-                    Size = new Size(136, 170), // Denser grid
-                    Margin = new Padding(6)
-                };
-                card.ProductClicked += (s, p) => AddToCart(p);
-                flpProducts.Controls.Add(card);
+                    AddCategoryHeader("✨ The Usuals");
+                    foreach (var p in topProducts) flpProducts.Controls.Add(CreateProductCard(p));
+                }
+
+                // Group remaining by category
+                var remainingGroups = all.Where(p => !topSellingProductIds.Contains(p.Id))
+                                         .GroupBy(p => p.CategoryName)
+                                         .OrderBy(g => g.Key);
+
+                foreach (var group in remainingGroups)
+                {
+                    AddCategoryHeader(group.Key);
+                    foreach (var p in group.OrderBy(x => x.Name)) flpProducts.Controls.Add(CreateProductCard(p));
+                }
             }
+            else
+            {
+                if (category != "All")
+                {
+                    filtered = filtered.Where(p => p.CategoryName.Equals(category, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                foreach (var p in filtered.OrderBy(x => x.Name))
+                {
+                    flpProducts.Controls.Add(CreateProductCard(p));
+                }
+            }
+
             flpProducts.ResumeLayout();
+        }
+
+        private void AddCategoryHeader(string title)
+        {
+            var header = new Label
+            {
+                Text = title,
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                ForeColor = Color.Black,
+                AutoSize = true,
+                TextAlign = ContentAlignment.BottomLeft,
+                Margin = new Padding(6, 12, 6, 4)
+            };
+
+            if (flpProducts.Controls.Count > 0)
+            {
+                flpProducts.SetFlowBreak(flpProducts.Controls[flpProducts.Controls.Count - 1], true);
+            }
+
+            flpProducts.Controls.Add(header);
+            flpProducts.SetFlowBreak(header, true);
+        }
+
+        private ProductCard CreateProductCard(Product product)
+        {
+            var card = new ProductCard
+            {
+                ProductData = product,
+                Size = new Size(136, 170), // Denser grid
+                Margin = new Padding(6)
+            };
+            card.ProductClicked += (s, p) => AddToCart(p);
+            return card;
         }
 
         // ══════════════════════════════════════════════════════════════

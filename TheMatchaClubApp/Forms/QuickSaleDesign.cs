@@ -73,6 +73,8 @@ namespace TheMatchaClubApp.Forms
             pnlProductGrid.BorderThickness = 0;
             pnlProductGrid.ShadowDecoration.Enabled = false;
             flpProducts.BackColor = BgColor;
+            typeof(System.Windows.Forms.Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(flpProducts, true);
 
             // ── Cart Sidebar ──
             pnlCartSidebar.BackColor = Color.Transparent;
