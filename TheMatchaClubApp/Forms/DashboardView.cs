@@ -393,6 +393,13 @@ namespace TheMatchaClubApp.Forms
             var settings = Program.DataService.Settings;
 
             decimal actualCash = 0;
+
+            if (Program.DataService.Settings.RequirePasswordForCloseSession)
+            {
+                using var authDialog = new PasswordPromptDialog("Enter password to close the session.");
+                if (authDialog.ShowDialog(this) != DialogResult.OK) return;
+            }
+
             if (settings.RequireCashCountOnClose)
             {
                 using var closeDialog = new CloseSessionDialogForm(activeSession);

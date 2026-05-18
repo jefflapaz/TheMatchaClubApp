@@ -57,6 +57,7 @@ namespace TheMatchaClubApp.Forms
         internal Guna.UI2.WinForms.Guna2Button btnExportPdf;
         internal Guna.UI2.WinForms.Guna2Button btnEmail;
         internal Guna.UI2.WinForms.Guna2Button btnCloseBottom;
+        internal Guna.UI2.WinForms.Guna2Button btnDeleteOrder;
 
         private void InitializeComponent()
         {
@@ -218,9 +219,12 @@ namespace TheMatchaClubApp.Forms
             btnPrint = new Guna.UI2.WinForms.Guna2Button { Text = "🖨 Print", Size = new System.Drawing.Size(100, 36), Location = new System.Drawing.Point(32, 10), BorderRadius = 8, FillColor = System.Drawing.Color.White, ForeColor = System.Drawing.ColorTranslator.FromHtml("#52B743"), BorderColor = System.Drawing.ColorTranslator.FromHtml("#52B743"), BorderThickness = 1, Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold) };
             btnExportPdf = new Guna.UI2.WinForms.Guna2Button { Text = "📄 PDF", Size = new System.Drawing.Size(100, 36), Location = new System.Drawing.Point(140, 10), BorderRadius = 8, FillColor = System.Drawing.ColorTranslator.FromHtml("#52B743"), ForeColor = System.Drawing.Color.White, Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0 };
             btnEmail = new Guna.UI2.WinForms.Guna2Button { Text = "✉ Email", Size = new System.Drawing.Size(100, 36), Location = new System.Drawing.Point(248, 10), BorderRadius = 8, FillColor = System.Drawing.ColorTranslator.FromHtml("#F3F4F6"), ForeColor = System.Drawing.ColorTranslator.FromHtml("#374151"), Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0 };
+            btnDeleteOrder = new Guna.UI2.WinForms.Guna2Button { Text = "🗑 Delete", Size = new System.Drawing.Size(100, 36), Location = new System.Drawing.Point(356, 10), BorderRadius = 8, FillColor = System.Drawing.ColorTranslator.FromHtml("#FEF2F2"), ForeColor = System.Drawing.ColorTranslator.FromHtml("#EF4444"), Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0 };
+            btnDeleteOrder.HoverState.FillColor = System.Drawing.ColorTranslator.FromHtml("#FEE2E2");
+
             btnCloseBottom = new Guna.UI2.WinForms.Guna2Button { Text = "Close", Size = new System.Drawing.Size(90, 36), BorderRadius = 8, FillColor = System.Drawing.ColorTranslator.FromHtml("#F3F4F6"), ForeColor = System.Drawing.ColorTranslator.FromHtml("#6B7280"), Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0, Anchor = AnchorStyles.Top | AnchorStyles.Right };
 
-            pnlFooter.Controls.AddRange(new Control[] { btnPrint, btnExportPdf, btnEmail, btnCloseBottom });
+            pnlFooter.Controls.AddRange(new Control[] { btnPrint, btnExportPdf, btnEmail, btnDeleteOrder, btnCloseBottom });
 
             // ═══════════════════════════════════════════
             //  FORM

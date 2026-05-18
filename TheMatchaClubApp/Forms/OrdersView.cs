@@ -724,8 +724,12 @@ namespace TheMatchaClubApp.Forms
 
         private async Task SendReceiptEmailAsync(Order order, string recipientEmail)
         {
-            var storeName = Program.DataService.Settings.StoreName;
-            var senderEmail = Program.DataService.Settings.Email;
+            var settings = Program.DataService.Settings;
+            var storeName = settings.StoreName;
+            var senderEmail = settings.Email;
+            var smtpServer = settings.SmtpServer;
+            var smtpPort = settings.SmtpPort;
+            var smtpPass = settings.SmtpPassword;
             
             var items = string.Join("",
                 order.Items.Select(i =>
@@ -758,11 +762,11 @@ namespace TheMatchaClubApp.Forms
 
             await Task.Run(() =>
             {
-                using var client = new SmtpClient("smtp.gmail.com", 587)
+                using var client = new SmtpClient(smtpServer, smtpPort)
                 {
                     EnableSsl = true,
                     Timeout = 15000,
-                    Credentials = new NetworkCredential(senderEmail, "")
+                    Credentials = new NetworkCredential(senderEmail, smtpPass)
                 };
 
                 using var mail = new MailMessage

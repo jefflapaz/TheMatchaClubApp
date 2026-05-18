@@ -135,11 +135,32 @@ namespace TheMatchaClubApp.Forms
 
             btnEmail.Click += (s, e) =>
             {
-                // Note: We can implement a shared Email Dialog helper if needed.
-                // For now, let's keep it consistent with OrdersView if possible.
-                // But since it's a new feature here, I'll add a simple prompt or 
-                // ideally use the one from OrdersView if I refactor it.
                 MessageBox.Show("Email receipt feature is being unified. Please use the Orders screen for now.", "Coming Soon", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            };
+
+            btnDeleteOrder.Click += async (s, e) =>
+            {
+                if (Program.DataService.Settings.RequirePasswordForDeleteOrder)
+                {
+                    using var authDialog = new PasswordPromptDialog("Enter password to delete this order.");
+                    if (authDialog.ShowDialog(this) != DialogResult.OK) return;
+                }
+
+                var result = MessageBox.Show(
+                    $"Permanently delete order '{_order.OrderId}'?\nThis action cannot be undone and will affect historical reporting.",
+                    "Delete Order",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Yes)
+                {
+                    Program.DataService.Orders.Remove(_order);
+                    await Program.DataService.SaveOrdersAsync();
+                    
+                    // Note: Ideally, we should also trigger an event to refresh OrdersView if needed,
+                    // but the DataService.OrdersChanged event will fire and refresh the background UI.
+                    this.Close();
+                }
             };
 
             this.KeyPreview = true;

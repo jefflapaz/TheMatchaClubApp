@@ -120,8 +120,8 @@ namespace TheMatchaClubApp.Forms
             lblUploadText.BackColor = Color.Transparent;
 
             // Store Profile inputs
-            StyleInput(txtStoreName); StyleInput(txtSupportEmail); StyleInput(txtPhone); StyleInput(txtReceiptFooter); StyleInput(txtCashierName);
-            StyleFieldLabel(lblStoreNameLabel); StyleFieldLabel(lblSupportEmailLabel); StyleFieldLabel(lblPhoneLabel); StyleFieldLabel(lblReceiptFooterLabel); StyleFieldLabel(lblCashierNameLabel);
+            StyleInput(txtStoreName); StyleInput(txtSupportEmail); StyleInput(txtPhone); StyleInput(txtReceiptFooter);
+            StyleFieldLabel(lblStoreNameLabel); StyleFieldLabel(lblSupportEmailLabel); StyleFieldLabel(lblPhoneLabel); StyleFieldLabel(lblReceiptFooterLabel);
 
             // Location inputs
             StyleInput(txtPopupLocation); StyleInput(txtOperatingLocation);
@@ -191,8 +191,8 @@ namespace TheMatchaClubApp.Forms
             // ── Export & Backup section ──
             BuildExportBackupSection();
 
-            // ── Placeholder styling for other sections ──
-            StylePlaceholderSection(pnlSecurity, "🔒", "Security", "Password and authentication settings.");
+            // ── Security section ──
+            BuildSecuritySection();
         }
 
         private void StylePlaceholderSection(Panel section, string icon, string title, string description)
@@ -517,6 +517,150 @@ namespace TheMatchaClubApp.Forms
             pnlExportBackup.Controls.AddRange(new Control[] { cardExport, cardBackup, cardInfo });
         }
 
+        private void BuildSecuritySection()
+        {
+            // ── Card 1: Account Security ──
+            var cardAccount = new Guna2Panel
+            {
+                Location = new Point(24, 8),
+                Size = new Size(720, 240),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(cardAccount);
+
+            var lblAccountTitle = new Label { Text = "Account Security", Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold), ForeColor = STextPrimary, Location = new Point(24, 20), Size = new Size(300, 24), BackColor = Color.Transparent };
+            var lblAccountSub = new Label { Text = "Manage your admin account credentials and password.", Font = new Font("Segoe UI", 8F), ForeColor = STextSecondary, Location = new Point(24, 44), Size = new Size(660, 18), BackColor = Color.Transparent };
+            cardAccount.Controls.AddRange(new Control[] { lblAccountTitle, lblAccountSub });
+
+            // Account Name & Email (Readonly)
+            var lblAdminName = new Label { Text = "Admin/Cashier Name", Location = new Point(24, 76), AutoSize = true };
+            StyleFieldLabel(lblAdminName);
+            txtSecurityAdminName = new Guna2TextBox { Location = new Point(24, 96), Size = new Size(200, 36), ReadOnly = true, FillColor = ColorTranslator.FromHtml("#F9FAFB") };
+            StyleInput(txtSecurityAdminName);
+            
+            var lblUsername = new Label { Text = "Username", Location = new Point(240, 76), AutoSize = true };
+            StyleFieldLabel(lblUsername);
+            txtSecurityUsername = new Guna2TextBox { Location = new Point(240, 96), Size = new Size(200, 36), ReadOnly = true, FillColor = ColorTranslator.FromHtml("#F9FAFB") };
+            StyleInput(txtSecurityUsername);
+
+            var lblEmail = new Label { Text = "Email Address", Location = new Point(456, 76), AutoSize = true };
+            StyleFieldLabel(lblEmail);
+            txtSecurityEmail = new Guna2TextBox { Location = new Point(456, 96), Size = new Size(200, 36), ReadOnly = true, FillColor = ColorTranslator.FromHtml("#F9FAFB") };
+            StyleInput(txtSecurityEmail);
+
+            // Passwords
+            var lblCurrentPass = new Label { Text = "Current Password", Location = new Point(24, 142), AutoSize = true };
+            StyleFieldLabel(lblCurrentPass);
+            txtCurrentPassword = new Guna2TextBox { Location = new Point(24, 162), Size = new Size(200, 36), PasswordChar = '•' };
+            StyleInput(txtCurrentPassword);
+
+            var lblNewPass = new Label { Text = "New Password", Location = new Point(240, 142), AutoSize = true };
+            StyleFieldLabel(lblNewPass);
+            txtNewPassword = new Guna2TextBox { Location = new Point(240, 162), Size = new Size(200, 36), PasswordChar = '•' };
+            StyleInput(txtNewPassword);
+
+            var lblConfirmPass = new Label { Text = "Confirm New Password", Location = new Point(456, 142), AutoSize = true };
+            StyleFieldLabel(lblConfirmPass);
+            txtConfirmPassword = new Guna2TextBox { Location = new Point(456, 162), Size = new Size(200, 36), PasswordChar = '•' };
+            StyleInput(txtConfirmPassword);
+
+            // Show/Hide toggle checkbox
+            var chkShowPass = new Guna2CheckBox
+            {
+                Text = "Show Passwords",
+                Location = new Point(24, 206),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 8F),
+                ForeColor = STextSecondary,
+                Cursor = Cursors.Hand
+            };
+            chkShowPass.CheckedChanged += (s, e) => {
+                char pc = chkShowPass.Checked ? '\0' : '•';
+                txtCurrentPassword.PasswordChar = pc;
+                txtNewPassword.PasswordChar = pc;
+                txtConfirmPassword.PasswordChar = pc;
+            };
+
+            btnChangePassword = new Guna2Button
+            {
+                Text = "Update Password",
+                Size = new Size(160, 36),
+                Location = new Point(496, 200),
+                BorderRadius = 8,
+                Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold),
+                ForeColor = Color.White,
+                FillColor = SGreen,
+                Cursor = Cursors.Hand
+            };
+
+            cardAccount.Controls.AddRange(new Control[] { lblAdminName, txtSecurityAdminName, lblUsername, txtSecurityUsername, lblEmail, txtSecurityEmail, lblCurrentPass, txtCurrentPassword, lblNewPass, txtNewPassword, lblConfirmPass, txtConfirmPassword, chkShowPass, btnChangePassword });
+            
+            // ── Card 2: Sensitive Action Protection ──
+            var cardAction = new Guna2Panel
+            {
+                Location = new Point(24, 260),
+                Size = new Size(720, 150),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(cardAction);
+
+            var lblActionTitle = new Label { Text = "Sensitive Action Protection", Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold), ForeColor = STextPrimary, Location = new Point(24, 20), Size = new Size(300, 24), BackColor = Color.Transparent };
+            var lblActionSub = new Label { Text = "Require password confirmation before performing critical POS actions.", Font = new Font("Segoe UI", 8F), ForeColor = STextSecondary, Location = new Point(24, 44), Size = new Size(660, 18), BackColor = Color.Transparent };
+            cardAction.Controls.AddRange(new Control[] { lblActionTitle, lblActionSub });
+
+            chkReqPassDeleteProduct = new Guna2ToggleSwitch { Location = new Point(24, 76) }; StyleToggle(chkReqPassDeleteProduct);
+            var lblReqPassDelProd = new Label { Text = "Require password before deleting products", Location = new Point(70, 78), AutoSize = true }; StyleToggleLabel(lblReqPassDelProd);
+            
+            chkReqPassDeleteOrder = new Guna2ToggleSwitch { Location = new Point(360, 76) }; StyleToggle(chkReqPassDeleteOrder);
+            var lblReqPassDelOrder = new Label { Text = "Require password before deleting orders", Location = new Point(406, 78), AutoSize = true }; StyleToggleLabel(lblReqPassDelOrder);
+
+            chkReqPassCloseSession = new Guna2ToggleSwitch { Location = new Point(24, 110) }; StyleToggle(chkReqPassCloseSession);
+            var lblReqPassCloseSess = new Label { Text = "Require password before closing session", Location = new Point(70, 112), AutoSize = true }; StyleToggleLabel(lblReqPassCloseSess);
+            
+            chkReqPassSettings = new Guna2ToggleSwitch { Location = new Point(360, 110) }; StyleToggle(chkReqPassSettings);
+            var lblReqPassSet = new Label { Text = "Require password before accessing Settings", Location = new Point(406, 112), AutoSize = true }; StyleToggleLabel(lblReqPassSet);
+
+            cardAction.Controls.AddRange(new Control[] { chkReqPassDeleteProduct, lblReqPassDelProd, chkReqPassDeleteOrder, lblReqPassDelOrder, chkReqPassCloseSession, lblReqPassCloseSess, chkReqPassSettings, lblReqPassSet });
+
+            // ── Card 3: Session Protection & Activity ──
+            var cardSession = new Guna2Panel
+            {
+                Location = new Point(24, 422),
+                Size = new Size(720, 140),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
+            };
+            StyleSettingsCard(cardSession);
+
+            var lblSessionTitle = new Label { Text = "Session Protection & Activity", Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold), ForeColor = STextPrimary, Location = new Point(24, 20), Size = new Size(300, 24), BackColor = Color.Transparent };
+            var lblSessionSub = new Label { Text = "Manage auto-lock settings and view account activity.", Font = new Font("Segoe UI", 8F), ForeColor = STextSecondary, Location = new Point(24, 44), Size = new Size(660, 18), BackColor = Color.Transparent };
+            cardSession.Controls.AddRange(new Control[] { lblSessionTitle, lblSessionSub });
+
+            var lblAutoLock = new Label { Text = "Auto-Lock POS After Inactivity", Location = new Point(24, 76), AutoSize = true }; StyleFieldLabel(lblAutoLock);
+            cmbAutoLock = new Guna2ComboBox
+            {
+                Location = new Point(24, 96),
+                Size = new Size(200, 36),
+                BorderRadius = 8,
+                BorderColor = SBorder,
+                FocusedState = { BorderColor = SGreen },
+                FillColor = SCard,
+                ForeColor = STextPrimary,
+                Font = new Font("Segoe UI", 9F)
+            };
+            cmbAutoLock.Items.AddRange(new string[] { "Never", "5 Minutes", "15 Minutes", "30 Minutes" });
+            cmbAutoLock.SelectedIndex = 0;
+            cardSession.Controls.AddRange(new Control[] { lblAutoLock, cmbAutoLock });
+
+            var lblLoginTitle = new Label { Text = "Last Login", Font = new Font("Segoe UI", 9F), ForeColor = STextSecondary, Location = new Point(320, 76), Size = new Size(160, 20), BackColor = Color.Transparent };
+            lblSecurityLastLogin = new Label { Text = "—", Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold), ForeColor = STextPrimary, Location = new Point(480, 76), Size = new Size(200, 20), BackColor = Color.Transparent };
+            var lblPassTitle = new Label { Text = "Last Password Change", Font = new Font("Segoe UI", 9F), ForeColor = STextSecondary, Location = new Point(320, 106), Size = new Size(160, 20), BackColor = Color.Transparent };
+            lblSecurityLastPassChange = new Label { Text = "—", Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold), ForeColor = STextPrimary, Location = new Point(480, 106), Size = new Size(200, 20), BackColor = Color.Transparent };
+            
+            cardSession.Controls.AddRange(new Control[] { lblLoginTitle, lblSecurityLastLogin, lblPassTitle, lblSecurityLastPassChange });
+
+            pnlSecurity.Controls.AddRange(new Control[] { cardAccount, cardAction, cardSession });
+        }
+
         private Guna2Button CreateExportButton(string text, Point location)
         {
             return new Guna2Button
@@ -570,5 +714,21 @@ namespace TheMatchaClubApp.Forms
         internal Label lblInfoBackupSize = null!;
         internal Label lblInfoDbStatus = null!;
         internal Label lblInfoDbSize = null!;
+
+        // ── Security control fields ──
+        internal Guna2TextBox txtSecurityAdminName = null!;
+        internal Guna2TextBox txtSecurityUsername = null!;
+        internal Guna2TextBox txtSecurityEmail = null!;
+        internal Guna2TextBox txtCurrentPassword = null!;
+        internal Guna2TextBox txtNewPassword = null!;
+        internal Guna2TextBox txtConfirmPassword = null!;
+        internal Guna2Button btnChangePassword = null!;
+        internal Guna2ToggleSwitch chkReqPassDeleteProduct = null!;
+        internal Guna2ToggleSwitch chkReqPassDeleteOrder = null!;
+        internal Guna2ToggleSwitch chkReqPassCloseSession = null!;
+        internal Guna2ToggleSwitch chkReqPassSettings = null!;
+        internal Guna2ComboBox cmbAutoLock = null!;
+        internal Label lblSecurityLastLogin = null!;
+        internal Label lblSecurityLastPassChange = null!;
     }
 }

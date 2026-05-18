@@ -115,6 +115,37 @@ namespace TheMatchaClubApp.Forms
             btnSignIn.ForeColor = Color.White;
             btnSignIn.Font = new Font("Segoe UI", 10F, FontStyle.Regular);
             btnSignIn.Click += BtnSignIn_Click;
+
+            // Show/Hide Password Toggle
+            var lblShowPassword = new Label
+            {
+                Text = "Show",
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                ForeColor = ColorTranslator.FromHtml("#9CA3AF"),
+                BackColor = Color.White,
+                Cursor = Cursors.Hand,
+                AutoSize = true
+            };
+            
+            // Wait for layout to properly position it inside the text box
+            lblShowPassword.Location = new Point(txtPassword.Location.X + txtPassword.Width - 60, txtPassword.Location.Y + 22);
+            
+            lblShowPassword.Click += (s, e) =>
+            {
+                if (txtPassword.UseSystemPasswordChar)
+                {
+                    txtPassword.UseSystemPasswordChar = false;
+                    lblShowPassword.Text = "Hide";
+                }
+                else
+                {
+                    txtPassword.UseSystemPasswordChar = true;
+                    lblShowPassword.Text = "Show";
+                }
+            };
+            
+            pnlCard.Controls.Add(lblShowPassword);
+            lblShowPassword.BringToFront();
         }
 
         private void PicLogo_Paint(object? sender, PaintEventArgs e)

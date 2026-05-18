@@ -40,5 +40,13 @@ namespace TheMatchaClubApp.Core.Models
         public int CustomerTierLoyalMin { get; set; } = 8;
         public int CustomerTierFrequentMin { get; set; } = 16;
         public decimal CustomerTierFrequentSpend { get; set; } = 7500m;
+
+        // ── Security Settings ───────────────────────────────────────
+        public bool RequirePasswordForDeleteProduct { get; set; } = false;
+        public bool RequirePasswordForDeleteOrder { get; set; } = false;
+        public bool RequirePasswordForCloseSession { get; set; } = false;
+        public bool RequirePasswordForSettings { get; set; } = false;
+        public int AutoLockMinutes { get; set; } = 0; // 0 = Never
+        public DateTime? LastPasswordChangeDate { get; set; } = null;
     }
 }

@@ -5,7 +5,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using TheMatchaClubApp.Core;
+using TheMatchaClubApp.Core.Models;
 using TheMatchaClubApp.Helpers;
 
 namespace TheMatchaClubApp.Forms
@@ -53,7 +56,6 @@ namespace TheMatchaClubApp.Forms
             txtOperatingLocation.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
             txtPhone.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
             txtSupportEmail.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
-            txtCashierName.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
 
             // Input validations for Session & Cash textboxes
             txtDefaultCash.KeyPress += (s, e) =>
@@ -105,6 +107,9 @@ namespace TheMatchaClubApp.Forms
 
             // Refresh backup info when Export & Backup tab is shown
             RefreshBackupInfo();
+
+            // Security handlers
+            btnChangePassword.Click += async (s, e) => await HandleChangePassword();
         }
 
         // ── Load Settings ────────────────────────────────────────────
@@ -116,9 +121,6 @@ namespace TheMatchaClubApp.Forms
             txtStoreName.Text = s.StoreName;
             txtSupportEmail.Text = s.Email;
             txtPhone.Text = s.Phone;
-            txtCashierName.Text = string.IsNullOrWhiteSpace(s.CashierName) 
-                ? (Program.CurrentUser?.FullName ?? "Admin") 
-                : s.CashierName;
 
             // Location
             txtPopupLocation.Text = s.PopupLocationName;
@@ -146,6 +148,31 @@ namespace TheMatchaClubApp.Forms
             if (cmbPaperWidth.SelectedIndex < 0) cmbPaperWidth.SelectedIndex = 1; // default 80mm
             txtReceiptFooterEditor.Text = s.ReceiptFooterMessage;
 
+            // Security Settings
+            if (Program.CurrentUser != null)
+            {
+                txtSecurityAdminName.Text = Program.CurrentUser.FullName;
+                txtSecurityUsername.Text = Program.CurrentUser.UserName;
+                txtSecurityEmail.Text = Program.CurrentUser.Email;
+            }
+            chkReqPassDeleteProduct.Checked = s.RequirePasswordForDeleteProduct;
+            chkReqPassDeleteOrder.Checked = s.RequirePasswordForDeleteOrder;
+            chkReqPassCloseSession.Checked = s.RequirePasswordForCloseSession;
+            chkReqPassSettings.Checked = s.RequirePasswordForSettings;
+            
+            cmbAutoLock.SelectedIndex = s.AutoLockMinutes switch
+            {
+                5 => 1,
+                15 => 2,
+                30 => 3,
+                _ => 0
+            };
+
+            // Fake last login data for display purposes
+            lblSecurityLastLogin.Text = DateTime.Now.ToString("MMM dd, yyyy  hh:mm tt");
+            lblSecurityLastPassChange.Text = s.LastPasswordChangeDate.HasValue 
+                ? s.LastPasswordChangeDate.Value.ToString("MMM dd, yyyy  hh:mm tt") 
+                : "Never";
 
             // Logo preview
             UpdateLogoPreview(s.StoreLogoPath);
@@ -159,7 +186,6 @@ namespace TheMatchaClubApp.Forms
             s.StoreName = txtStoreName.Text.Trim();
             s.Email = txtSupportEmail.Text.Trim();
             s.Phone = txtPhone.Text.Trim();
-            s.CashierName = txtCashierName.Text.Trim();
 
             // Location
             s.PopupLocationName = txtPopupLocation.Text.Trim();
@@ -186,7 +212,19 @@ namespace TheMatchaClubApp.Forms
             s.ReceiptPaperWidth = cmbPaperWidth.SelectedItem?.ToString() ?? "80mm";
             s.ReceiptFooterMessage = txtReceiptFooterEditor.Text.Trim();
 
+            // Security Settings
+            s.RequirePasswordForDeleteProduct = chkReqPassDeleteProduct.Checked;
+            s.RequirePasswordForDeleteOrder = chkReqPassDeleteOrder.Checked;
+            s.RequirePasswordForCloseSession = chkReqPassCloseSession.Checked;
+            s.RequirePasswordForSettings = chkReqPassSettings.Checked;
 
+            s.AutoLockMinutes = cmbAutoLock.SelectedIndex switch
+            {
+                1 => 5,
+                2 => 15,
+                3 => 30,
+                _ => 0
+            };
 
             await Program.DataService.SaveSettingsAsync();
 
@@ -467,6 +505,66 @@ namespace TheMatchaClubApp.Forms
             long dbSize = BackupService.GetDatabaseSizeBytes();
             lblInfoDbStatus.Text = "✅ Connected — Local JSON Store";
             lblInfoDbSize.Text = BackupService.FormatSize(dbSize);
+        }
+
+        // ══════════════════════════════════════════════════════════════
+        //  SECURITY HANDLERS
+        // ══════════════════════════════════════════════════════════════
+        private async Task HandleChangePassword()
+        {
+            if (Program.CurrentUser == null) return;
+
+            string currentPass = txtCurrentPassword.Text;
+            string newPass = txtNewPassword.Text;
+            string confirmPass = txtConfirmPassword.Text;
+
+            if (string.IsNullOrEmpty(currentPass) || string.IsNullOrEmpty(newPass) || string.IsNullOrEmpty(confirmPass))
+            {
+                var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Validation Error", Text = "All password fields are required.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Warning };
+                msg.Show();
+                return;
+            }
+
+            if (newPass != confirmPass)
+            {
+                var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Validation Error", Text = "New password and confirmation do not match.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Warning };
+                msg.Show();
+                return;
+            }
+
+            btnChangePassword.Enabled = false;
+            btnChangePassword.Text = "Updating...";
+
+            using var scope = Program.Services.CreateScope();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            
+            var user = await userManager.FindByIdAsync(Program.CurrentUser.Id);
+            if (user == null) return;
+
+            var result = await userManager.ChangePasswordAsync(user, currentPass, newPass);
+
+            if (result.Succeeded)
+            {
+                Program.DataService.Settings.LastPasswordChangeDate = DateTime.Now;
+                await Program.DataService.SaveSettingsAsync();
+                
+                txtCurrentPassword.Text = "";
+                txtNewPassword.Text = "";
+                txtConfirmPassword.Text = "";
+                
+                LoadSettings();
+                var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Success", Text = "Your password has been changed successfully.", Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Information };
+                msg.Show();
+            }
+            else
+            {
+                var errors = string.Join("\n", result.Errors.Select(e => e.Description));
+                var msg = new Guna.UI2.WinForms.Guna2MessageDialog { Parent = this.FindForm(), Caption = "Update Failed", Text = errors, Style = Guna.UI2.WinForms.MessageDialogStyle.Light, Buttons = Guna.UI2.WinForms.MessageDialogButtons.OK, Icon = Guna.UI2.WinForms.MessageDialogIcon.Error };
+                msg.Show();
+            }
+
+            btnChangePassword.Enabled = true;
+            btnChangePassword.Text = "Update Password";
         }
 
         protected override void Dispose(bool disposing)

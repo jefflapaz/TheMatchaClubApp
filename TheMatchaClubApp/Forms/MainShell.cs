@@ -165,6 +165,15 @@ namespace TheMatchaClubApp.Forms
 
         private void NavSettings_Click(object? s, EventArgs e)
         {
+            if (Program.DataService.Settings.RequirePasswordForSettings)
+            {
+                using var authDialog = new PasswordPromptDialog("Enter password to access Settings.");
+                if (authDialog.ShowDialog(this) != DialogResult.OK)
+                {
+                    return; // Deny access
+                }
+            }
+
             SetActiveNav(navSettings);
             _settings ??= new SettingsView();
             ShowView(_settings);
@@ -203,7 +212,9 @@ namespace TheMatchaClubApp.Forms
 
             _inactivityTimer.Stop();
 
-            var timeoutMin = Program.DataService.Settings.SessionTimeoutMinutes;
+            _inactivityTimer.Stop();
+
+            var timeoutMin = Program.DataService.Settings.AutoLockMinutes;
             if (timeoutMin > 0)
             {
                 _inactivityTimer.Interval = timeoutMin * 60 * 1000;

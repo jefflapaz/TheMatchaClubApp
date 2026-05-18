@@ -286,6 +286,11 @@ namespace TheMatchaClubApp.Forms
 
             if (result == DialogResult.Yes)
             {
+                if (Program.DataService.Settings.RequirePasswordForDeleteProduct)
+                {
+                    using var authDialog = new PasswordPromptDialog("Enter password to delete this product.");
+                    if (authDialog.ShowDialog(this) != DialogResult.OK) return;
+                }
                 Program.DataService.Products.Remove(product);
                 await Program.DataService.SaveProductsAsync();
             }

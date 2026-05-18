@@ -10,9 +10,7 @@ namespace TheMatchaClubApp.Forms
             flpTabs = new System.Windows.Forms.FlowLayoutPanel();
             pnlRightPanel = new System.Windows.Forms.Panel();
             lblSettingsTitle = new System.Windows.Forms.Label();
-            txtCashierName = new Guna.UI2.WinForms.Guna2TextBox();
-            lblCashierNameLabel = new System.Windows.Forms.Label();
-            lblCashierNameHelp = new System.Windows.Forms.Label();
+            lblSupportEmailLabel = new System.Windows.Forms.Label();
             btnSaveAll = new Guna.UI2.WinForms.Guna2Button();
 
             // Section panels
@@ -140,8 +138,6 @@ namespace TheMatchaClubApp.Forms
             pnlCardProfile.Controls.Add(lblStoreNameLabel); pnlCardProfile.Controls.Add(txtStoreName);
             pnlCardProfile.Controls.Add(lblSupportEmailLabel); pnlCardProfile.Controls.Add(txtSupportEmail);
             pnlCardProfile.Controls.Add(lblPhoneLabel); pnlCardProfile.Controls.Add(txtPhone);
-            pnlCardProfile.Controls.Add(lblCashierNameLabel); pnlCardProfile.Controls.Add(txtCashierName);
-            pnlCardProfile.Controls.Add(lblCashierNameHelp);
 
             lblCardProfileTitle.Location = new System.Drawing.Point(24, 20);
             lblCardProfileTitle.Size = new System.Drawing.Size(300, 24);
@@ -165,11 +161,6 @@ namespace TheMatchaClubApp.Forms
 
             lblPhoneLabel.Location = new System.Drawing.Point(172, 148); lblPhoneLabel.Size = new System.Drawing.Size(120, 18); lblPhoneLabel.Text = "Phone Number";
             txtPhone.Location = new System.Drawing.Point(172, 168); txtPhone.Size = new System.Drawing.Size(250, 40); txtPhone.PlaceholderText = "+63 912 345 6789";
-
-            lblCashierNameLabel.Location = new System.Drawing.Point(440, 148); lblCashierNameLabel.Size = new System.Drawing.Size(120, 18); lblCashierNameLabel.Text = "Cashier Name";
-            txtCashierName.Location = new System.Drawing.Point(440, 168); txtCashierName.Size = new System.Drawing.Size(250, 40); txtCashierName.PlaceholderText = "Main Counter";
-            lblCashierNameHelp.Location = new System.Drawing.Point(440, 212); lblCashierNameHelp.Size = new System.Drawing.Size(250, 18); lblCashierNameHelp.Text = "This name appears on receipts and reports.";
-            lblCashierNameHelp.Font = new System.Drawing.Font("Segoe UI", 7.5F); lblCashierNameHelp.ForeColor = System.Drawing.ColorTranslator.FromHtml("#9CA3AF");
 
             // Card: Pop-up Location
             pnlCardLocation.Location = new System.Drawing.Point(24, 284);
@@ -198,7 +189,7 @@ namespace TheMatchaClubApp.Forms
             pnlCardSmtp.Controls.Add(lblSmtpPasswordLabel); pnlCardSmtp.Controls.Add(txtSmtpPassword);
 
             lblCardSmtpTitle.Location = new System.Drawing.Point(24, 20); lblCardSmtpTitle.Size = new System.Drawing.Size(300, 24); lblCardSmtpTitle.Text = "Email Configuration (SMTP)";
-            lblCardSmtpSub.Location = new System.Drawing.Point(24, 44); lblCardSmtpSub.Size = new System.Drawing.Size(500, 18); lblCardSmtpSub.Text = "Used for sending email receipts to customers.";
+            lblCardSmtpSub.Location = new System.Drawing.Point(24, 44); lblCardSmtpSub.Size = new System.Drawing.Size(500, 18); lblCardSmtpSub.Text = "Used for sending email receipts to customers. Uses your Support Email as the sender address.";
 
             lblSmtpServerLabel.Location = new System.Drawing.Point(24, 72); lblSmtpServerLabel.Size = new System.Drawing.Size(100, 18); lblSmtpServerLabel.Text = "SMTP Server";
             txtSmtpServer.Location = new System.Drawing.Point(24, 92); txtSmtpServer.Size = new System.Drawing.Size(320, 40); txtSmtpServer.PlaceholderText = "smtp.gmail.com";
@@ -387,9 +378,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblSupportEmailLabel;
         private Guna.UI2.WinForms.Guna2TextBox txtPhone;
         private System.Windows.Forms.Label lblPhoneLabel;
-        private Guna.UI2.WinForms.Guna2TextBox txtCashierName;
-        private System.Windows.Forms.Label lblCashierNameLabel;
-        private System.Windows.Forms.Label lblCashierNameHelp;
         private Guna.UI2.WinForms.Guna2TextBox txtReceiptFooter;
         private System.Windows.Forms.Label lblReceiptFooterLabel;
 
