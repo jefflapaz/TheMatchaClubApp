@@ -384,14 +384,13 @@ namespace TheMatchaClubApp.Forms
                     foreach (var p in topProducts) flpProducts.Controls.Add(CreateProductCard(p));
                 }
 
-                // Group remaining by category
+                // Group all items by category
                 var categoryOrder = Program.DataService.Categories.ToDictionary(c => c.Name, c => c.DisplayOrder);
-                var remainingGroups = all.Where(p => !topSellingProductIds.Contains(p.Id))
-                                         .GroupBy(p => p.CategoryName)
-                                         .OrderBy(g => categoryOrder.TryGetValue(g.Key, out int order) ? order : int.MaxValue)
-                                         .ThenBy(g => g.Key);
+                var allGroups = all.GroupBy(p => p.CategoryName)
+                                   .OrderBy(g => categoryOrder.TryGetValue(g.Key, out int order) ? order : int.MaxValue)
+                                   .ThenBy(g => g.Key);
 
-                foreach (var group in remainingGroups)
+                foreach (var group in allGroups)
                 {
                     AddCategoryHeader(group.Key);
                     foreach (var p in group.OrderBy(x => x.Name)) flpProducts.Controls.Add(CreateProductCard(p));
