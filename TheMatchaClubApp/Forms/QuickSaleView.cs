@@ -42,21 +42,20 @@ namespace TheMatchaClubApp.Forms
             
             pnlSessionOverlay.Resize += (s, e) => CenterOverlayControls();
             
-            flpProducts.Resize += (s, e) => 
+            flpProducts.Layout += (s, e) => 
             {
-                flpProducts.SuspendLayout();
-                int targetWidth = flpProducts.ClientSize.Width - 32;
+                // flpProducts has 32px horizontal padding, header has 12px horizontal margin = 44px total
+                int targetWidth = flpProducts.ClientSize.Width - 50;
                 if (targetWidth > 10)
                 {
                     foreach (Control c in flpProducts.Controls)
                     {
-                        if (c is Label lbl && lbl.Tag?.ToString() == "CategoryHeader")
+                        if (c is Label lbl && lbl.Tag?.ToString() == "CategoryHeader" && lbl.Width != targetWidth)
                         {
                             lbl.Width = targetWidth;
                         }
                     }
                 }
-                flpProducts.ResumeLayout();
             };
             
             Program.SessionService.SessionOpened += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(UpdateSessionState)); };
@@ -424,7 +423,7 @@ namespace TheMatchaClubApp.Forms
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = Color.Black,
                 AutoSize = false,
-                Width = flpProducts.ClientSize.Width - 32 > 10 ? flpProducts.ClientSize.Width - 32 : 500,
+                Width = flpProducts.ClientSize.Width - 50 > 10 ? flpProducts.ClientSize.Width - 50 : 500,
                 Height = 35,
                 TextAlign = ContentAlignment.BottomLeft,
                 Margin = new Padding(6, 12, 6, 4)
