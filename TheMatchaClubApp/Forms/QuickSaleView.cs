@@ -46,11 +46,14 @@ namespace TheMatchaClubApp.Forms
             {
                 flpProducts.SuspendLayout();
                 int targetWidth = flpProducts.ClientSize.Width - 32;
-                foreach (Control c in flpProducts.Controls)
+                if (targetWidth > 10)
                 {
-                    if (c is Label lbl && lbl.Font.Size == 12F)
+                    foreach (Control c in flpProducts.Controls)
                     {
-                        lbl.Width = targetWidth;
+                        if (c is Label lbl && lbl.Tag?.ToString() == "CategoryHeader")
+                        {
+                            lbl.Width = targetWidth;
+                        }
                     }
                 }
                 flpProducts.ResumeLayout();
@@ -417,10 +420,11 @@ namespace TheMatchaClubApp.Forms
             var header = new Label
             {
                 Text = title,
+                Tag = "CategoryHeader",
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = Color.Black,
                 AutoSize = false,
-                Width = flpProducts.ClientSize.Width - 32,
+                Width = flpProducts.ClientSize.Width - 32 > 10 ? flpProducts.ClientSize.Width - 32 : 500,
                 Height = 35,
                 TextAlign = ContentAlignment.BottomLeft,
                 Margin = new Padding(6, 12, 6, 4)
