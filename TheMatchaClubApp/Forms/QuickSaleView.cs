@@ -42,6 +42,20 @@ namespace TheMatchaClubApp.Forms
             
             pnlSessionOverlay.Resize += (s, e) => CenterOverlayControls();
             
+            flpProducts.Resize += (s, e) => 
+            {
+                flpProducts.SuspendLayout();
+                int targetWidth = flpProducts.ClientSize.Width - 32;
+                foreach (Control c in flpProducts.Controls)
+                {
+                    if (c is Label lbl && lbl.Font.Size == 12F)
+                    {
+                        lbl.Width = targetWidth;
+                    }
+                }
+                flpProducts.ResumeLayout();
+            };
+            
             Program.SessionService.SessionOpened += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(UpdateSessionState)); };
             Program.SessionService.SessionClosed += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(UpdateSessionState)); };
             Program.DataService.DataLoaded += (s, e) => { if (!IsDisposed) BeginInvoke(new Action(() => { UpdateSessionState(); PopulateCategories(); PopulateProducts(_activeCategory); })); };
@@ -371,9 +385,11 @@ namespace TheMatchaClubApp.Forms
                 }
 
                 // Group remaining by category
+                var categoryOrder = Program.DataService.Categories.ToDictionary(c => c.Name, c => c.DisplayOrder);
                 var remainingGroups = all.Where(p => !topSellingProductIds.Contains(p.Id))
                                          .GroupBy(p => p.CategoryName)
-                                         .OrderBy(g => g.Key);
+                                         .OrderBy(g => categoryOrder.TryGetValue(g.Key, out int order) ? order : int.MaxValue)
+                                         .ThenBy(g => g.Key);
 
                 foreach (var group in remainingGroups)
                 {
@@ -404,18 +420,14 @@ namespace TheMatchaClubApp.Forms
                 Text = title,
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = Color.Black,
-                AutoSize = true,
+                AutoSize = false,
+                Width = flpProducts.ClientSize.Width - 32,
+                Height = 35,
                 TextAlign = ContentAlignment.BottomLeft,
                 Margin = new Padding(6, 12, 6, 4)
             };
 
-            if (flpProducts.Controls.Count > 0)
-            {
-                flpProducts.SetFlowBreak(flpProducts.Controls[flpProducts.Controls.Count - 1], true);
-            }
-
             flpProducts.Controls.Add(header);
-            flpProducts.SetFlowBreak(header, true);
         }
 
         private ProductCard CreateProductCard(Product product)
