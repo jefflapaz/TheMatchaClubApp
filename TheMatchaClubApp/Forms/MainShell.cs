@@ -4,8 +4,10 @@ using System.Windows.Forms;
 
 namespace TheMatchaClubApp.Forms
 {
-    public partial class MainShell : Form
+    public partial class MainShell : Form, IMessageFilter
     {
+        private System.Windows.Forms.Timer? _inactivityTimer;
+        private DateTime _lastInteractionTime = DateTime.MinValue;
         // ── Lazy-initialized views ─────────────────────────────────
         private DashboardView? _dashboard;
         private QuickSaleView? _quickSale;
@@ -37,6 +39,10 @@ namespace TheMatchaClubApp.Forms
 
             // Default: show Dashboard on launch
             NavDashboard_Click(this, EventArgs.Empty);
+
+            // Register global activity hook & Setup inactivity timer
+            Application.AddMessageFilter(this);
+            SetupInactivityTimer();
         }
 
         private async void LoadDataAsync()
@@ -171,6 +177,75 @@ namespace TheMatchaClubApp.Forms
         {
             using var wizard = new SetupWizardForm();
             wizard.ShowDialog(this);
+        }
+
+        // ── Inactivity Timeout ───────────────────────────────────────
+        private void SetupInactivityTimer()
+        {
+            _inactivityTimer = new System.Windows.Forms.Timer();
+            _inactivityTimer.Tick += InactivityTimer_Tick;
+            ResetInactivityTimer();
+        }
+
+        private void ResetInactivityTimer()
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(ResetInactivityTimer));
+                return;
+            }
+
+            if (_inactivityTimer == null) return;
+
+            // Throttle timer resets to at most once per second
+            if ((DateTime.Now - _lastInteractionTime).TotalSeconds < 1) return;
+            _lastInteractionTime = DateTime.Now;
+
+            _inactivityTimer.Stop();
+
+            var timeoutMin = Program.DataService.Settings.SessionTimeoutMinutes;
+            if (timeoutMin > 0)
+            {
+                _inactivityTimer.Interval = timeoutMin * 60 * 1000;
+                _inactivityTimer.Start();
+            }
+        }
+
+        private void InactivityTimer_Tick(object? sender, EventArgs e)
+        {
+            _inactivityTimer?.Stop();
+            Application.RemoveMessageFilter(this);
+            MessageBox.Show("Terminal locked due to inactivity. Please log in again.", "POS Inactivity Timeout", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            this.Close();
+        }
+
+        public bool PreFilterMessage(ref Message m)
+        {
+            // Detect interaction events (Mouse Move/Click, Key Down)
+            const int WM_MOUSEMOVE = 0x0200;
+            const int WM_LBUTTONDOWN = 0x0201;
+            const int WM_RBUTTONDOWN = 0x0204;
+            const int WM_MBUTTONDOWN = 0x0207;
+            const int WM_KEYDOWN = 0x0100;
+            const int WM_SYSKEYDOWN = 0x0104;
+
+            if (m.Msg == WM_MOUSEMOVE || m.Msg == WM_LBUTTONDOWN || m.Msg == WM_RBUTTONDOWN || 
+                m.Msg == WM_MBUTTONDOWN || m.Msg == WM_KEYDOWN || m.Msg == WM_SYSKEYDOWN)
+            {
+                ResetInactivityTimer();
+            }
+            return false;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            Application.RemoveMessageFilter(this);
+            if (_inactivityTimer != null)
+            {
+                _inactivityTimer.Stop();
+                _inactivityTimer.Dispose();
+            }
+            base.OnFormClosed(e);
         }
     }
 }

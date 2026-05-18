@@ -19,9 +19,7 @@ namespace TheMatchaClubApp.Forms
             pnlStoreProfile = new System.Windows.Forms.Panel();
             pnlSessionCash = new System.Windows.Forms.Panel();
             pnlReceiptEditor = new System.Windows.Forms.Panel();
-            pnlAppearance = new System.Windows.Forms.Panel();
-            pnlProductsCats = new System.Windows.Forms.Panel();
-            pnlCustomers = new System.Windows.Forms.Panel();
+
             pnlExportBackup = new System.Windows.Forms.Panel();
             pnlSecurity = new System.Windows.Forms.Panel();
 
@@ -74,6 +72,12 @@ namespace TheMatchaClubApp.Forms
             lblAutoZReport = new System.Windows.Forms.Label();
             chkAutoLockQuickSale = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             lblAutoLockQuickSale = new System.Windows.Forms.Label();
+            lblDefaultCashHelp = new System.Windows.Forms.Label();
+            lblSessionTimeoutHelp = new System.Windows.Forms.Label();
+            lblRequireCashCountHelp = new System.Windows.Forms.Label();
+            lblOverShortWarningsHelp = new System.Windows.Forms.Label();
+            lblAutoZReportHelp = new System.Windows.Forms.Label();
+            lblAutoLockQuickSaleHelp = new System.Windows.Forms.Label();
 
             SuspendLayout();
 
@@ -91,9 +95,7 @@ namespace TheMatchaClubApp.Forms
             pnlRightPanel.Controls.Add(pnlStoreProfile);
             pnlRightPanel.Controls.Add(pnlSessionCash);
             pnlRightPanel.Controls.Add(pnlReceiptEditor);
-            pnlRightPanel.Controls.Add(pnlAppearance);
-            pnlRightPanel.Controls.Add(pnlProductsCats);
-            pnlRightPanel.Controls.Add(pnlCustomers);
+
             pnlRightPanel.Controls.Add(pnlExportBackup);
             pnlRightPanel.Controls.Add(pnlSecurity);
             pnlRightPanel.Controls.Add(lblSettingsTitle);
@@ -120,9 +122,7 @@ namespace TheMatchaClubApp.Forms
             sectionStyle(pnlStoreProfile); pnlStoreProfile.Visible = true;
             sectionStyle(pnlSessionCash);
             sectionStyle(pnlReceiptEditor);
-            sectionStyle(pnlAppearance);
-            sectionStyle(pnlProductsCats);
-            sectionStyle(pnlCustomers);
+
             sectionStyle(pnlExportBackup);
             sectionStyle(pnlSecurity);
 
@@ -133,7 +133,7 @@ namespace TheMatchaClubApp.Forms
             // Card: Business Identity
             pnlCardProfile.Location = new System.Drawing.Point(24, 8);
             pnlCardProfile.Size = new System.Drawing.Size(720, 260);
-            pnlCardProfile.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlCardProfile.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
             pnlCardProfile.Controls.Add(lblCardProfileTitle);
             pnlCardProfile.Controls.Add(lblCardProfileSub);
             pnlCardProfile.Controls.Add(pnlLogoUpload);
@@ -172,9 +172,9 @@ namespace TheMatchaClubApp.Forms
             lblCashierNameHelp.Font = new System.Drawing.Font("Segoe UI", 7.5F); lblCashierNameHelp.ForeColor = System.Drawing.ColorTranslator.FromHtml("#9CA3AF");
 
             // Card: Pop-up Location
-            pnlCardLocation.Location = new System.Drawing.Point(24, 250);
+            pnlCardLocation.Location = new System.Drawing.Point(24, 284);
             pnlCardLocation.Size = new System.Drawing.Size(720, 180);
-            pnlCardLocation.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlCardLocation.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
             pnlCardLocation.Controls.Add(lblCardLocationTitle); pnlCardLocation.Controls.Add(lblCardLocationSub);
             pnlCardLocation.Controls.Add(lblPopupLocationLabel); pnlCardLocation.Controls.Add(txtPopupLocation);
             pnlCardLocation.Controls.Add(lblOperatingLocationLabel); pnlCardLocation.Controls.Add(txtOperatingLocation);
@@ -189,9 +189,9 @@ namespace TheMatchaClubApp.Forms
             txtOperatingLocation.Location = new System.Drawing.Point(370, 92); txtOperatingLocation.Size = new System.Drawing.Size(320, 40); txtOperatingLocation.PlaceholderText = "e.g. Makati City, Metro Manila";
 
             // Card: SMTP
-            pnlCardSmtp.Location = new System.Drawing.Point(24, 442);
+            pnlCardSmtp.Location = new System.Drawing.Point(24, 480);
             pnlCardSmtp.Size = new System.Drawing.Size(720, 200);
-            pnlCardSmtp.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlCardSmtp.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
             pnlCardSmtp.Controls.Add(lblCardSmtpTitle); pnlCardSmtp.Controls.Add(lblCardSmtpSub);
             pnlCardSmtp.Controls.Add(lblSmtpServerLabel); pnlCardSmtp.Controls.Add(txtSmtpServer);
             pnlCardSmtp.Controls.Add(lblSmtpPortLabel); pnlCardSmtp.Controls.Add(txtSmtpPort);
@@ -217,44 +217,50 @@ namespace TheMatchaClubApp.Forms
             //  SESSION & CASH SECTION
             // ══════════════════════════════════════════════════════════
             pnlCardSession.Location = new System.Drawing.Point(24, 8);
-            pnlCardSession.Size = new System.Drawing.Size(720, 380);
-            pnlCardSession.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            pnlCardSession.Size = new System.Drawing.Size(720, 500);
+            pnlCardSession.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
 
             lblCardSessionTitle.Location = new System.Drawing.Point(24, 20); lblCardSessionTitle.Size = new System.Drawing.Size(300, 24); lblCardSessionTitle.Text = "Session & Cash Management";
             lblCardSessionSub.Location = new System.Drawing.Point(24, 44); lblCardSessionSub.Size = new System.Drawing.Size(600, 18); lblCardSessionSub.Text = "Control how store sessions, cash handling, and closing procedures behave.";
 
             lblDefaultCashLabel.Location = new System.Drawing.Point(24, 76); lblDefaultCashLabel.Size = new System.Drawing.Size(160, 18); lblDefaultCashLabel.Text = "Default Starting Cash (₱)";
             txtDefaultCash.Location = new System.Drawing.Point(24, 96); txtDefaultCash.Size = new System.Drawing.Size(200, 40); txtDefaultCash.PlaceholderText = "200.00";
+            lblDefaultCashHelp.Location = new System.Drawing.Point(24, 140); lblDefaultCashHelp.Size = new System.Drawing.Size(220, 32); lblDefaultCashHelp.Text = "Initial cash float amount set on opening new store sessions.";
 
             lblSessionTimeoutLabel.Location = new System.Drawing.Point(260, 76); lblSessionTimeoutLabel.Size = new System.Drawing.Size(200, 18); lblSessionTimeoutLabel.Text = "Session Timeout (min, 0=off)";
             txtSessionTimeout.Location = new System.Drawing.Point(260, 96); txtSessionTimeout.Size = new System.Drawing.Size(120, 40); txtSessionTimeout.PlaceholderText = "0";
+            lblSessionTimeoutHelp.Location = new System.Drawing.Point(260, 140); lblSessionTimeoutHelp.Size = new System.Drawing.Size(220, 32); lblSessionTimeoutHelp.Text = "Minutes of inactivity before locking POS. Set to 0 to disable.";
 
             // Toggle rows
-            int toggleY = 160;
-            int toggleGap = 50;
+            int toggleY = 190;
+            int toggleGap = 72;
 
             lblRequireCashCount.Location = new System.Drawing.Point(24, toggleY); lblRequireCashCount.Size = new System.Drawing.Size(500, 20); lblRequireCashCount.Text = "Require actual cash count before closing session";
             chkRequireCashCount.Location = new System.Drawing.Point(620, toggleY - 2); chkRequireCashCount.Size = new System.Drawing.Size(60, 26);
+            lblRequireCashCountHelp.Location = new System.Drawing.Point(24, toggleY + 22); lblRequireCashCountHelp.Size = new System.Drawing.Size(580, 18); lblRequireCashCountHelp.Text = "Forces cashier to physically count and input drawer cash before session shutdown.";
 
             toggleY += toggleGap;
             lblOverShortWarnings.Location = new System.Drawing.Point(24, toggleY); lblOverShortWarnings.Size = new System.Drawing.Size(500, 20); lblOverShortWarnings.Text = "Enable Over/Short cash warnings";
             chkOverShortWarnings.Location = new System.Drawing.Point(620, toggleY - 2); chkOverShortWarnings.Size = new System.Drawing.Size(60, 26);
+            lblOverShortWarningsHelp.Location = new System.Drawing.Point(24, toggleY + 22); lblOverShortWarningsHelp.Size = new System.Drawing.Size(580, 18); lblOverShortWarningsHelp.Text = "Prompts a verification warning if entered cash differs from calculated expected cash.";
 
             toggleY += toggleGap;
             lblAutoZReport.Location = new System.Drawing.Point(24, toggleY); lblAutoZReport.Size = new System.Drawing.Size(500, 20); lblAutoZReport.Text = "Auto-generate Z-report after closing session";
             chkAutoZReport.Location = new System.Drawing.Point(620, toggleY - 2); chkAutoZReport.Size = new System.Drawing.Size(60, 26);
+            lblAutoZReportHelp.Location = new System.Drawing.Point(24, toggleY + 22); lblAutoZReportHelp.Size = new System.Drawing.Size(580, 18); lblAutoZReportHelp.Text = "Automatically compiles, saves, and opens the session performance report PDF.";
 
             toggleY += toggleGap;
             lblAutoLockQuickSale.Location = new System.Drawing.Point(24, toggleY); lblAutoLockQuickSale.Size = new System.Drawing.Size(500, 20); lblAutoLockQuickSale.Text = "Auto-lock Quick Sale if no active session";
             chkAutoLockQuickSale.Location = new System.Drawing.Point(620, toggleY - 2); chkAutoLockQuickSale.Size = new System.Drawing.Size(60, 26);
+            lblAutoLockQuickSaleHelp.Location = new System.Drawing.Point(24, toggleY + 22); lblAutoLockQuickSaleHelp.Size = new System.Drawing.Size(580, 18); lblAutoLockQuickSaleHelp.Text = "Blocks order processing and locks down Quick Sale features if no session is active.";
 
             pnlCardSession.Controls.Add(lblCardSessionTitle); pnlCardSession.Controls.Add(lblCardSessionSub);
-            pnlCardSession.Controls.Add(lblDefaultCashLabel); pnlCardSession.Controls.Add(txtDefaultCash);
-            pnlCardSession.Controls.Add(lblSessionTimeoutLabel); pnlCardSession.Controls.Add(txtSessionTimeout);
-            pnlCardSession.Controls.Add(lblRequireCashCount); pnlCardSession.Controls.Add(chkRequireCashCount);
-            pnlCardSession.Controls.Add(lblOverShortWarnings); pnlCardSession.Controls.Add(chkOverShortWarnings);
-            pnlCardSession.Controls.Add(lblAutoZReport); pnlCardSession.Controls.Add(chkAutoZReport);
-            pnlCardSession.Controls.Add(lblAutoLockQuickSale); pnlCardSession.Controls.Add(chkAutoLockQuickSale);
+            pnlCardSession.Controls.Add(lblDefaultCashLabel); pnlCardSession.Controls.Add(txtDefaultCash); pnlCardSession.Controls.Add(lblDefaultCashHelp);
+            pnlCardSession.Controls.Add(lblSessionTimeoutLabel); pnlCardSession.Controls.Add(txtSessionTimeout); pnlCardSession.Controls.Add(lblSessionTimeoutHelp);
+            pnlCardSession.Controls.Add(lblRequireCashCount); pnlCardSession.Controls.Add(chkRequireCashCount); pnlCardSession.Controls.Add(lblRequireCashCountHelp);
+            pnlCardSession.Controls.Add(lblOverShortWarnings); pnlCardSession.Controls.Add(chkOverShortWarnings); pnlCardSession.Controls.Add(lblOverShortWarningsHelp);
+            pnlCardSession.Controls.Add(lblAutoZReport); pnlCardSession.Controls.Add(chkAutoZReport); pnlCardSession.Controls.Add(lblAutoZReportHelp);
+            pnlCardSession.Controls.Add(lblAutoLockQuickSale); pnlCardSession.Controls.Add(chkAutoLockQuickSale); pnlCardSession.Controls.Add(lblAutoLockQuickSaleHelp);
             pnlSessionCash.Controls.Add(pnlCardSession);
 
             // ══════════════════════════════════════════════════════════
@@ -343,45 +349,7 @@ namespace TheMatchaClubApp.Forms
             pnlReceiptEditor.Controls.Add(lblReceiptPreviewTitle);
             pnlReceiptEditor.Controls.Add(pnlReceiptPreview);
 
-            // ══════════════════════════════════════════════════════════
-            //  APPEARANCE SECTION
-            // ══════════════════════════════════════════════════════════
-            pnlCardAppearance = new Guna.UI2.WinForms.Guna2Panel();
-            lblCardAppearanceTitle = new System.Windows.Forms.Label();
-            lblCardAppearanceSub = new System.Windows.Forms.Label();
-            chkDarkMode = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblDarkMode = new System.Windows.Forms.Label();
-            chkAnimations = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblAnimations = new System.Windows.Forms.Label();
-            cmbFontScale = new Guna.UI2.WinForms.Guna2ComboBox();
-            lblFontScaleLabel = new System.Windows.Forms.Label();
 
-            pnlCardAppearance.Location = new System.Drawing.Point(24, 8);
-            pnlCardAppearance.Size = new System.Drawing.Size(720, 280);
-            pnlCardAppearance.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
-
-            lblCardAppearanceTitle.Location = new System.Drawing.Point(24, 20); lblCardAppearanceTitle.Size = new System.Drawing.Size(300, 24); lblCardAppearanceTitle.Text = "Appearance & Theme";
-            lblCardAppearanceSub.Location = new System.Drawing.Point(24, 44); lblCardAppearanceSub.Size = new System.Drawing.Size(500, 18); lblCardAppearanceSub.Text = "Customize the look and feel of your POS interface.";
-
-            int ay = 80; int agap = 44;
-
-            lblDarkMode.Location = new System.Drawing.Point(24, ay); lblDarkMode.Size = new System.Drawing.Size(350, 20); lblDarkMode.Text = "Dark Mode (applies on next launch)";
-            chkDarkMode.Location = new System.Drawing.Point(420, ay - 2); chkDarkMode.Size = new System.Drawing.Size(60, 26);
-
-            ay += agap;
-            lblAnimations.Location = new System.Drawing.Point(24, ay); lblAnimations.Size = new System.Drawing.Size(350, 20); lblAnimations.Text = "Enable UI animations";
-            chkAnimations.Location = new System.Drawing.Point(420, ay - 2); chkAnimations.Size = new System.Drawing.Size(60, 26);
-
-            ay += agap + 8;
-            lblFontScaleLabel.Location = new System.Drawing.Point(24, ay); lblFontScaleLabel.Size = new System.Drawing.Size(130, 18); lblFontScaleLabel.Text = "Font Scaling";
-            cmbFontScale.Location = new System.Drawing.Point(24, ay + 20); cmbFontScale.Size = new System.Drawing.Size(200, 40);
-            cmbFontScale.Items.AddRange(new object[] { "Small", "Normal", "Large" });
-
-            pnlCardAppearance.Controls.Add(lblCardAppearanceTitle); pnlCardAppearance.Controls.Add(lblCardAppearanceSub);
-            pnlCardAppearance.Controls.Add(lblDarkMode); pnlCardAppearance.Controls.Add(chkDarkMode);
-            pnlCardAppearance.Controls.Add(lblAnimations); pnlCardAppearance.Controls.Add(chkAnimations);
-            pnlCardAppearance.Controls.Add(lblFontScaleLabel); pnlCardAppearance.Controls.Add(cmbFontScale);
-            pnlAppearance.Controls.Add(pnlCardAppearance);
 
             // SettingsView
             AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -404,9 +372,7 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Panel pnlStoreProfile;
         private System.Windows.Forms.Panel pnlSessionCash;
         private System.Windows.Forms.Panel pnlReceiptEditor;
-        private System.Windows.Forms.Panel pnlAppearance;
-        private System.Windows.Forms.Panel pnlProductsCats;
-        private System.Windows.Forms.Panel pnlCustomers;
+
         private System.Windows.Forms.Panel pnlExportBackup;
         private System.Windows.Forms.Panel pnlSecurity;
 
@@ -458,6 +424,12 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblAutoZReport;
         private Guna.UI2.WinForms.Guna2ToggleSwitch chkAutoLockQuickSale;
         private System.Windows.Forms.Label lblAutoLockQuickSale;
+        private System.Windows.Forms.Label lblDefaultCashHelp;
+        private System.Windows.Forms.Label lblSessionTimeoutHelp;
+        private System.Windows.Forms.Label lblRequireCashCountHelp;
+        private System.Windows.Forms.Label lblOverShortWarningsHelp;
+        private System.Windows.Forms.Label lblAutoZReportHelp;
+        private System.Windows.Forms.Label lblAutoLockQuickSaleHelp;
 
         // ── Receipt Editor ──
         private Guna.UI2.WinForms.Guna2Panel pnlCardReceipt;
@@ -477,14 +449,6 @@ namespace TheMatchaClubApp.Forms
         private Guna.UI2.WinForms.Guna2Panel pnlReceiptPreview;
         private System.Windows.Forms.Label lblReceiptPreviewTitle;
 
-        // ── Appearance ──
-        private Guna.UI2.WinForms.Guna2Panel pnlCardAppearance;
-        private System.Windows.Forms.Label lblCardAppearanceTitle, lblCardAppearanceSub;
-        private Guna.UI2.WinForms.Guna2ToggleSwitch chkDarkMode;
-        private System.Windows.Forms.Label lblDarkMode;
-        private Guna.UI2.WinForms.Guna2ToggleSwitch chkAnimations;
-        private System.Windows.Forms.Label lblAnimations;
-        private Guna.UI2.WinForms.Guna2ComboBox cmbFontScale;
-        private System.Windows.Forms.Label lblFontScaleLabel;
+
     }
 }

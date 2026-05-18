@@ -15,19 +15,18 @@ namespace TheMatchaClubApp.Forms
 
         private void InitializeDesign()
         {
-            this.BackColor = DlgBg;
+            this.BackColor = ColorTranslator.FromHtml("#F9FAFB");
 
             // Header
-            pnlHeader.BackColor = DlgBg;
-            pnlHeader.Paint += (s, e) =>
-            {
-                using var pen = new Pen(DlgBorder, 1);
-                e.Graphics.DrawLine(pen, 0, pnlHeader.Height - 1, pnlHeader.Width, pnlHeader.Height - 1);
-            };
+            pnlHeader.BackColor = Color.Transparent;
 
-            lblTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblTitle.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
             lblTitle.ForeColor = DlgText;
             lblTitle.BackColor = Color.Transparent;
+
+            lblSubtitle.Font = new Font("Segoe UI", 10F);
+            lblSubtitle.ForeColor = DlgMuted;
+            lblSubtitle.BackColor = Color.Transparent;
 
             btnClose.FillColor = Color.Transparent;
             btnClose.ForeColor = DlgMuted;
@@ -44,8 +43,7 @@ namespace TheMatchaClubApp.Forms
             {
                 using var borderPen = new Pen(DlgBorder, 1);
                 e.Graphics.DrawRectangle(borderPen, 0, 0, this.Width - 1, this.Height - 1);
-                // Subtle shadow line on bottom and right
-                using var shadowPen = new Pen(Color.FromArgb(30, 0, 0, 0), 2);
+                using var shadowPen = new Pen(Color.FromArgb(20, 0, 0, 0), 2);
                 e.Graphics.DrawLine(shadowPen, 2, this.Height, this.Width, this.Height);
                 e.Graphics.DrawLine(shadowPen, this.Width, 2, this.Width, this.Height);
             };
@@ -73,31 +71,33 @@ namespace TheMatchaClubApp.Forms
             };
             lblTitle.MouseUp += (s, me) => _dragStart = Point.Empty;
 
+            // Card Panel Styling
+            StyleCard(pnlOrderTypeCard);
+            StyleCard(pnlCustomerCard);
+            StyleCard(pnlPaymentCard);
+
             // Order Type Labels
-            lblOrderTypeLabel.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            lblOrderTypeLabel.ForeColor = DlgMuted;
+            lblOrderTypeLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblOrderTypeLabel.ForeColor = ColorTranslator.FromHtml("#4B5563");
             lblOrderTypeLabel.BackColor = Color.Transparent;
 
             // Dine-In / Take-Out buttons
             StyleTypeButton(btnDineIn, true);
             StyleTypeButton(btnTakeOut, false);
-
             btnDineIn.Click += (s, e) => { SetOrderType(true); };
             btnTakeOut.Click += (s, e) => { SetOrderType(false); };
 
             // Customer section
-            lblCustomerLabel.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            lblCustomerLabel.ForeColor = DlgMuted;
+            lblCustomerLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblCustomerLabel.ForeColor = ColorTranslator.FromHtml("#4B5563");
             lblCustomerLabel.BackColor = Color.Transparent;
 
-            // Searchable customer input
-            txtCustomerSearch.Font = new Font("Segoe UI", 10F);
+            txtCustomerSearch.Font = new Font("Segoe UI", 11F);
             txtCustomerSearch.BorderRadius = 8;
             txtCustomerSearch.BorderColor = DlgBorder;
             txtCustomerSearch.FocusedState.BorderColor = DlgGreen;
             txtCustomerSearch.TextOffset = new Point(4, 0);
 
-            // Suggestion panel styling
             pnlSuggestions.BackColor = Color.White;
             pnlSuggestions.BorderStyle = BorderStyle.None;
             pnlSuggestions.Paint += (s, e) =>
@@ -107,13 +107,12 @@ namespace TheMatchaClubApp.Forms
                 e.Graphics.DrawRectangle(pen, rect);
             };
 
-            lstSuggestions.Font = new Font("Segoe UI", 9.5F);
+            lstSuggestions.Font = new Font("Segoe UI", 10F);
             lstSuggestions.ForeColor = DlgText;
             lstSuggestions.BackColor = Color.White;
 
-            // New customer fields
-            lblNewCustomerLabel.Font = new Font("Segoe UI", 8F);
-            lblNewCustomerLabel.ForeColor = DlgMuted;
+            lblNewCustomerLabel.Font = new Font("Segoe UI", 9F);
+            lblNewCustomerLabel.ForeColor = ColorTranslator.FromHtml("#9CA3AF");
             lblNewCustomerLabel.BackColor = Color.Transparent;
 
             StyleTextField(txtFirstName);
@@ -122,36 +121,50 @@ namespace TheMatchaClubApp.Forms
             StyleTextField(txtNewEmail);
 
             // Payment section
-            lblTotalLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblTotalLabel.ForeColor = DlgMuted;
+            lblPaymentLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblPaymentLabel.ForeColor = ColorTranslator.FromHtml("#4B5563");
+            lblPaymentLabel.BackColor = Color.Transparent;
+
+            lblTotalLabel.Font = new Font("Segoe UI", 11F);
+            lblTotalLabel.ForeColor = ColorTranslator.FromHtml("#4B5563");
             lblTotalLabel.BackColor = Color.Transparent;
 
-            lblTotalValue.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            lblTotalValue.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
             lblTotalValue.ForeColor = DlgGreen;
             lblTotalValue.BackColor = Color.Transparent;
 
-            lblCashLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblCashLabel.ForeColor = DlgMuted;
+            lblCashLabel.Font = new Font("Segoe UI", 11F);
+            lblCashLabel.ForeColor = ColorTranslator.FromHtml("#4B5563");
             lblCashLabel.BackColor = Color.Transparent;
 
-            txtCash.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            txtCash.Font = new Font("Segoe UI", 14F);
             txtCash.BorderRadius = 8;
             txtCash.BorderColor = DlgBorder;
             txtCash.FocusedState.BorderColor = DlgGreen;
             txtCash.TextAlign = HorizontalAlignment.Right;
+            txtCash.ForeColor = ColorTranslator.FromHtml("#6B7280");
 
-            lblChangeLabel.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblChangeLabel.ForeColor = DlgMuted;
+            lblChangeLabel.Font = new Font("Segoe UI", 11F);
+            lblChangeLabel.ForeColor = ColorTranslator.FromHtml("#4B5563");
             lblChangeLabel.BackColor = Color.Transparent;
 
-            lblChange.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            lblChange.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
             lblChange.ForeColor = ColorTranslator.FromHtml("#EF4444");
             lblChange.BackColor = Color.Transparent;
 
-            // Validation error label
-            lblValidation.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            lblValidation.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblValidation.ForeColor = ColorTranslator.FromHtml("#EF4444");
             lblValidation.BackColor = Color.Transparent;
+
+            // Cancel button
+            btnCancel.FillColor = Color.White;
+            btnCancel.HoverState.FillColor = ColorTranslator.FromHtml("#F3F4F6");
+            btnCancel.ForeColor = ColorTranslator.FromHtml("#4B5563");
+            btnCancel.BorderRadius = 10;
+            btnCancel.Font = new Font("Segoe UI", 11F);
+            btnCancel.BorderThickness = 1;
+            btnCancel.BorderColor = DlgBorder;
+            btnCancel.Click += (s, e) => { this.DialogResult = DialogResult.Cancel; this.Close(); };
 
             // Confirm button
             btnConfirm.FillColor = DlgGreen;
@@ -160,6 +173,22 @@ namespace TheMatchaClubApp.Forms
             btnConfirm.BorderRadius = 10;
             btnConfirm.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnConfirm.BorderThickness = 0;
+            btnConfirm.DisabledState.FillColor = ColorTranslator.FromHtml("#D1D5DB");
+            btnConfirm.DisabledState.ForeColor = Color.White;
+            btnConfirm.DisabledState.BorderColor = Color.Transparent;
+        }
+
+        private void StyleCard(Guna.UI2.WinForms.Guna2Panel card)
+        {
+            card.BackColor = Color.Transparent;
+            card.FillColor = Color.White;
+            card.BorderRadius = 12;
+            card.BorderThickness = 1;
+            card.BorderColor = DlgBorder;
+            card.ShadowDecoration.Enabled = true;
+            card.ShadowDecoration.Shadow = new Padding(2, 2, 5, 5);
+            card.ShadowDecoration.Color = Color.FromArgb(10, 0, 0, 0);
+            card.ShadowDecoration.BorderRadius = 12;
         }
 
         private void StyleTextField(Guna.UI2.WinForms.Guna2TextBox txt)

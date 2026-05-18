@@ -27,8 +27,8 @@ namespace TheMatchaClubApp.Forms
 
             _sectionPanels = new Panel[]
             {
-                pnlStoreProfile, pnlSessionCash, pnlReceiptEditor, pnlAppearance,
-                pnlProductsCats, pnlCustomers, pnlExportBackup, pnlSecurity
+                pnlStoreProfile, pnlSessionCash, pnlReceiptEditor,
+                pnlExportBackup, pnlSecurity
             };
 
             InitializeDesign();
@@ -52,6 +52,47 @@ namespace TheMatchaClubApp.Forms
             txtPhone.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
             txtSupportEmail.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
             txtCashierName.TextChanged += (s, e) => pnlReceiptPreview.Invalidate();
+
+            // Input validations for Session & Cash textboxes
+            txtDefaultCash.KeyPress += (s, e) =>
+            {
+                if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
+                {
+                    e.Handled = true;
+                }
+                if (e.KeyChar == '.' && txtDefaultCash.Text.Contains('.'))
+                {
+                    e.Handled = true;
+                }
+            };
+
+            txtDefaultCash.Leave += (s, e) =>
+            {
+                if (decimal.TryParse(txtDefaultCash.Text.Trim(), out decimal val))
+                {
+                    txtDefaultCash.Text = val.ToString("F2");
+                }
+                else
+                {
+                    txtDefaultCash.Text = "0.00";
+                }
+            };
+
+            txtSessionTimeout.KeyPress += (s, e) =>
+            {
+                if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+                {
+                    e.Handled = true;
+                }
+            };
+
+            txtSessionTimeout.Leave += (s, e) =>
+            {
+                if (!int.TryParse(txtSessionTimeout.Text.Trim(), out _))
+                {
+                    txtSessionTimeout.Text = "0";
+                }
+            };
         }
 
         // ── Load Settings ────────────────────────────────────────────
@@ -93,10 +134,6 @@ namespace TheMatchaClubApp.Forms
             if (cmbPaperWidth.SelectedIndex < 0) cmbPaperWidth.SelectedIndex = 1; // default 80mm
             txtReceiptFooterEditor.Text = s.ReceiptFooterMessage;
 
-            // Appearance
-            chkAnimations.Checked = s.EnableAnimations;
-            cmbFontScale.SelectedItem = s.FontScale;
-            if (cmbFontScale.SelectedIndex < 0) cmbFontScale.SelectedIndex = 1; // Normal
 
             // Logo preview
             UpdateLogoPreview(s.StoreLogoPath);
@@ -137,9 +174,7 @@ namespace TheMatchaClubApp.Forms
             s.ReceiptPaperWidth = cmbPaperWidth.SelectedItem?.ToString() ?? "80mm";
             s.ReceiptFooterMessage = txtReceiptFooterEditor.Text.Trim();
 
-            // Appearance
-            s.EnableAnimations = chkAnimations.Checked;
-            s.FontScale = cmbFontScale.SelectedItem?.ToString() ?? "Normal";
+
 
             await Program.DataService.SaveSettingsAsync();
 
@@ -212,8 +247,8 @@ namespace TheMatchaClubApp.Forms
                 {
                     if (_tabButtons[i] == btn)
                     {
-                        string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor", "Appearance",
-                                              "Products & Categories", "Customers", "Export & Backup", "Security" };
+                        string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor",
+                                              "Export & Backup", "Security" };
                         ShowTab(tabNames[i]);
                         break;
                     }
@@ -224,8 +259,7 @@ namespace TheMatchaClubApp.Forms
         private void ShowTab(string tabName)
         {
             _activeTab = tabName;
-            string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor", "Appearance",
-                                  "Products & Categories", "Customers", "Export & Backup", "Security" };
+            string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor", "Export & Backup", "Security" };
 
             for (int i = 0; i < _sectionPanels.Length; i++)
                 _sectionPanels[i].Visible = tabNames[i] == tabName;

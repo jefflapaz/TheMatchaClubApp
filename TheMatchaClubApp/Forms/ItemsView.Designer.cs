@@ -19,8 +19,6 @@ namespace TheMatchaClubApp.Forms
             pnlHeaderMain = new System.Windows.Forms.Panel();
             lblItemCount = new System.Windows.Forms.Label();
             cmbSort = new Guna.UI2.WinForms.Guna2ComboBox();
-            btnGrid = new Guna.UI2.WinForms.Guna2Button();
-            btnFilter = new Guna.UI2.WinForms.Guna2Button();
             
             flpItems = new System.Windows.Forms.FlowLayoutPanel();
 
@@ -55,7 +53,7 @@ namespace TheMatchaClubApp.Forms
             btnAddItem.Location = new System.Drawing.Point(880, 10);
             btnAddItem.Name = "btnAddItem";
             btnAddItem.Size = new System.Drawing.Size(108, 36);
-            btnAddItem.Text = "+ Add New Item";
+            btnAddItem.Text = "+ Add New";
 
             // pnlBody
             pnlBody.Controls.Add(pnlRightArea);
@@ -103,8 +101,6 @@ namespace TheMatchaClubApp.Forms
             // pnlHeaderMain
             pnlHeaderMain.Controls.Add(lblItemCount);
             pnlHeaderMain.Controls.Add(cmbSort);
-            pnlHeaderMain.Controls.Add(btnGrid);
-            pnlHeaderMain.Controls.Add(btnFilter);
             pnlHeaderMain.Dock = System.Windows.Forms.DockStyle.Top;
             pnlHeaderMain.Location = new System.Drawing.Point(0, 0);
             pnlHeaderMain.Name = "pnlHeaderMain";
@@ -119,23 +115,10 @@ namespace TheMatchaClubApp.Forms
 
             // cmbSort
             cmbSort.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            cmbSort.Location = new System.Drawing.Point(544, 14);
+            cmbSort.Location = new System.Drawing.Point(624, 14);
             cmbSort.Name = "cmbSort";
             cmbSort.Size = new System.Drawing.Size(140, 32);
 
-            // btnGrid
-            btnGrid.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnGrid.Location = new System.Drawing.Point(694, 14);
-            btnGrid.Name = "btnGrid";
-            btnGrid.Size = new System.Drawing.Size(32, 32);
-            btnGrid.Text = "⊞";
-
-            // btnFilter
-            btnFilter.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnFilter.Location = new System.Drawing.Point(732, 14);
-            btnFilter.Name = "btnFilter";
-            btnFilter.Size = new System.Drawing.Size(32, 32);
-            btnFilter.Text = "Y";
 
             // flpItems
             flpItems.AutoScroll = true;
@@ -175,8 +158,6 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Panel pnlHeaderMain;
         private System.Windows.Forms.Label lblItemCount;
         private Guna.UI2.WinForms.Guna2ComboBox cmbSort;
-        private Guna.UI2.WinForms.Guna2Button btnGrid;
-        private Guna.UI2.WinForms.Guna2Button btnFilter;
         private System.Windows.Forms.FlowLayoutPanel flpItems;
     }
 }

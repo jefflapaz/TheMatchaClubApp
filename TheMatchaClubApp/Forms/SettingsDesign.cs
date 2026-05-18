@@ -19,11 +19,11 @@ namespace TheMatchaClubApp.Forms
         private static readonly Color SGreen = ColorTranslator.FromHtml("#52B743");
 
         private static readonly string[] TabNames = {
-            "Store Profile", "Session & Cash", "Receipt Editor", "Appearance",
-            "Products & Categories", "Customers", "Export & Backup", "Security"
+            "Store Profile", "Session & Cash", "Receipt Editor",
+            "Export & Backup", "Security"
         };
         private static readonly string[] TabIcons = {
-            "🏪", "💰", "🧾", "🎨", "📦", "👥", "💾", "🔒"
+            "🏪", "💰", "🧾", "💾", "🔒"
         };
 
         private void InitializeDesign()
@@ -72,6 +72,17 @@ namespace TheMatchaClubApp.Forms
                 foreach (var sp in _sectionPanels)
                 {
                     sp.Size = new Size(pw, pnlRightPanel.Height - 58);
+                    
+                    if (sp == pnlReceiptEditor) continue; // Receipt Editor has its own custom responsive layout
+                    
+                    int cw = sp.ClientSize.Width;
+                    foreach (Control c in sp.Controls)
+                    {
+                        if (c is Guna2Panel card)
+                        {
+                            card.Width = cw - 48; // 24px left + 24px right margin
+                        }
+                    }
                 }
             };
 
@@ -125,12 +136,18 @@ namespace TheMatchaClubApp.Forms
             StyleCardHeader(lblCardSessionTitle, lblCardSessionSub);
             StyleInput(txtDefaultCash); StyleInput(txtSessionTimeout);
             StyleFieldLabel(lblDefaultCashLabel); StyleFieldLabel(lblSessionTimeoutLabel);
+            StyleHelpLabel(lblDefaultCashHelp); StyleHelpLabel(lblSessionTimeoutHelp);
 
             // Toggle labels
             StyleToggleLabel(lblRequireCashCount);
             StyleToggleLabel(lblOverShortWarnings);
             StyleToggleLabel(lblAutoZReport);
             StyleToggleLabel(lblAutoLockQuickSale);
+
+            StyleHelpLabel(lblRequireCashCountHelp);
+            StyleHelpLabel(lblOverShortWarningsHelp);
+            StyleHelpLabel(lblAutoZReportHelp);
+            StyleHelpLabel(lblAutoLockQuickSaleHelp);
 
             // Toggle switches
             StyleToggle(chkRequireCashCount);
@@ -169,20 +186,9 @@ namespace TheMatchaClubApp.Forms
             lblReceiptPreviewTitle.BackColor = Color.Transparent;
             lblReceiptPreviewTitle.TextAlign = ContentAlignment.MiddleCenter;
 
-            // ── Appearance card ──
-            StyleSettingsCard(pnlCardAppearance);
-            StyleCardHeader(lblCardAppearanceTitle, lblCardAppearanceSub);
-            StyleToggleLabel(lblDarkMode); StyleToggle(chkDarkMode);
-            StyleToggleLabel(lblAnimations); StyleToggle(chkAnimations);
-            StyleFieldLabel(lblFontScaleLabel);
-            cmbFontScale.BorderRadius = 8; cmbFontScale.BorderColor = SBorder;
-            cmbFontScale.FocusedState.BorderColor = SGreen; cmbFontScale.ForeColor = STextPrimary;
-            cmbFontScale.BackColor = Color.Transparent; cmbFontScale.FillColor = SCard;
-            cmbFontScale.Font = new Font("Segoe UI", 9F);
+
 
             // ── Placeholder styling for other sections ──
-            StylePlaceholderSection(pnlProductsCats, "📦", "Products & Categories", $"Managing {Program.DataService.Products.Count} products across {Program.DataService.Categories.Count} categories.");
-            StylePlaceholderSection(pnlCustomers, "👥", "Customers", $"Managing {Program.DataService.Customers.Count} registered customers.");
             StylePlaceholderSection(pnlExportBackup, "💾", "Export & Backup", "Export your data or create a full backup.");
             StylePlaceholderSection(pnlSecurity, "🔒", "Security", "Password and authentication settings.");
         }
@@ -276,6 +282,13 @@ namespace TheMatchaClubApp.Forms
             toggle.CheckedState.InnerColor = Color.White;
             toggle.UncheckedState.FillColor = ColorTranslator.FromHtml("#D1D5DB");
             toggle.UncheckedState.InnerColor = Color.White;
+        }
+
+        private void StyleHelpLabel(Label lbl)
+        {
+            lbl.Font = new Font("Segoe UI", 7.8F);
+            lbl.ForeColor = STextSecondary;
+            lbl.BackColor = Color.Transparent;
         }
 
         private void UpdateTabStyles()

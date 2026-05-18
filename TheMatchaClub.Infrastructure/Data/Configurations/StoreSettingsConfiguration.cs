@@ -39,7 +39,29 @@ namespace TheMatchaClub.Infrastructure.Data.Configurations
                 StoreLogoPath = "",
                 Email = "info@thematchaclub.ph",
                 Phone = "+63 912 345 6789",
-                Address = "Makati City, Metro Manila"
+                Address = "Makati City, Metro Manila",
+                ReceiptFooterMessage = "Thank you for your purchase!",
+                PopupLocationName = "",
+                CurrentOperatingLocation = "",
+                CashierName = "",
+                SmtpServer = "smtp.gmail.com",
+                SmtpPort = 587,
+                SmtpPassword = "",
+                DefaultStartingCash = 200m,
+                RequireCashCountOnClose = true,
+                EnableOverShortWarnings = true,
+                AutoGenerateZReport = true,
+                SessionTimeoutMinutes = 0,
+                AutoLockQuickSaleIfNoSession = true,
+                ReceiptShowCashierName = true,
+                ReceiptShowCustomerName = true,
+                ReceiptShowOrderType = true,
+                ReceiptShowSessionNumber = false,
+                ReceiptPaperWidth = "80mm",
+                CustomerTierRegularMin = 2,
+                CustomerTierLoyalMin = 8,
+                CustomerTierFrequentMin = 16,
+                CustomerTierFrequentSpend = 7500m
             });
         }
     }

@@ -379,103 +379,10 @@ namespace TheMatchaClubApp.Forms
         {
             try
             {
-                QuestPDF.Settings.License = QuestInfrastructure.LicenseType.Community;
                 using var dlg = new SaveFileDialog { Filter = "PDF (*.pdf)|*.pdf", FileName = $"SessionReport_{_session.OpenedAt:yyyyMMdd}.pdf" };
                 if (dlg.ShowDialog() != DialogResult.OK) return;
 
-                var items = Program.SessionService.GetAllItemSales(_session.SessionId);
-                var settings = Program.DataService.Settings;
-
-                Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        page.Size(PageSizes.A4);
-                        page.Margin(40);
-                        page.PageColor(QuestPDF.Helpers.Colors.White);
-                        page.DefaultTextStyle(x => x.FontSize(10).FontFamily(QuestPDF.Helpers.Fonts.SegoeUI));
-
-                        page.Header().Column(col =>
-                        {
-                            col.Item().Row(row =>
-                            {
-                                row.RelativeItem().Column(c =>
-                                {
-                                    c.Item().Text(settings.StoreName).FontSize(20).Bold().FontColor("#52B743");
-                                    c.Item().Text("Session Performance Report").FontSize(14).SemiBold().FontColor("#6B7280");
-                                });
-
-                                row.RelativeItem().AlignRight().Column(c =>
-                                {
-                                    c.Item().Text($"Date: {_session.OpenedAt:MMM dd, yyyy}").SemiBold();
-                                    c.Item().Text($"Cashier: {_session.OpenedBy}");
-                                    c.Item().Text($"Status: {(_session.IsClosed ? "Closed" : "Active")}");
-                                });
-                            });
-
-                            col.Item().PaddingVertical(10).LineHorizontal(1).LineColor("#E5E7EB");
-                        });
-
-                        page.Content().Column(col =>
-                        {
-                            // KPI Row
-                            col.Item().PaddingVertical(10).Row(row =>
-                            {
-                                decimal revenue = _session.IsClosed ? _session.TotalRevenue : _orders.Sum(o => o.Total);
-                                row.RelativeItem().Column(c => { c.Item().Text("REVENUE").FontSize(8).Bold().FontColor("#9CA3AF"); c.Item().Text(Fmt(revenue)).FontSize(16).Bold(); });
-                                row.RelativeItem().Column(c => { c.Item().Text("TRANSACTIONS").FontSize(8).Bold().FontColor("#9CA3AF"); c.Item().Text(_orders.Count.ToString()).FontSize(16).Bold(); });
-                                row.RelativeItem().Column(c => { c.Item().Text("UNITS SOLD").FontSize(8).Bold().FontColor("#9CA3AF"); c.Item().Text(_orders.Sum(o => o.Items.Sum(i => i.Quantity)).ToString()).FontSize(16).Bold(); });
-                            });
-
-                            col.Item().PaddingVertical(10).LineHorizontal(1).LineColor("#F3F4F6");
-
-                            // Products Table
-                            col.Item().PaddingTop(15).Text("Product Performance").FontSize(12).Bold();
-                            col.Item().PaddingTop(5).Table(table =>
-                            {
-                                table.ColumnsDefinition(columns =>
-                                {
-                                    columns.RelativeColumn(3);
-                                    columns.RelativeColumn(2);
-                                    columns.RelativeColumn(1);
-                                    columns.RelativeColumn(1.5f);
-                                });
-
-                                table.Header(header =>
-                                {
-                                    header.Cell().Element(CellStyleHeader).Text("Product");
-                                    header.Cell().Element(CellStyleHeader).Text("Category");
-                                    header.Cell().Element(CellStyleHeader).AlignCenter().Text("Units");
-                                    header.Cell().Element(CellStyleHeader).AlignRight().Text("Revenue");
-
-                                    static QuestInfrastructure.IContainer CellStyleHeader(QuestInfrastructure.IContainer container)
-                                    {
-                                        return container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor("#E5E7EB");
-                                    }
-                                });
-
-                                foreach (var item in items.OrderByDescending(p => p.Revenue))
-                                {
-                                    table.Cell().Element(CellStyleBody).Text(item.Name);
-                                    table.Cell().Element(CellStyleBody).Text(item.Category);
-                                    table.Cell().Element(CellStyleBody).AlignCenter().Text(item.Units.ToString());
-                                    table.Cell().Element(CellStyleBody).AlignRight().Text(Fmt(item.Revenue));
-
-                                    static QuestInfrastructure.IContainer CellStyleBody(QuestInfrastructure.IContainer container)
-                                    {
-                                        return container.PaddingVertical(5).BorderBottom(1).BorderColor("#F3F4F6");
-                                    }
-                                }
-                            });
-                        });
-
-                        page.Footer().AlignCenter().Text(x =>
-                        {
-                            x.Span("Generated by The Matcha Club POS • ").FontSize(8).FontColor("#9CA3AF");
-                            x.CurrentPageNumber().FontSize(8).FontColor("#9CA3AF");
-                        });
-                    });
-                }).GeneratePdf(dlg.FileName);
+                Helpers.ZReportHelper.GenerateZReportPdf(_session, dlg.FileName);
 
                 MessageBox.Show($"PDF exported successfully:\n{dlg.FileName}", "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

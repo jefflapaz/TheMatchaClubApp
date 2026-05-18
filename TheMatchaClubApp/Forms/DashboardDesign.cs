@@ -137,7 +137,7 @@ namespace TheMatchaClubApp.Forms
             card.BorderColor = BorderCard; card.BorderThickness = 1;
             card.ShadowDecoration.Enabled = true; card.ShadowDecoration.Depth = 6;
             card.ShadowDecoration.Color = Color.FromArgb(8, 0, 0, 0);
-            title.Font = new Font("Segoe UI", 7.5F); title.ForeColor = TextMuted; title.BackColor = Color.Transparent;
+            title.Font = new Font("Segoe UI", 7.5F); title.ForeColor = TextBody; title.BackColor = Color.Transparent;
             value.Font = new Font("Segoe UI", 18F, FontStyle.Bold); value.ForeColor = TextPrimary; value.BackColor = Color.Transparent;
         }
 

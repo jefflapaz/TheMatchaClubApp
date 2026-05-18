@@ -138,7 +138,7 @@ namespace TheMatchaClubApp.Forms
             }
 
             int totalHeight = Math.Min(matches.Count, 5) * lstSuggestions.ItemHeight + 4;
-            pnlSuggestions.Size = new System.Drawing.Size(380, totalHeight);
+            pnlSuggestions.Size = new System.Drawing.Size(580, totalHeight);
             pnlSuggestions.Visible = true;
             pnlSuggestions.BringToFront();
         }
@@ -171,10 +171,19 @@ namespace TheMatchaClubApp.Forms
             txtCustomerSearch.Text = customer.Name;
             _suppressSearch = false;
 
-            // Parse first/last name from Name field
-            var parts = customer.Name.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-            txtFirstName.Text = parts.Length > 0 ? parts[0] : "";
-            txtLastName.Text = parts.Length > 1 ? parts[1] : "";
+            // Parse first/last name from Name field: Last word is Last Name, everything else is First Name
+            var nameStr = customer.Name.Trim();
+            int lastSpaceIndex = nameStr.LastIndexOf(' ');
+            if (lastSpaceIndex > 0)
+            {
+                txtFirstName.Text = nameStr.Substring(0, lastSpaceIndex).Trim();
+                txtLastName.Text = nameStr.Substring(lastSpaceIndex + 1).Trim();
+            }
+            else
+            {
+                txtFirstName.Text = nameStr;
+                txtLastName.Text = "";
+            }
             txtPhone.Text = customer.Phone;
             txtNewEmail.Text = customer.Email;
 
@@ -279,7 +288,7 @@ namespace TheMatchaClubApp.Forms
                     ShowValidationError("Customer not found. Please select from suggestions or fill in details.");
                     _isProcessing = false;
                     btnConfirm.Enabled = true;
-                    btnConfirm.Text = "✓  Confirm & Complete Sale";
+                    btnConfirm.Text = "✓  Confirm && Complete Sale";
                     return;
                 }
 
@@ -290,7 +299,7 @@ namespace TheMatchaClubApp.Forms
             {
                 _isProcessing = false;
                 btnConfirm.Enabled = true;
-                btnConfirm.Text = "✓  Confirm & Complete Sale";
+                btnConfirm.Text = "✓  Confirm && Complete Sale";
                 ShowValidationError($"Error: {ex.Message}");
             }
         }

@@ -82,22 +82,7 @@ namespace TheMatchaClubApp.Forms
             cmbSort.TextOffset = new Point(3, 0);
             cmbSort.SelectedIndexChanged += (s, e) => PopulateItems(_activeCategory);
 
-            StyleIconBtn(btnGrid);
-            StyleIconBtn(btnFilter);
-
             flpItems.BackColor = IBgColor;
-        }
-
-        private void StyleIconBtn(Guna2Button btn)
-        {
-            btn.FillColor = Color.Transparent;
-            btn.ForeColor = ITextSecondary;
-            btn.BorderColor = IBorderLight;
-            btn.BorderRadius = 4;
-            btn.BorderThickness = 1;
-            btn.Font = new Font("Segoe UI", 10F);
-            btn.Cursor = Cursors.Hand;
-            btn.HoverState.FillColor = Color.FromArgb(249, 250, 251);
         }
     }
 }

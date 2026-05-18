@@ -381,26 +381,67 @@ namespace TheMatchaClubApp.Forms
             var activeSession = Program.SessionService.GetActiveSession()!;
             Program.SessionService.ComputeSessionTotals(activeSession);
             decimal expectedCash = activeSession.StartingCash + activeSession.TotalRevenue;
-
-            // Confirmation
-            var confirm = MessageBox.Show(
-                $"Close the current store session?\n\nRevenue: ₱{activeSession.TotalRevenue:#,##0.00}\nTransactions: {activeSession.TotalTransactions}\nExpected Cash: ₱{expectedCash:#,##0.00}",
-                "Confirm Close Session",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (confirm != DialogResult.Yes) return;
-
-            decimal actualCash = 0;
             var settings = Program.DataService.Settings;
 
+            decimal actualCash = 0;
             if (settings.RequireCashCountOnClose)
             {
-                string? input = ShowInputDialog($"Enter actual cash counted in register:\n(Expected: ₱{expectedCash:#,##0.00})", "Close Store Session", expectedCash.ToString("F2"));
-                if (string.IsNullOrWhiteSpace(input)) return;
-                if (!decimal.TryParse(input, out actualCash) || actualCash < 0)
+                string? input = ShowInputDialog(
+                    $"CLOSE SESSION - CASH COUNT\n\nPlease count and enter the actual cash in the register drawer:\n(Expected: ₱{expectedCash:#,##0.00})", 
+                    "Close Store Session", 
+                    "");
+                
+                if (input == null) return; // User clicked Cancel or closed the dialog
+                
+                if (string.IsNullOrWhiteSpace(input) || !decimal.TryParse(input, out actualCash) || actualCash < 0)
                 {
                     MessageBox.Show("Please enter a valid cash amount.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+            }
+            else
+            {
+                actualCash = expectedCash; // If count not required, assume actual equals expected
+            }
+
+            decimal diff = actualCash - expectedCash;
+
+            // Warning if over/short warnings are enabled and discrepancy exists
+            if (settings.EnableOverShortWarnings && diff != 0)
+            {
+                string statusText = diff > 0 
+                    ? $"🟢 OVER by ₱{diff:#,##0.00} (Extra cash in register)" 
+                    : $"🔴 SHORT by ₱{Math.Abs(diff):#,##0.00} (Missing cash)";
+
+                var warnResult = MessageBox.Show(
+                    $"⚠️ CASH DISCREPANCY DETECTED!\n\n" +
+                    $"Expected Cash: ₱{expectedCash:#,##0.00}\n" +
+                    $"Actual Counted: ₱{actualCash:#,##0.00}\n\n" +
+                    $"{statusText}\n\n" +
+                    "Are you absolutely sure you want to close this session with this discrepancy?",
+                    "Warning: Cash Discrepancy",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (warnResult != DialogResult.Yes) return;
+            }
+            else
+            {
+                // Normal closing confirmation
+                string discrepancyInfo = settings.RequireCashCountOnClose 
+                    ? $"\nActual Cash: ₱{actualCash:#,##0.00}" 
+                    : "";
+
+                var confirm = MessageBox.Show(
+                    $"Are you sure you want to close the store session?\n\n" +
+                    $"Revenue: ₱{activeSession.TotalRevenue:#,##0.00}\n" +
+                    $"Transactions: {activeSession.TotalTransactions}\n" +
+                    $"Expected Cash: ₱{expectedCash:#,##0.00}" + 
+                    discrepancyInfo,
+                    "Confirm Close Session",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (confirm != DialogResult.Yes) return;
             }
 
             _isSessionProcessing = true;
@@ -408,23 +449,27 @@ namespace TheMatchaClubApp.Forms
             try
             {
                 var session = await Program.SessionService.CloseSessionAsync(actualCash, Program.GetCurrentCashierName());
-                decimal diff = session.ActualCash - session.ExpectedCash;
-
-                if (settings.RequireCashCountOnClose && settings.EnableOverShortWarnings && Math.Abs(diff) > 0)
+                
+                // Show final success notification
+                string finalMessage = $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}";
+                if (diff != 0)
                 {
-                    string status = diff >= 0 ? $"Over: +₱{diff:#,##0.00}" : $"Short: -₱{Math.Abs(diff):#,##0.00}";
-                    MessageBox.Show(
-                        $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}\n{status}",
-                        "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    finalMessage += diff > 0 
+                        ? $"\nOver: +₱{diff:#,##0.00}" 
+                        : $"\nShort: -₱{Math.Abs(diff):#,##0.00}";
                 }
-                else
+                MessageBox.Show(finalMessage, "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // Auto-generate Z-Report if enabled
+                if (settings.AutoGenerateZReport)
                 {
-                    MessageBox.Show(
-                        $"Session closed successfully.\n\nRevenue: ₱{session.TotalRevenue:#,##0.00}\nTransactions: {session.TotalTransactions}",
-                        "Session Closed", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    AutoGenerateZReport(session);
                 }
             }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            catch (Exception ex) 
+            { 
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); 
+            }
             finally
             {
                 _isSessionProcessing = false;
@@ -432,16 +477,99 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
+        private void AutoGenerateZReport(BusinessSession session)
+        {
+            try
+            {
+                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                string reportsDir = Path.Combine(documentsPath, "TheMatchaClub", "ZReports");
+                Directory.CreateDirectory(reportsDir);
+
+                string fileName = $"ZReport_Session_{session.OpenedAt:yyyyMMdd_HHmmss}.pdf";
+                string fullPath = Path.Combine(reportsDir, fileName);
+
+                Helpers.ZReportHelper.GenerateZReportPdf(session, fullPath);
+
+                // Open the PDF automatically
+                var ps = new System.Diagnostics.ProcessStartInfo(fullPath)
+                {
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(ps);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to auto-generate Z-Report: {ex.Message}", "Z-Report Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
         private static string? ShowInputDialog(string prompt, string title, string defaultValue)
         {
-            using var form = new Form { Text = title, Width = 360, Height = 180, FormBorderStyle = FormBorderStyle.FixedDialog, StartPosition = FormStartPosition.CenterParent, MaximizeBox = false, MinimizeBox = false };
-            var lbl = new Label { Text = prompt, Left = 16, Top = 16, Width = 310, AutoSize = true };
-            var txt = new TextBox { Text = defaultValue, Left = 16, Top = 44, Width = 310 };
-            var ok = new Button { Text = "OK", DialogResult = DialogResult.OK, Left = 170, Top = 90, Width = 75 };
-            var cancel = new Button { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 251, Top = 90, Width = 75 };
-            form.Controls.AddRange(new Control[] { lbl, txt, ok, cancel });
+            using var form = new Form 
+            { 
+                Text = title, 
+                Width = 380, 
+                Height = 220, 
+                FormBorderStyle = FormBorderStyle.FixedDialog, 
+                StartPosition = FormStartPosition.CenterParent, 
+                MaximizeBox = false, 
+                MinimizeBox = false 
+            };
+            
+            var lbl = new Label 
+            { 
+                Text = prompt, 
+                Left = 16, 
+                Top = 16, 
+                Width = 330, 
+                AutoSize = true 
+            };
+            
+            // Add label first to calculate its true dynamic height
+            form.Controls.Add(lbl);
+            
+            int txtTop = lbl.Bottom + 12;
+            var txt = new TextBox 
+            { 
+                Text = defaultValue, 
+                Left = 16, 
+                Top = txtTop, 
+                Width = 330 
+            };
+            
+            int btnTop = txt.Bottom + 16;
+            var ok = new Button 
+            { 
+                Text = "OK", 
+                DialogResult = DialogResult.OK, 
+                Left = 190, 
+                Top = btnTop, 
+                Width = 75 
+            };
+            var cancel = new Button 
+            { 
+                Text = "Cancel", 
+                DialogResult = DialogResult.Cancel, 
+                Left = 271, 
+                Top = btnTop, 
+                Width = 75 
+            };
+            
+            form.Controls.AddRange(new Control[] { txt, ok, cancel });
+            
+            // Adjust form height to dynamically fit all elements perfectly
+            form.ClientSize = new Size(380, cancel.Bottom + 16);
+            
             form.AcceptButton = ok;
             form.CancelButton = cancel;
+            
+            // Auto-focus and highlight textbox text for immediate typing convenience
+            form.Shown += (s, e) => 
+            { 
+                txt.Focus(); 
+                txt.SelectAll(); 
+            };
+            
             return form.ShowDialog() == DialogResult.OK ? txt.Text : null;
         }
 

@@ -33,10 +33,6 @@ namespace TheMatchaClubApp.Core.Models
         public bool ReceiptShowSessionNumber { get; set; } = false;
         public string ReceiptPaperWidth { get; set; } = "80mm";
 
-        // ── Appearance ───────────────────────────────────────────────
-        public string AccentColor { get; set; } = "#52B743";
-        public bool EnableAnimations { get; set; } = true;
-        public string FontScale { get; set; } = "Normal"; // "Small", "Normal", "Large"
 
         // ── Customer Classification Thresholds ───────────────────────
         // New: 1 order, Regular: 2–7, Loyal: 8–15, Frequent: 16+ or lifetime ≥ threshold
