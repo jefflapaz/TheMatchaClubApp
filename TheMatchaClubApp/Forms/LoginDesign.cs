@@ -96,6 +96,7 @@ namespace TheMatchaClubApp.Forms
             lblForgotPassword.ForeColor = ColorTranslator.FromHtml("#6B7280");
             lblForgotPassword.Cursor = Cursors.Hand;
             lblForgotPassword.TextAlign = ContentAlignment.MiddleRight;
+            lblForgotPassword.Click += LblForgotPassword_Click;
 
             txtPassword.BackColor = Color.Transparent;
             txtPassword.BorderColor = ColorTranslator.FromHtml("#E5E7EB");
@@ -193,6 +194,12 @@ namespace TheMatchaClubApp.Forms
         private void TitleBar_MouseUp(object? sender, MouseEventArgs e)
         {
             dragging = false;
+        }
+
+        private void LblForgotPassword_Click(object? sender, EventArgs e)
+        {
+            using var dialog = new ForgotPasswordDialog(_serviceProvider);
+            dialog.ShowDialog(this);
         }
 
         /// <summary>

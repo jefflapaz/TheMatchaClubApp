@@ -297,8 +297,8 @@ namespace TheMatchaClubApp.Forms
                 {
                     if (_tabButtons[i] == btn)
                     {
-                        string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor",
-                                              "Export & Backup", "Security" };
+                        string[] tabNames = { "Store Profile", "Session Cash", "Receipt Editor",
+                                              "Export Backup", "Security" };
                         ShowTab(tabNames[i]);
                         break;
                     }
@@ -309,7 +309,7 @@ namespace TheMatchaClubApp.Forms
         private void ShowTab(string tabName)
         {
             _activeTab = tabName;
-            string[] tabNames = { "Store Profile", "Session & Cash", "Receipt Editor", "Export & Backup", "Security" };
+            string[] tabNames = { "Store Profile", "Session Cash", "Receipt Editor", "Export Backup", "Security" };
 
             for (int i = 0; i < _sectionPanels.Length; i++)
                 _sectionPanels[i].Visible = tabNames[i] == tabName;

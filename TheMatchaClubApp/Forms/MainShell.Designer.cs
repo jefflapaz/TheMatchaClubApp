@@ -122,7 +122,7 @@ namespace TheMatchaClubApp.Forms
             lblCopyright.Name = "lblCopyright";
             lblCopyright.Size = new Size(360, 20);
             lblCopyright.TabIndex = 0;
-            lblCopyright.Text = "© 2024 Matcha Cafe POS  Version 2.4.0-stable";
+            lblCopyright.Text = "© 2026 Matcha Cafe POS Version 1.0";
 
             // lblSystemOnline
             lblSystemOnline.Anchor = AnchorStyles.Top | AnchorStyles.Right;

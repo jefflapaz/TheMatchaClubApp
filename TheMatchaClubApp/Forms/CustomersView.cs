@@ -353,7 +353,6 @@ namespace TheMatchaClubApp.Forms
 
             lblFavCatValue.Text = mostFreqCategory;
             lblModValue.Text = favoriteItem;
-            lblTimeValue.Text = typicalTime;
 
             txtAdminNotes.Text = c.AdminNotes;
 

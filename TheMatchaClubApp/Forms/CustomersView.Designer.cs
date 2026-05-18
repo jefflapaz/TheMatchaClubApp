@@ -263,7 +263,7 @@ namespace TheMatchaClubApp.Forms
 
             // History DataGrid
             dgvHistory.Dock = System.Windows.Forms.DockStyle.Top;
-            dgvHistory.Height = 200;
+            dgvHistory.Height = 350;
             dgvHistory.AllowUserToAddRows = false;
             dgvHistory.AllowUserToDeleteRows = false;
             dgvHistory.ReadOnly = true;
@@ -283,8 +283,6 @@ namespace TheMatchaClubApp.Forms
             pnlPreferences.Controls.Add(lblFavCatValue);
             pnlPreferences.Controls.Add(lblModLabel);
             pnlPreferences.Controls.Add(lblModValue);
-            pnlPreferences.Controls.Add(lblTimeLabel);
-            pnlPreferences.Controls.Add(lblTimeValue);
 
             lblPrefTitle.Location = new System.Drawing.Point(20, 15);
             lblPrefTitle.Text = "CUSTOMER INSIGHTS";

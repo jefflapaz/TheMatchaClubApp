@@ -436,17 +436,17 @@ namespace TheMatchaClubApp.Forms
                 paidViaText += $"\nServed by {order.CashierName}";
             lblPaidVia.Text = paidViaText;
             int paidY = showCashDetails ? cashY + 5 : totalsY + 70;
-            lblPaidVia.Top = paidY;
             lblPaidVia.Width = pnlReceiptBody.Width - 32;
+            lblPaidVia.Height = 45;
             lblPaidVia.Location = new Point(16, paidY);
 
             // Footer from settings
             lblThankYou.Text = settings.ReceiptFooterMessage;
-            lblThankYou.Top = paidY + 40;
             lblThankYou.Width = pnlReceiptBody.Width - 32;
-            lblThankYou.Location = new Point(16, paidY + 40);
+            lblThankYou.Height = 40;
+            lblThankYou.Location = new Point(16, paidY + 55);
 
-            int btnY = paidY + 75;
+            int btnY = paidY + 105;
             btnPrintReceipt.Top = btnY;
             btnExportPDF.Top = btnY;
             btnEmailReceipt.Top = btnY;
@@ -457,6 +457,7 @@ namespace TheMatchaClubApp.Forms
             lblReceiptSubtotal.Text = order.Subtotal.ToString("C2");
             lblReceiptTotal.Text = order.Total.ToString("C2");
 
+            pnlReceiptBody.AutoScrollMinSize = new Size(0, btnY + 60);
             pnlReceiptBody.ResumeLayout();
             pnlReceiptBody.Invalidate();
         }

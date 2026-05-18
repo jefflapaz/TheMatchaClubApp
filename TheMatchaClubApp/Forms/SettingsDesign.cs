@@ -19,8 +19,8 @@ namespace TheMatchaClubApp.Forms
         private static readonly Color SGreen = ColorTranslator.FromHtml("#52B743");
 
         private static readonly string[] TabNames = {
-            "Store Profile", "Session & Cash", "Receipt Editor",
-            "Export & Backup", "Security"
+            "Store Profile", "Session Cash", "Receipt Editor",
+            "Export Backup", "Security"
         };
         private static readonly string[] TabIcons = {
             "🏪", "💰", "🧾", "💾", "🔒"
@@ -237,9 +237,7 @@ namespace TheMatchaClubApp.Forms
             card.BorderRadius = 16;
             card.BorderColor = ColorTranslator.FromHtml("#F3F4F6");
             card.BorderThickness = 1;
-            card.ShadowDecoration.Enabled = true;
-            card.ShadowDecoration.Depth = 4;
-            card.ShadowDecoration.Color = Color.FromArgb(6, 0, 0, 0);
+            card.ShadowDecoration.Enabled = false;
         }
 
         private void StyleCardHeader(Label title, Label sub)
