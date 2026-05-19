@@ -21,8 +21,9 @@ namespace TheMatchaClubApp.Core
                 container.Page(page =>
                 {
                     float widthMm = settings.ReceiptPaperWidth == "58mm" ? 58f : 80f;
-                    page.Size(widthMm, 297f, Unit.Millimetre);
-                    page.Margin(0.5f, Unit.Centimetre);
+                    float marginMm = settings.ReceiptPaperWidth == "58mm" ? 2f : 5f;
+                    page.ContinuousSize(widthMm, Unit.Millimetre);
+                    page.Margin(marginMm, Unit.Millimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Verdana));
 
@@ -30,10 +31,10 @@ namespace TheMatchaClubApp.Core
                     page.Header().Column(col =>
                     {
                         col.Item().Height(4).Background(accentColor);
-                        col.Item().PaddingTop(10).AlignCenter().Row(r =>
+                        col.Item().PaddingTop(10).AlignCenter().Text(t =>
                         {
-                            r.AutoItem().PaddingRight(5).Text("🍵").FontSize(18).FontColor(accentColor);
-                            r.AutoItem().Text(settings.StoreName).FontSize(16).Bold().FontColor(accentColor);
+                            t.Span("🍵 ").FontSize(18).FontColor(accentColor);
+                            t.Span(settings.StoreName).FontSize(16).Bold().FontColor(accentColor);
                         });
                         col.Item().AlignCenter().Text(location).FontSize(8).FontColor(Colors.Grey.Medium);
                         col.Item().AlignCenter().Text($"{settings.Phone}  •  {settings.Email}").FontSize(8).FontColor(Colors.Grey.Medium);
@@ -113,18 +114,19 @@ namespace TheMatchaClubApp.Core
                         });
 
                         // Totals
+                        float valueColWidth = settings.ReceiptPaperWidth == "58mm" ? 50f : 80f;
                         col.Item().PaddingTop(10).AlignRight().Column(innerCol =>
                         {
                             innerCol.Item().Row(r =>
                             {
                                 r.RelativeItem().Text("Subtotal").FontSize(8).FontColor(Colors.Grey.Medium);
-                                r.ConstantItem(80).AlignRight().Text($"₱{order.Subtotal:#,##0.00}").FontSize(8);
+                                r.ConstantItem(valueColWidth).AlignRight().Text($"₱{order.Subtotal:#,##0.00}").FontSize(8);
                             });
 
                             innerCol.Item().PaddingTop(4).Background(accentColor).PaddingHorizontal(8).PaddingVertical(4).Row(r =>
                             {
                                 r.RelativeItem().Text("TOTAL").FontSize(11).Bold().FontColor(Colors.White);
-                                r.ConstantItem(80).AlignRight().Text($"₱{order.Total:#,##0.00}").FontSize(11).Bold().FontColor(Colors.White);
+                                r.ConstantItem(valueColWidth).AlignRight().Text($"₱{order.Total:#,##0.00}").FontSize(11).Bold().FontColor(Colors.White);
                             });
                         });
 
@@ -136,12 +138,12 @@ namespace TheMatchaClubApp.Core
                                 innerCol.Item().Row(r =>
                                 {
                                     r.RelativeItem().Text("Cash Tendered").FontSize(8).FontColor(Colors.Grey.Medium);
-                                    r.ConstantItem(80).AlignRight().Text($"₱{order.CashTendered:#,##0.00}").FontSize(8);
+                                    r.ConstantItem(valueColWidth).AlignRight().Text($"₱{order.CashTendered:#,##0.00}").FontSize(8);
                                 });
                                 innerCol.Item().Row(r =>
                                 {
                                     r.RelativeItem().Text("Change").FontSize(8).Bold().FontColor(accentColor);
-                                    r.ConstantItem(80).AlignRight().Text($"₱{order.ChangeGiven:#,##0.00}").FontSize(8).Bold().FontColor(accentColor);
+                                    r.ConstantItem(valueColWidth).AlignRight().Text($"₱{order.ChangeGiven:#,##0.00}").FontSize(8).Bold().FontColor(accentColor);
                                 });
                             });
                         }
