@@ -277,6 +277,14 @@ namespace TheMatchaClubApp.Forms
             Controls.Add(pnlTitleBar);
             Name = "AdminSetupForm";
             Text = "Admin Setup";
+            
+            // ── App Icon (taskbar + title bar) ──
+            var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Resources", "app.ico");
+            if (!System.IO.File.Exists(iconPath))
+                iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "app.ico");
+            if (System.IO.File.Exists(iconPath))
+                this.Icon = new Icon(iconPath);
+                
             Resize += AdminSetupForm_Resize;
 
             pnlTitleBar.ResumeLayout(false);

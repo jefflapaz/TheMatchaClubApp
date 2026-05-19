@@ -372,6 +372,14 @@ namespace TheMatchaClubApp.Forms
             Controls.Add(lblGetSupport);
             Name = "SetupWizardForm";
             Text = "Setup Wizard";
+            
+            // ── App Icon (taskbar + title bar) ──
+            var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Resources", "app.ico");
+            if (!System.IO.File.Exists(iconPath))
+                iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "app.ico");
+            if (System.IO.File.Exists(iconPath))
+                this.Icon = new Icon(iconPath);
+                
             ResumeLayout(false);
         }
 

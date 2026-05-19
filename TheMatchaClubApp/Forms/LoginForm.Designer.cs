@@ -260,6 +260,13 @@ namespace TheMatchaClubApp.Forms
             Margin = new Padding(4, 5, 4, 5);
             Name = "LoginForm";
             Text = "LoginForm";
+
+            // ── App Icon (taskbar + title bar) ──
+            var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Resources", "app.ico");
+            if (!System.IO.File.Exists(iconPath))
+                iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "app.ico");
+            if (System.IO.File.Exists(iconPath))
+                this.Icon = new Icon(iconPath);
             Resize += LoginForm_Resize;
             pnlTitleBar.ResumeLayout(false);
             pnlCard.ResumeLayout(false);

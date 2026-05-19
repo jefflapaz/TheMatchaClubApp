@@ -194,6 +194,13 @@ namespace TheMatchaClubApp.Forms
             Name = "MainShell";
             Text = "S.I.P. - Session Integrated POS";
 
+            // ── App Icon (taskbar + title bar) ──
+            var iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "Resources", "app.ico");
+            if (!System.IO.File.Exists(iconPath))
+                iconPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "app.ico");
+            if (System.IO.File.Exists(iconPath))
+                this.Icon = new Icon(iconPath);
+
             pnlSidebar.ResumeLayout(false);
             pnlLogoHeader.ResumeLayout(false);
             pnlSidebarBottom.ResumeLayout(false);
