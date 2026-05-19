@@ -480,7 +480,7 @@ namespace TheMatchaClubApp.Forms
                 page.Size(PageSizes.A4); page.Margin(30); page.DefaultTextStyle(x => x.FontSize(10));
                 page.Header().Column(col =>
                 {
-                    col.Item().Text("The Matcha Club \u2014 Session Report").Bold().FontSize(18).FontColor("#52B743");
+                    col.Item().Text("S.I.P. \u2014 Session Report").Bold().FontSize(18).FontColor("#52B743");
                     col.Item().Text($"Session ID: {_selectedSession.SessionId}").FontSize(8).FontColor("#9CA3AF");
                     col.Item().Text($"Opened: {_selectedSession.OpenedAt:MMM dd, yyyy hh:mm tt} by {_selectedSession.OpenedBy}").FontSize(9).FontColor("#6B7280");
                     if (!string.IsNullOrWhiteSpace(Program.DataService.Settings.CurrentOperatingLocation))
@@ -500,7 +500,7 @@ namespace TheMatchaClubApp.Forms
                         foreach (var item in items) { t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(item.Name).FontSize(9); t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(item.Category).FontSize(9); t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(item.Units.ToString()).FontSize(9); t.Cell().BorderBottom(1).BorderColor("#E5E7EB").Padding(5).Text(Fmt(item.Revenue)).FontSize(9); }
                     });
                 });
-                page.Footer().AlignCenter().Text(t => { t.Span("The Matcha Club POS \u2014 ").FontSize(8).FontColor("#9CA3AF"); t.Span($"Generated {DateTime.Now:MMM dd, yyyy}").FontSize(8).FontColor("#9CA3AF"); });
+                page.Footer().AlignCenter().Text(t => { t.Span("S.I.P. \u2014 ").FontSize(8).FontColor("#9CA3AF"); t.Span($"Generated {DateTime.Now:MMM dd, yyyy}").FontSize(8).FontColor("#9CA3AF"); });
             })).GeneratePdf(dlg.FileName);
             MessageBox.Show($"PDF exported to:\n{dlg.FileName}", "Export", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

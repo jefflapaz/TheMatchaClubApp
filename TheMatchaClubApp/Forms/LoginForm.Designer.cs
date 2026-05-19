@@ -210,7 +210,7 @@ namespace TheMatchaClubApp.Forms
             lblSubtitle.Name = "lblSubtitle";
             lblSubtitle.Size = new Size(587, 31);
             lblSubtitle.TabIndex = 3;
-            lblSubtitle.Text = "Welcome back! Please enter your details.";
+            lblSubtitle.Text = "Session Integrated Point-of-Sale";
             // 
             // lblTitle
             // 
@@ -219,7 +219,7 @@ namespace TheMatchaClubApp.Forms
             lblTitle.Name = "lblTitle";
             lblTitle.Size = new Size(587, 46);
             lblTitle.TabIndex = 2;
-            lblTitle.Text = "Matcha Café POS";
+            lblTitle.Text = "S.I.P.";
             // 
             // picLogo
             // 
@@ -248,7 +248,7 @@ namespace TheMatchaClubApp.Forms
             lblBadge.Name = "lblBadge";
             lblBadge.Size = new Size(187, 37);
             lblBadge.TabIndex = 0;
-            lblBadge.Text = "THE MATCHA CLUB";
+            lblBadge.Text = "The Matcha Club";
             // 
             // LoginForm
             // 

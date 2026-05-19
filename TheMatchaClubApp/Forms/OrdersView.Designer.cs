@@ -213,7 +213,7 @@ namespace TheMatchaClubApp.Forms
 
             lblStoreName.Location = new System.Drawing.Point(16, 85);
             lblStoreName.Size = new System.Drawing.Size(140, 24);
-            lblStoreName.Text = "The Matcha Club";
+            lblStoreName.Text = "S.I.P.";
             lblStoreAddress.Location = new System.Drawing.Point(60, 115);
             lblStoreAddress.Size = new System.Drawing.Size(200, 16);
             lblStoreAddress.Text = "";

@@ -154,7 +154,7 @@ namespace TheMatchaClubApp.Forms
             lblUploadText.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 
             lblStoreNameLabel.Location = new System.Drawing.Point(172, 72); lblStoreNameLabel.Size = new System.Drawing.Size(100, 18); lblStoreNameLabel.Text = "Store Name";
-            txtStoreName.Location = new System.Drawing.Point(172, 92); txtStoreName.Size = new System.Drawing.Size(250, 40); txtStoreName.PlaceholderText = "The Matcha Club";
+            txtStoreName.Location = new System.Drawing.Point(172, 92); txtStoreName.Size = new System.Drawing.Size(250, 40); txtStoreName.PlaceholderText = "S.I.P.";
 
             lblSupportEmailLabel.Location = new System.Drawing.Point(440, 72); lblSupportEmailLabel.Size = new System.Drawing.Size(120, 18); lblSupportEmailLabel.Text = "Support Email";
             txtSupportEmail.Location = new System.Drawing.Point(440, 92); txtSupportEmail.Size = new System.Drawing.Size(250, 40); txtSupportEmail.PlaceholderText = "info@thematchaclub.ph";

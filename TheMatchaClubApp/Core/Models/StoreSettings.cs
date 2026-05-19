@@ -3,7 +3,7 @@ namespace TheMatchaClubApp.Core.Models
     public class StoreSettings
     {
         // ── Store Profile ────────────────────────────────────────────
-        public string StoreName { get; set; } = "The Matcha Club";
+        public string StoreName { get; set; } = "S.I.P.";
         public string StoreLogoPath { get; set; } = string.Empty;
         public string Email { get; set; } = "info@thematchaclub.ph";
         public string Phone { get; set; } = "+63 912 345 6789";

@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace TheMatchaClubApp.Forms
 {
     /// <summary>
-    /// Login form for the Matcha Club POS.
+    /// Login form for S.I.P. POS.
     /// Accepts an IServiceProvider to resolve Identity services for authentication.
     /// </summary>
     public partial class LoginForm : Form

@@ -122,7 +122,7 @@ namespace TheMatchaClubApp.Forms
             lblCopyright.Name = "lblCopyright";
             lblCopyright.Size = new Size(360, 20);
             lblCopyright.TabIndex = 0;
-            lblCopyright.Text = "© 2026 Matcha Cafe POS Version 1.0";
+            lblCopyright.Text = "© 2026 S.I.P. (Session Integrated POS) Version 1.0";
 
             // lblSystemOnline
             lblSystemOnline.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -192,7 +192,7 @@ namespace TheMatchaClubApp.Forms
             Controls.Add(pnlFooter);
             Controls.Add(pnlSidebar);
             Name = "MainShell";
-            Text = "The Matcha Club";
+            Text = "S.I.P. - Session Integrated POS";
 
             pnlSidebar.ResumeLayout(false);
             pnlLogoHeader.ResumeLayout(false);

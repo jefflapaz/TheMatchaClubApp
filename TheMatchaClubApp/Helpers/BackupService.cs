@@ -177,7 +177,7 @@ namespace TheMatchaClubApp.Helpers
 
                     // Write backup metadata
                     string meta = $"Backup Created: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
-                                  $"Application: Matcha Cafe POS\n" +
+                                  $"Application: S.I.P.\n" +
                                   $"Version: 2.4.0-stable\n" +
                                   $"Machine: {Environment.MachineName}\n";
                     File.WriteAllText(Path.Combine(tempDir, "_backup_info.txt"), meta);

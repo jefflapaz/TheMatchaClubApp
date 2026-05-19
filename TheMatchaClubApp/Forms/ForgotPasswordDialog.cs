@@ -202,7 +202,7 @@ namespace TheMatchaClubApp.Forms
                     using var mail = new MailMessage
                     {
                         From = new MailAddress(settings.Email, settings.StoreName),
-                        Subject = "Matcha Cafe POS - Password Recovery Code",
+                        Subject = "S.I.P. - Password Recovery Code",
                         Body = $"<div style='font-family:sans-serif;padding:20px;'><h2 style='color:#52B743;'>Password Recovery</h2><p>Your one-time recovery code is: <strong style='font-size:24px;'>{_generatedOtp}</strong></p><p>If you did not request this, please ignore this email.</p></div>",
                         IsBodyHtml = true
                     };
