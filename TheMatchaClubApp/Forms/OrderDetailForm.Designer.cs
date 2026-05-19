@@ -18,13 +18,11 @@ namespace TheMatchaClubApp.Forms
         internal Panel pnlTabBar;
         internal Guna.UI2.WinForms.Guna2Button btnTabOverview;
         internal Guna.UI2.WinForms.Guna2Button btnTabReceipt;
-        internal Guna.UI2.WinForms.Guna2Button btnTabTimeline;
 
         // ── Content ─────────────────────────────────
         internal Panel pnlContent;
         internal Panel pnlOverviewTab;
         internal Panel pnlReceiptTab;
-        internal Panel pnlTimelineTab;
 
         // ── Overview Controls ───────────────────────
         internal FlowLayoutPanel flpKpiCards;
@@ -47,9 +45,6 @@ namespace TheMatchaClubApp.Forms
 
         // ── Receipt Tab ─────────────────────────────
         internal Panel pnlReceiptPreview;
-
-        // ── Timeline Tab ────────────────────────────
-        internal Label lblTimelinePlaceholder;
 
         // ── Footer ──────────────────────────────────
         internal Panel pnlFooter;
@@ -119,9 +114,8 @@ namespace TheMatchaClubApp.Forms
 
             btnTabOverview = new Guna.UI2.WinForms.Guna2Button { Text = "Overview", Size = new System.Drawing.Size(120, 34), Location = new System.Drawing.Point(32, 5), BorderRadius = 8, Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0 };
             btnTabReceipt = new Guna.UI2.WinForms.Guna2Button { Text = "Receipt", Size = new System.Drawing.Size(110, 34), Location = new System.Drawing.Point(158, 5), BorderRadius = 8, Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0 };
-            btnTabTimeline = new Guna.UI2.WinForms.Guna2Button { Text = "Timeline", Size = new System.Drawing.Size(110, 34), Location = new System.Drawing.Point(274, 5), BorderRadius = 8, Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold), BorderThickness = 0 };
 
-            pnlTabBar.Controls.AddRange(new Control[] { btnTabOverview, btnTabReceipt, btnTabTimeline });
+            pnlTabBar.Controls.AddRange(new Control[] { btnTabOverview, btnTabReceipt });
 
             // ═══════════════════════════════════════════
             //  CONTENT AREA
@@ -196,20 +190,7 @@ namespace TheMatchaClubApp.Forms
             pnlReceiptPreview = new Panel { Location = new System.Drawing.Point(0, 0), Size = new System.Drawing.Size(360, 800), BackColor = System.Drawing.Color.White };
             pnlReceiptTab.Controls.Add(pnlReceiptPreview);
 
-            // ── Timeline Tab ────────────────────────
-            pnlTimelineTab = new Panel { Dock = DockStyle.Fill, Visible = false, BackColor = System.Drawing.Color.Transparent };
-            lblTimelinePlaceholder = new Label
-            {
-                Text = "🕐  Timeline\n\nOrder timeline and audit trail coming soon.\nThis feature will track status changes,\nreprints, and modifications.",
-                Font = new System.Drawing.Font("Segoe UI", 10F),
-                ForeColor = System.Drawing.ColorTranslator.FromHtml("#9CA3AF"),
-                TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Fill,
-                BackColor = System.Drawing.Color.White
-            };
-            pnlTimelineTab.Controls.Add(lblTimelinePlaceholder);
-
-            pnlContent.Controls.AddRange(new Control[] { pnlOverviewTab, pnlReceiptTab, pnlTimelineTab });
+            pnlContent.Controls.AddRange(new Control[] { pnlOverviewTab, pnlReceiptTab });
 
             // ═══════════════════════════════════════════
             //  FOOTER

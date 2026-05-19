@@ -102,7 +102,6 @@ namespace TheMatchaClubApp.Forms
             btnCloseBottom.Click += (s, e) => Close();
             btnTabOverview.Click += (s, e) => ShowTab("overview");
             btnTabReceipt.Click += (s, e) => ShowTab("receipt");
-            btnTabTimeline.Click += (s, e) => ShowTab("timeline");
 
             btnPrint.Click += (s, e) =>
             {
@@ -173,11 +172,9 @@ namespace TheMatchaClubApp.Forms
         {
             pnlOverviewTab.Visible = tab == "overview";
             pnlReceiptTab.Visible = tab == "receipt";
-            pnlTimelineTab.Visible = tab == "timeline";
 
             StyleTab(btnTabOverview, tab == "overview");
             StyleTab(btnTabReceipt, tab == "receipt");
-            StyleTab(btnTabTimeline, tab == "timeline");
         }
 
         private void StyleTab(Guna.UI2.WinForms.Guna2Button btn, bool active)
