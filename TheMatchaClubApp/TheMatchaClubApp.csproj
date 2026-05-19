@@ -11,7 +11,6 @@
 
   <ItemGroup>
     <Folder Include="Controller\" />
-    <Folder Include="Models\" />
     <Folder Include="Resources\" />
   </ItemGroup>
 
@@ -55,9 +54,7 @@
     <Compile Update="Forms\ProductItemCardDesign.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Forms\CustomOrderTableDesign.cs">
-      <SubType>Code</SubType>
-    </Compile>
+
     <Compile Update="Forms\QuickSaleDesign.cs" />
     <Compile Update="Forms\OrdersDesign.cs">
       <SubType>Code</SubType>
