@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClub.Infrastructure.Data.Configurations
 {

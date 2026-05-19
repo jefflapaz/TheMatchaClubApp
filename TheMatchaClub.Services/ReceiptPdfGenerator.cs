@@ -4,13 +4,13 @@ using System.Linq;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
-namespace TheMatchaClubApp.Core
+namespace TheMatchaClub.Services
 {
     public static class ReceiptPdfGenerator
     {
-        public static void Generate(Order order, StoreSettings settings, string filePath)
+        public static void Generate(Order order, StoreSettings settings, string currentCashierName, string filePath)
         {
             QuestPDF.Settings.License = LicenseType.Community;
             var accentColor = "#52B743";
@@ -84,7 +84,7 @@ namespace TheMatchaClubApp.Core
                             col.Item().PaddingTop(4).Text(t =>
                             {
                                 t.Span("Cashier: ").FontSize(7).FontColor(Colors.Grey.Medium);
-                                t.Span(order.CashierName ?? Program.GetCurrentCashierName()).FontSize(8);
+                                t.Span(order.CashierName ?? currentCashierName).FontSize(8);
                             });
                         }
 
@@ -152,7 +152,7 @@ namespace TheMatchaClubApp.Core
                         {
                             c.Item().Text($"Paid via {order.PaymentMethod}").FontSize(8).Bold().FontColor(Colors.Grey.Darken1);
                             if (settings.ReceiptShowCashierName)
-                                c.Item().Text($"Served by {order.CashierName ?? Program.GetCurrentCashierName()}").FontSize(7).FontColor(Colors.Grey.Medium);
+                                c.Item().Text($"Served by {order.CashierName ?? currentCashierName}").FontSize(7).FontColor(Colors.Grey.Medium);
                         });
                     });
 

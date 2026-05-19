@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
-namespace TheMatchaClubApp.Core.Services
+namespace TheMatchaClub.Services
 {
     /// <summary>
     /// Manages the lifecycle of business sessions (store open → close).

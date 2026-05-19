@@ -1,6 +1,6 @@
 using System;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClubApp.Forms
 {

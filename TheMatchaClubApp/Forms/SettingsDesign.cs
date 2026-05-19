@@ -3,8 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Guna.UI2.WinForms;
-using TheMatchaClubApp.Core;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClub.Services;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -339,7 +339,7 @@ namespace TheMatchaClubApp.Forms
                 ReceiptFooterMessage = txtReceiptFooterEditor?.Text ?? "Thank you!"
             };
 
-            ReceiptRenderer.Render(e.Graphics, pnlReceiptPreview.ClientRectangle, null, liveSettings);
+            ReceiptRenderer.Render(e.Graphics, pnlReceiptPreview.ClientRectangle, null, liveSettings, Program.GetCurrentCashierName());
         }
 
         // ══════════════════════════════════════════════════════════════

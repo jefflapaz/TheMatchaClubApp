@@ -1,8 +1,8 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClub.Services;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClubApp.Forms
 {

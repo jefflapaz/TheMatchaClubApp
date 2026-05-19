@@ -6,7 +6,7 @@ using System.Windows.Forms;
 using Guna.UI2.WinForms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClubApp.Forms
 {

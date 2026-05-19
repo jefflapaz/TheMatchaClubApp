@@ -1,6 +1,6 @@
 using System;
 
-namespace TheMatchaClubApp.Core.Models
+namespace TheMatchaClubDomain.Models
 {
     public class Product
     {

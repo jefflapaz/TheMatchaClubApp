@@ -1,6 +1,6 @@
 using System;
 
-namespace TheMatchaClubApp.Core.Models
+namespace TheMatchaClubDomain.Models
 {
     /// <summary>
     /// Represents a single line item within an Order.

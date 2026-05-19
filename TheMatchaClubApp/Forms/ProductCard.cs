@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 using TheMatchaClubApp.Helpers;
 
 namespace TheMatchaClubApp.Forms

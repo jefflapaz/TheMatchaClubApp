@@ -2,9 +2,9 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
-namespace TheMatchaClubApp.Core
+namespace TheMatchaClub.Services
 {
     /// <summary>
     /// Centralized receipt renderer. Every receipt output in the system
@@ -24,7 +24,7 @@ namespace TheMatchaClubApp.Core
         /// Pass null for <paramref name="order"/> to render a sample preview.
         /// Returns the total rendered height.
         /// </summary>
-        public static float Render(Graphics g, Rectangle bounds, Order? order, StoreSettings settings)
+        public static float Render(Graphics g, Rectangle bounds, Order? order, StoreSettings settings, string currentCashierName)
         {
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
@@ -78,7 +78,7 @@ namespace TheMatchaClubApp.Core
             string orderId = isSample ? "#MC-SAMPLE" : order!.OrderId;
             string dateStr = isSample ? DateTime.Now.ToString("dd MMM yyyy HH:mm") : order!.Timestamp.ToString("dd MMM yyyy HH:mm");
             string customer = isSample ? "Walk-In" : (string.IsNullOrEmpty(order!.CustomerName) ? "Walk-In" : order.CustomerName);
-            string cashier = isSample ? Program.GetCurrentCashierName() : (order!.CashierName ?? Program.GetCurrentCashierName());
+            string cashier = isSample ? currentCashierName : (order!.CashierName ?? currentCashierName);
             string orderType = isSample ? "Dine-In" : (order!.OrderType ?? "Dine-In");
             string paymentMethod = isSample ? "Cash" : (order!.PaymentMethod ?? "Cash");
 

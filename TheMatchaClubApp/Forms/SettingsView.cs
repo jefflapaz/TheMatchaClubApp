@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using TheMatchaClubApp.Core;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClub.Services;
+using TheMatchaClubDomain.Models;
 using TheMatchaClubApp.Helpers;
 
 namespace TheMatchaClubApp.Forms

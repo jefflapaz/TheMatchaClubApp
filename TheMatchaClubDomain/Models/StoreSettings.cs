@@ -1,4 +1,4 @@
-namespace TheMatchaClubApp.Core.Models
+namespace TheMatchaClubDomain.Models
 {
     public class StoreSettings
     {

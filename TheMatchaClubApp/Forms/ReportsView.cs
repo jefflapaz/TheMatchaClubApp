@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClub.Services;
+using TheMatchaClubDomain.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 

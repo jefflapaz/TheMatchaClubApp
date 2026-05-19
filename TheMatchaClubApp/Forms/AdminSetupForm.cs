@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClubApp.Forms
 {

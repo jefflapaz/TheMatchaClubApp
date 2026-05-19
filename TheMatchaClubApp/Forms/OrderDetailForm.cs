@@ -5,8 +5,8 @@ using System.Drawing;
 using System.Drawing.Printing;
 using System.Linq;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
-using TheMatchaClubApp.Core;
+using TheMatchaClubDomain.Models;
+using TheMatchaClub.Services;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -124,7 +124,7 @@ namespace TheMatchaClubApp.Forms
                     string fileName = $"Receipt_{_order.OrderId}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
                     string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
                     
-                    ReceiptPdfGenerator.Generate(_order, Program.DataService.Settings, filePath);
+                    ReceiptPdfGenerator.Generate(_order, Program.DataService.Settings, Program.GetCurrentCashierName(), filePath);
                     Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
                 }
                 catch (Exception ex)
@@ -266,7 +266,7 @@ namespace TheMatchaClubApp.Forms
         private void DrawReceiptOnGraphics(Graphics g, Rectangle bounds)
         {
             var settings = Program.DataService.Settings;
-            float renderedHeight = Core.ReceiptRenderer.Render(g, bounds, _order, settings);
+            float renderedHeight = ReceiptRenderer.Render(g, bounds, _order, settings, Program.GetCurrentCashierName());
 
             // Resize preview panel to fit
             if (renderedHeight + 30 > pnlReceiptPreview.Height)

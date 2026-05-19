@@ -1,3 +1,4 @@
+using TheMatchaClub.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,7 +9,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using System.IO;
@@ -516,7 +517,7 @@ namespace TheMatchaClubApp.Forms
                 string filePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
 
                 var settings = Program.DataService.Settings;
-                Core.ReceiptPdfGenerator.Generate(order, settings, filePath);
+                ReceiptPdfGenerator.Generate(order, settings, Program.GetCurrentCashierName(), filePath);
 
                 Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
             }
@@ -529,7 +530,7 @@ namespace TheMatchaClubApp.Forms
         private void DrawReceipt(PrintPageEventArgs e, Order order)
         {
             var settings = Program.DataService.Settings;
-            Core.ReceiptRenderer.Render(e.Graphics!, e.PageBounds, order, settings);
+            ReceiptRenderer.Render(e.Graphics!, e.PageBounds, order, settings, Program.GetCurrentCashierName());
             e.HasMorePages = false;
         }
 

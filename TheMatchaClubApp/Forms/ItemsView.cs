@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 using TheMatchaClubApp.Helpers;
 
 namespace TheMatchaClubApp.Forms

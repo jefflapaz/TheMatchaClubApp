@@ -1,10 +1,11 @@
+using TheMatchaClub.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClubApp.Forms
 {
@@ -466,7 +467,7 @@ namespace TheMatchaClubApp.Forms
                 string fileName = $"ZReport_Session_{session.OpenedAt:yyyyMMdd_HHmmss}.pdf";
                 string fullPath = Path.Combine(reportsDir, fileName);
 
-                Helpers.ZReportHelper.GenerateZReportPdf(session, fullPath);
+                ZReportHelper.GenerateZReportPdf(session, fullPath, Program.SessionService, Program.DataService.Settings);
 
                 // Open the PDF automatically
                 var ps = new System.Diagnostics.ProcessStartInfo(fullPath)

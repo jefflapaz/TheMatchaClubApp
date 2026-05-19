@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
 namespace TheMatchaClub.Infrastructure.Data.Configurations
 {
@@ -61,7 +61,13 @@ namespace TheMatchaClub.Infrastructure.Data.Configurations
                 CustomerTierRegularMin = 2,
                 CustomerTierLoyalMin = 8,
                 CustomerTierFrequentMin = 16,
-                CustomerTierFrequentSpend = 7500m
+                CustomerTierFrequentSpend = 7500m,
+                RequirePasswordForDeleteProduct = false,
+                RequirePasswordForDeleteOrder = false,
+                RequirePasswordForCloseSession = false,
+                RequirePasswordForSettings = false,
+                AutoLockMinutes = 0,
+                LastPasswordChangeDate = (DateTime?)null
             });
         }
     }

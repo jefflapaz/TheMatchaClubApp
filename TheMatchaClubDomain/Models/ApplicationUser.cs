@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace TheMatchaClubApp.Core.Models
+namespace TheMatchaClubDomain.Models
 {
     /// <summary>
     /// Extended Identity user for the Matcha Club POS system.

@@ -1,6 +1,6 @@
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
-namespace TheMatchaClubApp.Core
+namespace TheMatchaClub.Services
 {
     /// <summary>
     /// Centralized profit calculation utility.

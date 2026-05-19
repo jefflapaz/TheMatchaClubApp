@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TheMatchaClubApp.Core.Models
+namespace TheMatchaClubDomain.Models
 {
     public class Customer
     {

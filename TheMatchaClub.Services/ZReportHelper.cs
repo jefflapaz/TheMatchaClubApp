@@ -1,21 +1,20 @@
 using System;
 using System.IO;
 using System.Linq;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 using QuestPDF.Helpers;
 using QuestPDF.Fluent;
 using QuestInfrastructure = QuestPDF.Infrastructure;
 
-namespace TheMatchaClubApp.Helpers
+namespace TheMatchaClub.Services
 {
     public static class ZReportHelper
     {
-        public static void GenerateZReportPdf(BusinessSession session, string filePath)
+        public static void GenerateZReportPdf(BusinessSession session, string filePath, SessionService sessionService, StoreSettings settings)
         {
             QuestPDF.Settings.License = QuestInfrastructure.LicenseType.Community;
 
-            var items = Program.SessionService.GetAllItemSales(session.SessionId);
-            var settings = Program.DataService.Settings;
+            var items = sessionService.GetAllItemSales(session.SessionId);
 
             Document.Create(container =>
             {

@@ -1,3 +1,4 @@
+using TheMatchaClub.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -5,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestInfrastructure = QuestPDF.Infrastructure;
@@ -382,7 +383,7 @@ namespace TheMatchaClubApp.Forms
                 using var dlg = new SaveFileDialog { Filter = "PDF (*.pdf)|*.pdf", FileName = $"SessionReport_{_session.OpenedAt:yyyyMMdd}.pdf" };
                 if (dlg.ShowDialog() != DialogResult.OK) return;
 
-                Helpers.ZReportHelper.GenerateZReportPdf(_session, dlg.FileName);
+                ZReportHelper.GenerateZReportPdf(_session, dlg.FileName, Program.SessionService, Program.DataService.Settings);
 
                 MessageBox.Show($"PDF exported successfully:\n{dlg.FileName}", "Export Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

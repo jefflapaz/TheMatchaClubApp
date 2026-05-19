@@ -15,10 +15,13 @@ namespace TheMatchaClub.Infrastructure.Data
         {
             var optionsBuilder = new DbContextOptionsBuilder<MatchaClubDbContext>();
 
-            // Default connection string for local development.
-            // Change "Server" to your SQL Server instance name (e.g., ".\\SQLEXPRESS" or "localhost").
-            optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\MSSQLLocalDB;Database=TheMatchaClubDb;Trusted_Connection=True;");
+            // Default connection string for local development using SQLite.
+            var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+            var appFolder = System.IO.Path.Combine(folder, "TheMatchaClub");
+            System.IO.Directory.CreateDirectory(appFolder);
+            var dbPath = System.IO.Path.Combine(appFolder, "TheMatchaClub.db");
+
+            optionsBuilder.UseSqlite($"Data Source={dbPath}");
 
             return new MatchaClubDbContext(optionsBuilder.Options);
         }

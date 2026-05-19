@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using TheMatchaClubApp.Core.Models;
+using TheMatchaClubDomain.Models;
 
-namespace TheMatchaClubApp.Core.Services
+namespace TheMatchaClub.Services
 {
     public class JsonDataService
     {

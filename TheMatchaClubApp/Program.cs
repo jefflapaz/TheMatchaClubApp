@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TheMatchaClubApp.Core.Models;
-using TheMatchaClubApp.Core.Services;
+using TheMatchaClubDomain.Models;
+using TheMatchaClub.Services;
 
 namespace TheMatchaClubApp
 {
@@ -54,8 +54,18 @@ namespace TheMatchaClubApp
         /// Connection string for the local SQL Server database.
         /// Uses the same database as the Infrastructure layer.
         /// </summary>
-        private const string ConnectionString =
-            "Server=(localdb)\\MSSQLLocalDB;Database=TheMatchaClubDb;Trusted_Connection=True;";
+        public static string DatabasePath
+        {
+            get
+            {
+                var folder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                var appFolder = System.IO.Path.Combine(folder, "TheMatchaClub");
+                System.IO.Directory.CreateDirectory(appFolder);
+                return System.IO.Path.Combine(appFolder, "TheMatchaClub.db");
+            }
+        }
+
+        public static string ConnectionString => $"Data Source={DatabasePath}";
 
         /// <summary>
         ///  The main entry point for the application.
@@ -113,7 +123,7 @@ namespace TheMatchaClubApp
 
             // Register the auth-only DbContext with SQL Server
             services.AddDbContext<AuthDbContext>(options =>
-                options.UseSqlServer(ConnectionString));
+                options.UseSqlite(ConnectionString));
 
             // Register ASP.NET Identity with our custom ApplicationUser
             // This sets up UserManager<ApplicationUser>, RoleManager<IdentityRole>,

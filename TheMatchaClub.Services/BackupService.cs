@@ -5,11 +5,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TheMatchaClubApp.Core;
-using TheMatchaClubApp.Core.Models;
-using TheMatchaClubApp.Core.Services;
-
-namespace TheMatchaClubApp.Helpers
+using TheMatchaClubDomain.Models;
+namespace TheMatchaClub.Services
 {
     /// <summary>
     /// Provides local CSV export, full ZIP backup, and restore functionality.
