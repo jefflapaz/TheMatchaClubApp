@@ -784,6 +784,19 @@ namespace TheMatchaClubApp.Forms
             });
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.P))
+            {
+                if (GetSelectedOrder() != null)
+                {
+                    BtnPrintReceipt_Click(this, EventArgs.Empty);
+                    return true;
+                }
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing) components?.Dispose();

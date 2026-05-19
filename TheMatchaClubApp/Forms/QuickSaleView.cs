@@ -1039,6 +1039,19 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.Enter))
+            {
+                if (btnCompleteSale.Enabled && pnlProductGrid.Enabled)
+                {
+                    BtnCompleteSale_Click(btnCompleteSale, EventArgs.Empty);
+                    return true;
+                }
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing) components?.Dispose();

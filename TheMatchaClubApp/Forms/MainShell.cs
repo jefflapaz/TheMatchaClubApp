@@ -248,6 +248,26 @@ namespace TheMatchaClubApp.Forms
             return false;
         }
 
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.F1:
+                    NavQuickSale_Click(this, EventArgs.Empty);
+                    return true;
+                case Keys.F2:
+                    NavOrders_Click(this, EventArgs.Empty);
+                    return true;
+                case Keys.F5:
+                    NavDashboard_Click(this, EventArgs.Empty);
+                    return true;
+                case Keys.F12:
+                    this.Close(); // Logs out / closes the terminal
+                    return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             Application.RemoveMessageFilter(this);

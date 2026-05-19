@@ -20,6 +20,25 @@ namespace TheMatchaClubApp.Forms
             InitializeComponent();
             DoubleBuffered = true;
             InitializeDesign();
+
+            // Keyboard shortcuts for smoother login flow
+            txtEmail.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    txtPassword.Focus();
+                }
+            };
+
+            txtPassword.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    BtnSignIn_Click(btnSignIn, EventArgs.Empty);
+                }
+            };
         }
     }
 }
