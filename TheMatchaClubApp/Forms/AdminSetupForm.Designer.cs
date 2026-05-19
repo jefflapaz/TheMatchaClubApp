@@ -267,7 +267,7 @@ namespace TheMatchaClubApp.Forms
             btnCreateAccount.Name = "btnCreateAccount";
             btnCreateAccount.Size = new Size(523, 65);
             btnCreateAccount.TabIndex = 15;
-            btnCreateAccount.Text = "Create Admin Account & Continue";
+            btnCreateAccount.Text = "Create Admin Account && Continue";
 
             // ─── AdminSetupForm ────────────────────────────────────
             AutoScaleDimensions = new SizeF(8F, 20F);

@@ -163,7 +163,7 @@ namespace TheMatchaClubApp.Forms
                 if (!AccountCreated)
                 {
                     btnCreateAccount.Enabled = true;
-                    btnCreateAccount.Text = "Create Admin Account & Continue";
+                    btnCreateAccount.Text = "Create Admin Account && Continue";
                 }
             }
         }
