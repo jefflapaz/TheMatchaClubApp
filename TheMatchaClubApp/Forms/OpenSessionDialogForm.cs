@@ -12,10 +12,10 @@ namespace TheMatchaClubApp.Forms
         {
             InitializeComponent();
 
-            lblCashierVal.Text = cashierName;
-            lblDateTimeVal.Text = DateTime.Now.ToString("MMM dd, yyyy \u2014 h:mm tt");
+            lblCashierVal!.Text = cashierName;
+            lblDateTimeVal!.Text = DateTime.Now.ToString("MMM dd, yyyy \u2014 h:mm tt");
             
-            txtStartingCash.Text = $"₱{defaultCash:#,##0.00}";
+            txtStartingCash!.Text = $"₱{defaultCash:#,##0.00}";
             StartingCash = defaultCash;
 
             WireEvents();

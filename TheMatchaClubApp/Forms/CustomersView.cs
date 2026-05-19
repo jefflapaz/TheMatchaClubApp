@@ -523,7 +523,7 @@ namespace TheMatchaClubApp.Forms
                 if (c.Tag?.ToString() == "MonthHeader")
                 {
                     // Check if it's within the top visible region
-                    Point p = c.Parent.PointToScreen(c.Location);
+                    Point p = c.Parent!.PointToScreen(c.Location);
                     Point pnl = flpCalendarDays.PointToScreen(Point.Empty);
                     
                     if (p.Y >= pnl.Y && p.Y < pnl.Y + 100)
@@ -540,9 +540,9 @@ namespace TheMatchaClubApp.Forms
 
         private void DgvHistory_CellContentClick(object? sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0 && e.ColumnIndex == dgvHistory.Columns["Action"].Index)
+            if (e.RowIndex >= 0 && dgvHistory.Columns["Action"] != null && e.ColumnIndex == dgvHistory.Columns["Action"]!.Index)
             {
-                string orderId = dgvHistory.Rows[e.RowIndex].Cells["OrderId"].Value.ToString() ?? "";
+                string orderId = dgvHistory.Rows[e.RowIndex].Cells["OrderId"].Value?.ToString() ?? "";
                 var order = Program.DataService.Orders.FirstOrDefault(o => o.OrderId == orderId);
                 if (order != null)
                 {

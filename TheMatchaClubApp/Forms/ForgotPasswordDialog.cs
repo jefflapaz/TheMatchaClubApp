@@ -44,7 +44,7 @@ namespace TheMatchaClubApp.Forms
         {
             _serviceProvider = serviceProvider;
             InitializeDesign();
-            ShowPanel(pnlIdentify);
+            ShowPanel(pnlIdentify!);
         }
 
         private void InitializeDesign()
@@ -284,7 +284,7 @@ namespace TheMatchaClubApp.Forms
                     lblResetError.Visible = true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 lblResetError.Text = "Error updating password.";
                 lblResetError.Visible = true;
