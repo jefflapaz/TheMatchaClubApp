@@ -437,7 +437,7 @@ namespace TheMatchaClubApp.Forms
             var card = new ProductCard
             {
                 ProductData = product,
-                Size = new Size(136, 170), // Denser grid
+                Size = new Size(160, 190), // Match the original design size to prevent clipping
                 Margin = new Padding(6)
             };
             card.ProductClicked += (s, p) => AddToCart(p);

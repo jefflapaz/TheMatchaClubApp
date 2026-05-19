@@ -32,7 +32,14 @@ namespace TheMatchaClubApp.Forms
             lblProfilePhone = new System.Windows.Forms.Label();
             btnEmail = new Guna.UI2.WinForms.Guna2Button();
             btnEditProfile = new Guna.UI2.WinForms.Guna2Button();
-            btnExport = new Guna.UI2.WinForms.Guna2Button();
+            btnDeleteCustomer = new Guna.UI2.WinForms.Guna2Button();
+            
+            pnlInlineEdit = new Guna.UI2.WinForms.Guna2Panel();
+            txtEditFirstName = new Guna.UI2.WinForms.Guna2TextBox();
+            txtEditLastName = new Guna.UI2.WinForms.Guna2TextBox();
+            txtEditEmail = new Guna.UI2.WinForms.Guna2TextBox();
+            txtEditPhone = new Guna.UI2.WinForms.Guna2TextBox();
+            btnSaveProfile = new Guna.UI2.WinForms.Guna2Button();
             
             flpKPIs = new System.Windows.Forms.FlowLayoutPanel();
             
@@ -188,39 +195,73 @@ namespace TheMatchaClubApp.Forms
             pnlProfileHeader.Controls.Add(lblProfileName);
             pnlProfileHeader.Controls.Add(lblProfileEmail);
             pnlProfileHeader.Controls.Add(lblProfilePhone);
-            pnlProfileHeader.Controls.Add(btnExport);
             pnlProfileHeader.Controls.Add(btnEditProfile);
+            pnlProfileHeader.Controls.Add(btnDeleteCustomer);
             pnlProfileHeader.Controls.Add(btnEmail);
 
             picProfile.Location = new System.Drawing.Point(0, 0);
             picProfile.Size = new System.Drawing.Size(80, 80);
             picProfile.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
 
-            lblProfileName.Location = new System.Drawing.Point(100, 10);
+            lblProfileName.Location = new System.Drawing.Point(100, 5);
             lblProfileName.AutoSize = true;
 
-            lblProfileEmail.Location = new System.Drawing.Point(100, 45);
+            lblProfileEmail.Location = new System.Drawing.Point(100, 48);
             lblProfileEmail.AutoSize = true;
             lblProfileEmail.BackColor = System.Drawing.Color.Transparent;
 
-            lblProfilePhone.Location = new System.Drawing.Point(100, 65);
+            lblProfilePhone.Location = new System.Drawing.Point(100, 70);
             lblProfilePhone.AutoSize = true;
             lblProfilePhone.BackColor = System.Drawing.Color.Transparent;
 
-            btnExport.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnExport.Location = new System.Drawing.Point(700, 20);
-            btnExport.Size = new System.Drawing.Size(80, 36);
-            btnExport.Text = "Export";
-
             btnEditProfile.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnEditProfile.Location = new System.Drawing.Point(600, 20);
+            btnEditProfile.Location = new System.Drawing.Point(690, 10);
             btnEditProfile.Size = new System.Drawing.Size(90, 36);
-            btnEditProfile.Text = "Edit Profile";
+            btnEditProfile.Text = "Edit";
+
+            btnDeleteCustomer.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnDeleteCustomer.Location = new System.Drawing.Point(690, 52);
+            btnDeleteCustomer.Size = new System.Drawing.Size(90, 36);
+            btnDeleteCustomer.Text = "Delete";
 
             btnEmail.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnEmail.Location = new System.Drawing.Point(510, 20);
+            btnEmail.Location = new System.Drawing.Point(600, 10);
             btnEmail.Size = new System.Drawing.Size(80, 36);
             btnEmail.Text = "Email";
+            
+            // Inline Edit Panel
+            pnlInlineEdit.Location = new System.Drawing.Point(280, 10);
+            pnlInlineEdit.Size = new System.Drawing.Size(400, 80);
+            pnlInlineEdit.Visible = false;
+            pnlInlineEdit.BackColor = System.Drawing.Color.Transparent;
+            
+            txtEditFirstName.Location = new System.Drawing.Point(0, 5);
+            txtEditFirstName.Size = new System.Drawing.Size(140, 32);
+            txtEditFirstName.PlaceholderText = "First Name";
+            
+            txtEditLastName.Location = new System.Drawing.Point(150, 5);
+            txtEditLastName.Size = new System.Drawing.Size(140, 32);
+            txtEditLastName.PlaceholderText = "Last Name";
+            
+            txtEditEmail.Location = new System.Drawing.Point(0, 42);
+            txtEditEmail.Size = new System.Drawing.Size(140, 32);
+            txtEditEmail.PlaceholderText = "Email Address";
+            
+            txtEditPhone.Location = new System.Drawing.Point(150, 42);
+            txtEditPhone.Size = new System.Drawing.Size(140, 32);
+            txtEditPhone.PlaceholderText = "Phone Number";
+            
+            btnSaveProfile.Location = new System.Drawing.Point(300, 20);
+            btnSaveProfile.Size = new System.Drawing.Size(80, 40);
+            btnSaveProfile.Text = "Save";
+            
+            pnlInlineEdit.Controls.Add(txtEditFirstName);
+            pnlInlineEdit.Controls.Add(txtEditLastName);
+            pnlInlineEdit.Controls.Add(txtEditEmail);
+            pnlInlineEdit.Controls.Add(txtEditPhone);
+            pnlInlineEdit.Controls.Add(btnSaveProfile);
+            
+            pnlProfileHeader.Controls.Add(pnlInlineEdit);
 
             // KPIs
             flpKPIs.Dock = System.Windows.Forms.DockStyle.Top;
@@ -400,7 +441,14 @@ namespace TheMatchaClubApp.Forms
         private System.Windows.Forms.Label lblProfilePhone;
         private Guna.UI2.WinForms.Guna2Button btnEmail;
         private Guna.UI2.WinForms.Guna2Button btnEditProfile;
-        private Guna.UI2.WinForms.Guna2Button btnExport;
+        private Guna.UI2.WinForms.Guna2Button btnDeleteCustomer;
+        
+        private Guna.UI2.WinForms.Guna2Panel pnlInlineEdit;
+        private Guna.UI2.WinForms.Guna2TextBox txtEditFirstName;
+        private Guna.UI2.WinForms.Guna2TextBox txtEditLastName;
+        private Guna.UI2.WinForms.Guna2TextBox txtEditEmail;
+        private Guna.UI2.WinForms.Guna2TextBox txtEditPhone;
+        private Guna.UI2.WinForms.Guna2Button btnSaveProfile;
         
         private System.Windows.Forms.FlowLayoutPanel flpKPIs;
         

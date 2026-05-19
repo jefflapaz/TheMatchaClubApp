@@ -157,6 +157,7 @@ namespace TheMatchaClubApp.Forms
             }
             chkReqPassDeleteProduct.Checked = s.RequirePasswordForDeleteProduct;
             chkReqPassDeleteOrder.Checked = s.RequirePasswordForDeleteOrder;
+            chkReqPassDeleteCustomer.Checked = s.RequirePasswordForDeleteCustomer;
             chkReqPassCloseSession.Checked = s.RequirePasswordForCloseSession;
             chkReqPassSettings.Checked = s.RequirePasswordForSettings;
             
@@ -215,6 +216,7 @@ namespace TheMatchaClubApp.Forms
             // Security Settings
             s.RequirePasswordForDeleteProduct = chkReqPassDeleteProduct.Checked;
             s.RequirePasswordForDeleteOrder = chkReqPassDeleteOrder.Checked;
+            s.RequirePasswordForDeleteCustomer = chkReqPassDeleteCustomer.Checked;
             s.RequirePasswordForCloseSession = chkReqPassCloseSession.Checked;
             s.RequirePasswordForSettings = chkReqPassSettings.Checked;
 

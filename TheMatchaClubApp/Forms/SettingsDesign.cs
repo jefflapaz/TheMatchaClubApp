@@ -352,7 +352,7 @@ namespace TheMatchaClubApp.Forms
             var cardExport = new Guna2Panel
             {
                 Location = new Point(24, 8),
-                Size = new Size(720, 220),
+                Size = new Size(720, 240),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             StyleSettingsCard(cardExport);
@@ -370,8 +370,8 @@ namespace TheMatchaClubApp.Forms
             };
 
             btnExportSales = CreateExportButton("📊  Export Sales CSV", new Point(24, 80));
-            btnExportCustomers = CreateExportButton("👥  Export Customers CSV", new Point(24, 130));
             btnExportProducts = CreateExportButton("📦  Export Products CSV", new Point(260, 80));
+            btnExportCustomers = CreateExportButton("👥  Export Customers CSV", new Point(24, 140));
 
             // Record counts
             var lblSalesCount = new Label
@@ -380,25 +380,24 @@ namespace TheMatchaClubApp.Forms
                 Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
                 Location = new Point(24, 118), AutoSize = true, BackColor = Color.Transparent
             };
-            var lblCustCount = new Label
-            {
-                Text = $"{Program.DataService.Customers.Count} customers available",
-                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
-                Location = new Point(24, 168), AutoSize = true, BackColor = Color.Transparent
-            };
             var lblProdCount = new Label
             {
                 Text = $"{Program.DataService.Products.Count} products available",
                 Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
                 Location = new Point(260, 118), AutoSize = true, BackColor = Color.Transparent
             };
+            var lblCustCount = new Label
+            {
+                Text = $"{Program.DataService.Customers.Count} customers available",
+                Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
+                Location = new Point(24, 178), AutoSize = true, BackColor = Color.Transparent
+            };
 
-            // Export folder info
             var lblExportFolder = new Label
             {
                 Text = $"📁 Export folder: Documents/MatchaPOS/Exports",
                 Font = new Font("Segoe UI", 7.5F), ForeColor = STextMuted,
-                Location = new Point(24, 192), AutoSize = true, BackColor = Color.Transparent
+                Location = new Point(24, 208), AutoSize = true, BackColor = Color.Transparent
             };
 
             cardExport.Controls.AddRange(new Control[] {
@@ -410,7 +409,7 @@ namespace TheMatchaClubApp.Forms
             // ── Card 2: Backup System ──
             var cardBackup = new Guna2Panel
             {
-                Location = new Point(24, 244),
+                Location = new Point(24, 264),
                 Size = new Size(720, 180),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
@@ -479,7 +478,7 @@ namespace TheMatchaClubApp.Forms
             // ── Card 3: Backup Information ──
             var cardInfo = new Guna2Panel
             {
-                Location = new Point(24, 440),
+                Location = new Point(24, 460),
                 Size = new Size(720, 200),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
@@ -597,7 +596,7 @@ namespace TheMatchaClubApp.Forms
             var cardAction = new Guna2Panel
             {
                 Location = new Point(24, 260),
-                Size = new Size(720, 150),
+                Size = new Size(720, 256),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
             StyleSettingsCard(cardAction);
@@ -609,21 +608,24 @@ namespace TheMatchaClubApp.Forms
             chkReqPassDeleteProduct = new Guna2ToggleSwitch { Location = new Point(24, 76) }; StyleToggle(chkReqPassDeleteProduct);
             var lblReqPassDelProd = new Label { Text = "Require password before deleting products", Location = new Point(70, 78), AutoSize = true }; StyleToggleLabel(lblReqPassDelProd);
             
-            chkReqPassDeleteOrder = new Guna2ToggleSwitch { Location = new Point(360, 76) }; StyleToggle(chkReqPassDeleteOrder);
-            var lblReqPassDelOrder = new Label { Text = "Require password before deleting orders", Location = new Point(406, 78), AutoSize = true }; StyleToggleLabel(lblReqPassDelOrder);
+            chkReqPassDeleteOrder = new Guna2ToggleSwitch { Location = new Point(24, 110) }; StyleToggle(chkReqPassDeleteOrder);
+            var lblReqPassDelOrder = new Label { Text = "Require password before deleting orders", Location = new Point(70, 112), AutoSize = true }; StyleToggleLabel(lblReqPassDelOrder);
 
-            chkReqPassCloseSession = new Guna2ToggleSwitch { Location = new Point(24, 110) }; StyleToggle(chkReqPassCloseSession);
-            var lblReqPassCloseSess = new Label { Text = "Require password before closing session", Location = new Point(70, 112), AutoSize = true }; StyleToggleLabel(lblReqPassCloseSess);
+            chkReqPassDeleteCustomer = new Guna2ToggleSwitch { Location = new Point(24, 144) }; StyleToggle(chkReqPassDeleteCustomer);
+            var lblReqPassDelCust = new Label { Text = "Require password before deleting customers", Location = new Point(70, 146), AutoSize = true }; StyleToggleLabel(lblReqPassDelCust);
+
+            chkReqPassCloseSession = new Guna2ToggleSwitch { Location = new Point(24, 178) }; StyleToggle(chkReqPassCloseSession);
+            var lblReqPassCloseSess = new Label { Text = "Require password before closing session", Location = new Point(70, 180), AutoSize = true }; StyleToggleLabel(lblReqPassCloseSess);
             
-            chkReqPassSettings = new Guna2ToggleSwitch { Location = new Point(360, 110) }; StyleToggle(chkReqPassSettings);
-            var lblReqPassSet = new Label { Text = "Require password before accessing Settings", Location = new Point(406, 112), AutoSize = true }; StyleToggleLabel(lblReqPassSet);
+            chkReqPassSettings = new Guna2ToggleSwitch { Location = new Point(24, 212) }; StyleToggle(chkReqPassSettings);
+            var lblReqPassSet = new Label { Text = "Require password before accessing Settings", Location = new Point(70, 214), AutoSize = true }; StyleToggleLabel(lblReqPassSet);
 
-            cardAction.Controls.AddRange(new Control[] { chkReqPassDeleteProduct, lblReqPassDelProd, chkReqPassDeleteOrder, lblReqPassDelOrder, chkReqPassCloseSession, lblReqPassCloseSess, chkReqPassSettings, lblReqPassSet });
+            cardAction.Controls.AddRange(new Control[] { chkReqPassDeleteProduct, lblReqPassDelProd, chkReqPassDeleteOrder, lblReqPassDelOrder, chkReqPassDeleteCustomer, lblReqPassDelCust, chkReqPassCloseSession, lblReqPassCloseSess, chkReqPassSettings, lblReqPassSet });
 
             // ── Card 3: Session Protection & Activity ──
             var cardSession = new Guna2Panel
             {
-                Location = new Point(24, 422),
+                Location = new Point(24, 532),
                 Size = new Size(720, 140),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
             };
@@ -723,6 +725,7 @@ namespace TheMatchaClubApp.Forms
         internal Guna2Button btnChangePassword = null!;
         internal Guna2ToggleSwitch chkReqPassDeleteProduct = null!;
         internal Guna2ToggleSwitch chkReqPassDeleteOrder = null!;
+        internal Guna2ToggleSwitch chkReqPassDeleteCustomer = null!;
         internal Guna2ToggleSwitch chkReqPassCloseSession = null!;
         internal Guna2ToggleSwitch chkReqPassSettings = null!;
         internal Guna2ComboBox cmbAutoLock = null!;

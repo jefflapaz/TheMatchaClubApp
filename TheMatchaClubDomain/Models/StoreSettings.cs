@@ -44,6 +44,7 @@ namespace TheMatchaClubDomain.Models
         // ── Security Settings ───────────────────────────────────────
         public bool RequirePasswordForDeleteProduct { get; set; } = false;
         public bool RequirePasswordForDeleteOrder { get; set; } = false;
+        public bool RequirePasswordForDeleteCustomer { get; set; } = false;
         public bool RequirePasswordForCloseSession { get; set; } = false;
         public bool RequirePasswordForSettings { get; set; } = false;
         public int AutoLockMinutes { get; set; } = 0; // 0 = Never

@@ -81,6 +81,9 @@ namespace TheMatchaClubApp.Forms
             
             dgvHistory.CellContentClick += DgvHistory_CellContentClick;
             btnSaveNote.Click += BtnSaveNote_Click;
+            btnEditProfile.Click += BtnEditProfile_Click;
+            btnSaveProfile.Click += BtnSaveProfile_Click;
+            btnDeleteCustomer.Click += BtnDeleteCustomer_Click;
             
             btnCalendarClose.Click += (s, e) => pnlCalendarPopup.Visible = false;
             
@@ -275,6 +278,10 @@ namespace TheMatchaClubApp.Forms
         {
             _currentCustomer = c;
             pnlCalendarPopup.Visible = false;
+            pnlInlineEdit.Visible = false; // Hide edit panel on new selection
+            lblProfileName.Visible = true;
+            lblProfileEmail.Visible = true;
+            lblProfilePhone.Visible = true;
             PopulateProfile(c);
         }
 
@@ -576,6 +583,108 @@ namespace TheMatchaClubApp.Forms
             }
         }
 
+        private void BtnEditProfile_Click(object? sender, EventArgs e)
+        {
+            if (_currentCustomer == null) return;
+            
+            // Split name into first and last
+            var nameParts = _currentCustomer.Name.Split(new[] { ' ' }, 2);
+            txtEditFirstName.Text = nameParts.Length > 0 ? nameParts[0] : "";
+            txtEditLastName.Text = nameParts.Length > 1 ? nameParts[1] : "";
+            
+            txtEditEmail.Text = _currentCustomer.Email;
+            txtEditPhone.Text = _currentCustomer.Phone;
+            
+            lblProfileName.Visible = false;
+            lblProfileEmail.Visible = false;
+            lblProfilePhone.Visible = false;
+            pnlInlineEdit.Visible = true;
+        }
+
+        private async void BtnSaveProfile_Click(object? sender, EventArgs e)
+        {
+            if (_currentCustomer == null) return;
+            
+            string newName = $"{txtEditFirstName.Text.Trim()} {txtEditLastName.Text.Trim()}".Trim();
+            if (string.IsNullOrEmpty(newName))
+            {
+                MessageBox.Show("First Name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            _currentCustomer.Name = newName;
+            _currentCustomer.Email = txtEditEmail.Text.Trim();
+            _currentCustomer.Phone = txtEditPhone.Text.Trim();
+            
+            try
+            {
+                await Program.DataService.SaveCustomersAsync();
+                
+                // Update UI
+                PopulateProfile(_currentCustomer);
+                
+                // Re-show labels, hide edit panel
+                lblProfileName.Visible = true;
+                lblProfileEmail.Visible = true;
+                lblProfilePhone.Visible = true;
+                pnlInlineEdit.Visible = false;
+                
+                // Refresh directory to reflect name changes
+                LoadDirectory();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to save profile: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void BtnDeleteCustomer_Click(object? sender, EventArgs e)
+        {
+            if (_currentCustomer == null) return;
+
+            if (Program.DataService.Settings.RequirePasswordForDeleteCustomer)
+            {
+                using var authDialog = new PasswordPromptDialog("Enter password to delete this customer.");
+                if (authDialog.ShowDialog(this.FindForm()) != DialogResult.OK) return;
+            }
+
+            var result = MessageBox.Show(
+                $"Are you sure you want to permanently delete '{_currentCustomer.Name}'?\nThis action cannot be undone.",
+                "Confirm Delete",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    Program.DataService.Customers.Remove(_currentCustomer);
+                    await Program.DataService.SaveCustomersAsync();
+
+                    _currentCustomer = null;
+                    
+                    // Refresh directory
+                    txtSearch.Text = "";
+                    SetFilter("All");
+                    LoadDirectory();
+                    
+                    // Clear profile pane or select first
+                    var firstCustomer = Program.DataService.Customers.FirstOrDefault();
+                    if (firstCustomer != null)
+                    {
+                        SelectCustomer(firstCustomer);
+                    }
+                    else
+                    {
+                        pnlProfile.Visible = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to delete customer: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
 
         private void FilterPurchaseHistory()
         {

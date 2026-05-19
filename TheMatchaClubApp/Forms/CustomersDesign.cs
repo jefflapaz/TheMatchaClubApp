@@ -78,8 +78,19 @@ namespace TheMatchaClubApp.Forms
             lblProfilePhone.ForeColor = CTextSecondary;
 
             StyleOutlineButton(btnEmail);
+            
+            // Inline edit fields
+            StyleEditField(txtEditFirstName);
+            StyleEditField(txtEditLastName);
+            StyleEditField(txtEditEmail);
+            StyleEditField(txtEditPhone);
+            
+            btnSaveProfile.FillColor = CGreen;
+            btnSaveProfile.ForeColor = Color.White;
+            btnSaveProfile.BorderRadius = 6;
+            btnSaveProfile.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             StyleOutlineButton(btnEditProfile);
-            StyleOutlineButton(btnExport);
+            StyleDangerOutlineButton(btnDeleteCustomer);
 
             lblHistoryTitle.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             lblHistoryTitle.ForeColor = CTextPrimary;
@@ -197,10 +208,27 @@ namespace TheMatchaClubApp.Forms
             btn.FillColor = CCardBg;
             btn.ForeColor = CTextPrimary;
             btn.BorderColor = CBorderLight;
-            btn.BorderThickness = 1;
             btn.BorderRadius = 6;
             btn.Font = new Font("Segoe UI Semibold", 9F);
         }
 
+        private void StyleEditField(Guna.UI2.WinForms.Guna2TextBox txt)
+        {
+            txt.BorderRadius = 6;
+            txt.FillColor = CCardBg;
+            txt.PlaceholderForeColor = CTextMuted;
+            txt.Font = new Font("Segoe UI", 8.5F);
+            txt.BorderColor = CBorderLight;
+            txt.ForeColor = CTextBody;
+        }
+
+        private void StyleDangerOutlineButton(Guna.UI2.WinForms.Guna2Button btn)
+        {
+            btn.FillColor = CCardBg;
+            btn.ForeColor = ColorTranslator.FromHtml("#EF4444");
+            btn.BorderColor = ColorTranslator.FromHtml("#FCA5A5");
+            btn.BorderRadius = 6;
+            btn.Font = new Font("Segoe UI Semibold", 9F);
+        }
     }
 }

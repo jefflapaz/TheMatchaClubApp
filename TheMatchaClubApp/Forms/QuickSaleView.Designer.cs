@@ -146,9 +146,9 @@ namespace TheMatchaClubApp.Forms
             pnlProductGrid.Controls.Add(flpProducts);
             pnlProductGrid.Dock = System.Windows.Forms.DockStyle.Fill;
 
-            flpProducts.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
+            flpProducts.Dock = System.Windows.Forms.DockStyle.Fill;
             flpProducts.Location = new System.Drawing.Point(0, 0);
-            flpProducts.Size = new System.Drawing.Size(624, 500); // 20px wider than parent (604)
+            flpProducts.Size = new System.Drawing.Size(604, 500);
             flpProducts.WrapContents = true;
             flpProducts.AutoScroll = true;
             flpProducts.Padding = new System.Windows.Forms.Padding(12, 12, 20, 12);
