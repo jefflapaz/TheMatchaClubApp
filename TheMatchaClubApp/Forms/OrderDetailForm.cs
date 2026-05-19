@@ -108,7 +108,8 @@ namespace TheMatchaClubApp.Forms
                 try
                 {
                     var doc = new PrintDocument();
-                    doc.DefaultPageSettings.PaperSize = new PaperSize("Receipt", 300, 800);
+                    int paperWidth = Program.DataService.Settings.ReceiptPaperWidth == "58mm" ? 228 : 315;
+                    doc.DefaultPageSettings.PaperSize = new PaperSize("Receipt", paperWidth, 800);
                     doc.PrintPage += (ps, pe) => DrawReceiptOnGraphics(pe!.Graphics!, pe.PageBounds);
                     var dlg = new PrintPreviewDialog { Document = doc, Width = 500, Height = 700 };
                     dlg.ShowDialog(this);

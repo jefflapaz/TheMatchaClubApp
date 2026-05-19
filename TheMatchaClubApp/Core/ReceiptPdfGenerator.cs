@@ -20,7 +20,8 @@ namespace TheMatchaClubApp.Core
             {
                 container.Page(page =>
                 {
-                    page.Size(PageSizes.A6);
+                    float widthMm = settings.ReceiptPaperWidth == "58mm" ? 58f : 80f;
+                    page.Size(widthMm, 297f, Unit.Millimetre);
                     page.Margin(0.5f, Unit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.Verdana));

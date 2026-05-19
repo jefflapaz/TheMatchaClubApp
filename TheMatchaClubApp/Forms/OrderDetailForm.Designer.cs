@@ -152,7 +152,7 @@ namespace TheMatchaClubApp.Forms
             pnlPaymentCard.Controls.AddRange(new Control[] { lblPaymentTitle, lblPaymentMethod, lblCashTendered, lblChangeGiven });
 
             // Order Info Card
-            pnlOrderInfoCard = new Panel { Location = new System.Drawing.Point(616, 130), Size = new System.Drawing.Size(280, 130), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, BackColor = System.Drawing.Color.White };
+            pnlOrderInfoCard = new Panel { Location = new System.Drawing.Point(616, 130), Size = new System.Drawing.Size(280, 130), Anchor = AnchorStyles.Top | AnchorStyles.Left, BackColor = System.Drawing.Color.White };
             lblOrderInfoTitle = new Label { Text = "ORDER INFO", Font = new System.Drawing.Font("Segoe UI", 7.5F, System.Drawing.FontStyle.Bold), ForeColor = System.Drawing.ColorTranslator.FromHtml("#9CA3AF"), Location = new System.Drawing.Point(16, 14), AutoSize = true };
             lblOrderType = new Label { Text = "Dine-In", Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold), ForeColor = System.Drawing.ColorTranslator.FromHtml("#111827"), Location = new System.Drawing.Point(16, 38), AutoSize = true };
             lblCashier = new Label { Text = "Cashier: Admin", Font = new System.Drawing.Font("Segoe UI", 9F), ForeColor = System.Drawing.ColorTranslator.FromHtml("#6B7280"), Location = new System.Drawing.Point(16, 64), AutoSize = true };
@@ -160,7 +160,7 @@ namespace TheMatchaClubApp.Forms
             pnlOrderInfoCard.Controls.AddRange(new Control[] { lblOrderInfoTitle, lblOrderType, lblCashier, lblTimestamp });
 
             // Items Grid Card
-            pnlItemsCard = new Panel { Location = new System.Drawing.Point(32, 276), Size = new System.Drawing.Size(864, 300), Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, BackColor = System.Drawing.Color.White };
+            pnlItemsCard = new Panel { Location = new System.Drawing.Point(32, 276), Size = new System.Drawing.Size(864, 300), Anchor = AnchorStyles.Top | AnchorStyles.Left, BackColor = System.Drawing.Color.White };
             var lblItemsTitle = new Label { Text = "ORDER ITEMS", Font = new System.Drawing.Font("Segoe UI", 7.5F, System.Drawing.FontStyle.Bold), ForeColor = System.Drawing.ColorTranslator.FromHtml("#9CA3AF"), Location = new System.Drawing.Point(16, 14), AutoSize = true };
 
             dgvItems = new DataGridView
