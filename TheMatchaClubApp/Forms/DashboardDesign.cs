@@ -61,8 +61,9 @@ namespace TheMatchaClubApp.Forms
                 e.Graphics.FillEllipse(b, 8, 8, 6, 6); 
             };
             lblStoreStatus.Font = new Font("Segoe UI", 7F, FontStyle.Bold); lblStoreStatus.ForeColor = Green; lblStoreStatus.BackColor = Color.Transparent;
+            lblDate.AutoSize = true;
             lblDate.Font = new Font("Segoe UI", 9F); lblDate.ForeColor = TextBody; lblDate.BackColor = Color.Transparent;
-            lblDate.Text = "📅 " + DateTime.Now.ToString("M/d/yyyy");
+            lblDate.Text = "📅 " + DateTime.Now.ToString("MM/dd/yyyy");
             btnNotification.FillColor = Color.Transparent; btnNotification.ForeColor = TextBody; btnNotification.BorderThickness = 0;
             btnNotification.Font = new Font("Segoe UI", 12F); btnNotification.HoverState.FillColor = BorderCard;
             picAvatar.SizeMode = PictureBoxSizeMode.StretchImage; picAvatar.BackColor = Color.Transparent;
@@ -71,14 +72,22 @@ namespace TheMatchaClubApp.Forms
             // ── Quick Actions (PRIMARY → SECONDARY → TERTIARY) ────
             pnlQuickActions.BackColor = Color.Transparent;
             StyleActionBtn(btnQuickNewSale, Green, true);
-            btnQuickNewSale.Size = new Size(140, 32);
+            btnQuickNewSale.Size = new Size(130, 32);
             btnQuickNewSale.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            
             StyleActionBtn(btnQuickOpenSession, Green, false);
+            btnQuickOpenSession.Size = new Size(150, 32);
+            
             StyleActionBtn(btnQuickCloseSession, Orange, false);
+            btnQuickCloseSession.Size = new Size(150, 32);
+            
             StyleActionBtn(btnQuickReports, Purple, false);
+            btnQuickReports.Size = new Size(150, 32);
+            
             // Tertiary: muted fill, subtle text
             btnQuickAddProduct.BorderRadius = 8;
             btnQuickAddProduct.Font = new Font("Segoe UI", 8.5F, FontStyle.Bold);
+            btnQuickAddProduct.Size = new Size(170, 32); // Increased width to prevent "Add Product" text wrapping
             btnQuickAddProduct.FillColor = ColorTranslator.FromHtml("#F3F4F6");
             btnQuickAddProduct.ForeColor = TextSecondary;
             btnQuickAddProduct.BorderThickness = 0;
@@ -93,6 +102,17 @@ namespace TheMatchaClubApp.Forms
                 int idx = i;
                 card.Paint += (s, e) => PaintCardIcon(e.Graphics, idx);
             }
+
+            lblCard6Value.TextChanged += (s, e) =>
+            {
+                string txt = lblCard6Value.Text;
+                if (txt.Length > 20)
+                    lblCard6Value.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+                else if (txt.Length > 12)
+                    lblCard6Value.Font = new Font("Segoe UI", 13F, FontStyle.Bold);
+                else
+                    lblCard6Value.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            };
 
             // ── Analytics Panels ──────────────────────────────────
             StyleAnalyticsPanel(pnlHourlySales, lblHourlySalesTitle);
@@ -186,9 +206,9 @@ namespace TheMatchaClubApp.Forms
                 int row = i / 4, col = i % 4;
                 cards[i].card.Location = new Point(m + col * (cardW + gap), kpiY + row * (cardH + gap));
                 cards[i].card.Size = new Size(cardW, cardH);
-                cards[i].title.Location = new Point(52, 14);
-                cards[i].value.Location = new Point(52, 34);
-                cards[i].value.MaximumSize = new Size(cardW - 64, 32);
+                cards[i].title.Location = new Point(52, 10);
+                cards[i].value.Location = new Point(52, 26);
+                cards[i].value.MaximumSize = new Size(cardW - 60, 42);
             }
 
             // Analytics area
@@ -250,7 +270,7 @@ namespace TheMatchaClubApp.Forms
             int rightEdge = w - 16;
             rightEdge -= 32; picAvatar.Location = new Point(rightEdge, 16);
             rightEdge -= 40; btnNotification.Location = new Point(rightEdge, 16);
-            rightEdge -= 108; lblDate.Location = new Point(rightEdge, 20);
+            rightEdge -= (lblDate.Width + 8); lblDate.Location = new Point(rightEdge, 20);
             rightEdge -= 108; pnlStoreStatus.Location = new Point(rightEdge, 21);
         }
 

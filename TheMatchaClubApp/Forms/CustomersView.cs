@@ -26,7 +26,7 @@ namespace TheMatchaClubApp.Forms
             InitializeComponent();
             InitializeDesign();
 
-            splitContainerMain.SplitterDistance = 350;
+            splitContainerMain.SplitterDistance = 410;
 
             SetupDataGrid();
             WireEvents();

@@ -24,35 +24,28 @@ namespace TheMatchaClubApp.Forms
             pnlContainer.BorderThickness = 0;
             pnlContainer.ShadowDecoration.Enabled = false;
 
-            // Paint pill-style border around qty group
-            pnlContainer.Paint += (s, e) =>
-            {
-                var g = e.Graphics;
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                using var pen = new Pen(BorderColor, 1);
-                var rect = new Rectangle(btnMinus.Left - 1, btnMinus.Top - 1, btnPlus.Right - btnMinus.Left + 2, btnMinus.Height + 2);
-                int radius = 8;
-                using var path = new System.Drawing.Drawing2D.GraphicsPath();
-                path.AddArc(rect.X, rect.Y, radius * 2, radius * 2, 180, 90);
-                path.AddArc(rect.Right - radius * 2, rect.Y, radius * 2, radius * 2, 270, 90);
-                path.AddArc(rect.Right - radius * 2, rect.Bottom - radius * 2, radius * 2, radius * 2, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - radius * 2, radius * 2, radius * 2, 90, 90);
-                path.CloseFigure();
-                g.DrawPath(pen, path);
-            };
-
-            // ── Quantity Controls (pill-style) ──
-            StyleQtyButton(btnMinus, "−");
-            btnMinus.FillColor = Color.White;
-            btnMinus.BorderThickness = 0;
+            // ── Quantity Controls (white circles with dynamic icons) ──
+            StyleQtyButton(btnMinus);
+            btnMinus.Image = CreateMinusImage(TextSecondary);
+            btnMinus.HoverState.Image = CreateMinusImage(Red);
             btnMinus.HoverState.FillColor = ColorTranslator.FromHtml("#FEE2E2");
-            btnMinus.HoverState.ForeColor = Red;
+            btnMinus.HoverState.BorderColor = Red;
+            btnMinus.PressedColor = Color.FromArgb(40, Red);
 
-            StyleQtyButton(btnPlus, "+");
-            btnPlus.FillColor = Color.White;
-            btnPlus.BorderThickness = 0;
+            StyleQtyButton(btnPlus);
+            btnPlus.Image = CreatePlusImage(TextSecondary);
+            btnPlus.HoverState.Image = CreatePlusImage(Green);
             btnPlus.HoverState.FillColor = ColorTranslator.FromHtml("#D1FAE5");
-            btnPlus.HoverState.ForeColor = Green;
+            btnPlus.HoverState.BorderColor = Green;
+            btnPlus.PressedColor = Color.FromArgb(40, Green);
+
+            this.Disposed += (s, e) =>
+            {
+                btnMinus.Image?.Dispose();
+                btnMinus.HoverState.Image?.Dispose();
+                btnPlus.Image?.Dispose();
+                btnPlus.HoverState.Image?.Dispose();
+            };
 
             txtQty.BackColor = Color.White;
             txtQty.FillColor = Color.White;
@@ -96,15 +89,14 @@ namespace TheMatchaClubApp.Forms
             LayoutControls();
         }
 
-        private void StyleQtyButton(Guna2Button btn, string text)
+        private void StyleQtyButton(Guna2Button btn)
         {
-            btn.Text = text;
-            btn.Size = new Size(30, 30);
-            btn.BorderRadius = 0;
+            btn.Text = "";
+            btn.Size = new Size(28, 28);
+            btn.BorderRadius = 14;
             btn.FillColor = Color.White;
-            btn.ForeColor = TextSecondary;
-            btn.BorderThickness = 0;
-            btn.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btn.BorderColor = BorderColor;
+            btn.BorderThickness = 1;
             btn.Cursor = Cursors.Hand;
             btn.ShadowDecoration.Enabled = false;
             btn.Animated = false;
@@ -119,6 +111,16 @@ namespace TheMatchaClubApp.Forms
             int removeW = 30;
             int qtyAreaW = 120; // minus(30) + qty(48) + plus(30) + padding
 
+            // Position and size quantity control elements
+            btnMinus.Size = new Size(28, 28);
+            btnMinus.Location = new Point(8, 12);
+
+            txtQty.Size = new Size(40, 28);
+            txtQty.Location = new Point(36, 12);
+
+            btnPlus.Size = new Size(28, 28);
+            btnPlus.Location = new Point(76, 12);
+
             // Info labels fill available space
             int infoX = qtyAreaW + 4;
             int infoW = Math.Max(40, w - qtyAreaW - totalW - removeW - 16);
@@ -132,6 +134,31 @@ namespace TheMatchaClubApp.Forms
             btnRemove.Size = new Size(removeW, 30);
             lblTotal.Location = new Point(w - totalW, 0);
             lblTotal.Size = new Size(totalW, 52);
+        }
+
+        private static Image CreateMinusImage(Color color)
+        {
+            var bmp = new Bitmap(12, 12);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                using var pen = new Pen(color, 2f);
+                g.DrawLine(pen, 2, 6, 10, 6);
+            }
+            return bmp;
+        }
+
+        private static Image CreatePlusImage(Color color)
+        {
+            var bmp = new Bitmap(12, 12);
+            using (var g = Graphics.FromImage(bmp))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                using var pen = new Pen(color, 2f);
+                g.DrawLine(pen, 2, 6, 10, 6);
+                g.DrawLine(pen, 6, 2, 6, 10);
+            }
+            return bmp;
         }
     }
 }

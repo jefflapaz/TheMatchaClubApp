@@ -8,10 +8,11 @@ namespace TheMatchaClubApp.Forms
 {
     public partial class NavItem
     {
-        private static readonly Color NormalFg = ColorTranslator.FromHtml("#6B7280");
+        private bool _isHovered;
+        private static readonly Color NormalFg = Color.White;
         private static readonly Color ActiveFg = ColorTranslator.FromHtml("#52B743");
-        private static readonly Color HoverBg = ColorTranslator.FromHtml("#F3F4F6");
-        private static readonly Color ActiveBorder = ColorTranslator.FromHtml("#E5E7EB");
+        private static readonly Color HoverBg = Color.White;
+        private static readonly Color ActiveBorder = Color.White;
 
         private void InitializeDesign()
         {
@@ -51,14 +52,24 @@ namespace TheMatchaClubApp.Forms
 
         private void OnHoverEnter(object? s, EventArgs e)
         {
-            if (!_isActive)
-                pnlContainer.FillColor = HoverBg;
+            UpdateHoverState();
         }
 
         private void OnHoverLeave(object? s, EventArgs e)
         {
-            if (!_isActive)
-                pnlContainer.FillColor = Color.Transparent;
+            UpdateHoverState();
+        }
+
+        private void UpdateHoverState()
+        {
+            Point clientMousePos = this.PointToClient(Control.MousePosition);
+            bool isMouseInside = this.ClientRectangle.Contains(clientMousePos);
+
+            if (_isHovered != isMouseInside)
+            {
+                _isHovered = isMouseInside;
+                ApplyState();
+            }
         }
 
         internal void ApplyState()
@@ -75,10 +86,10 @@ namespace TheMatchaClubApp.Forms
             }
             else
             {
-                pnlContainer.FillColor = Color.Transparent;
+                pnlContainer.FillColor = _isHovered ? HoverBg : Color.Transparent;
                 pnlContainer.BorderThickness = 0;
                 pnlContainer.ShadowDecoration.Enabled = false;
-                lblText.ForeColor = NormalFg;
+                lblText.ForeColor = _isHovered ? ActiveFg : NormalFg;
             }
             pnlIcon.Invalidate();
         }
@@ -89,7 +100,7 @@ namespace TheMatchaClubApp.Forms
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            Color iconColor = _isActive ? ActiveFg : NormalFg;
+            Color iconColor = (_isActive || _isHovered) ? ActiveFg : NormalFg;
             using var pen = new Pen(iconColor, 1.6f);
             using var brush = new SolidBrush(iconColor);
 

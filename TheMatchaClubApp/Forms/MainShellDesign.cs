@@ -9,7 +9,7 @@ namespace TheMatchaClubApp.Forms
     public partial class MainShell
     {
         // ── Palette ────────────────────────────────────────────────
-        private static readonly Color SidebarBg = ColorTranslator.FromHtml("#F8F9F8");
+        private static readonly Color SidebarBg = ColorTranslator.FromHtml("#52B743");
         private static readonly Color ContentBg = ColorTranslator.FromHtml("#FAFAFA");
         private static readonly Color BorderLine = ColorTranslator.FromHtml("#E5E7EB");
         private static readonly Color GreenAccent = ColorTranslator.FromHtml("#52B743");
@@ -66,39 +66,45 @@ namespace TheMatchaClubApp.Forms
             pnlSidebar.BackColor = SidebarBg;
             pnlSidebar.Padding = new Padding(0, 32, 0, 0); // Balance with content padding
             pnlSidebar.Paint += PnlSidebar_Paint;
+            pnlSidebar.SizeChanged += (s, e) => ApplySidebarRounding();
 
             // ── Logo header ────────────────────────────────────────
+            pnlLogoHeader.Height = 80;
             pnlLogoHeader.BackColor = SidebarBg;
             pnlLogoHeader.Paint += PnlLogoHeader_Paint;
             pnlLogoHeader.MouseDown += Drag_MouseDown;
             pnlLogoHeader.MouseMove += Drag_MouseMove;
             pnlLogoHeader.MouseUp += Drag_MouseUp;
             pnlLogoHeader.DoubleClick += LogoHeader_DoubleClick;
+            pnlLogoHeader.SizeChanged += (s, e) => ApplySidebarRounding();
 
+            pnlLogoCircle.Size = new Size(40, 40);
+            pnlLogoCircle.Location = new Point(20, 20);
             pnlLogoCircle.BackColor = Color.Transparent;
             pnlLogoCircle.Paint += PnlLogoCircle_Paint;
 
-            lblLogoText.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            lblLogoText.ForeColor = TextDark;
+            lblLogoText.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            lblLogoText.Size = new Size(110, 40);
+            lblLogoText.Location = new Point(68, 20);
+            lblLogoText.ForeColor = Color.White;
             lblLogoText.BackColor = Color.Transparent;
 
             // ── Nav container ──────────────────────────────────────
             pnlNavContainer.BackColor = SidebarBg;
             CreateNavItems();
 
+            ApplySidebarRounding();
+
             // ── Sidebar bottom ─────────────────────────────────────
             pnlSidebarBottom.BackColor = SidebarBg;
             pnlSidebarBottom.Paint += PnlSidebarBottom_Paint;
 
             btnLogout.FillColor = Color.Transparent;
-            btnLogout.ForeColor = Red;
+            btnLogout.ForeColor = Color.White;
             btnLogout.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnLogout.BorderThickness = 0;
-            btnLogout.HoverState.FillColor = Color.FromArgb(254, 242, 242);
+            btnLogout.HoverState.FillColor = Color.White;
             btnLogout.HoverState.ForeColor = Red;
-            btnLogout.TextAlign = HorizontalAlignment.Left;
-            btnLogout.Click += BtnLogout_Click;
-
             btnLogout.TextAlign = HorizontalAlignment.Left;
             btnLogout.Click += BtnLogout_Click;
 
@@ -183,32 +189,75 @@ namespace TheMatchaClubApp.Forms
         /// <summary>Bottom border on logo header.</summary>
         private void PnlLogoHeader_Paint(object? sender, PaintEventArgs e)
         {
-            using var pen = new Pen(BorderLine, 1);
+            using var pen = new Pen(Color.FromArgb(40, Color.White), 1);
             int y = pnlLogoHeader.Height - 1;
             e.Graphics.DrawLine(pen, 0, y, pnlLogoHeader.Width, y);
         }
 
-        /// <summary>Green circle with leaf icon.</summary>
         private void PnlLogoCircle_Paint(object? sender, PaintEventArgs e)
         {
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
-            using var bgBrush = new SolidBrush(GreenAccent);
-            g.FillEllipse(bgBrush, 0, 0, 27, 27);
+            int w = pnlLogoCircle.Width;
+            int h = pnlLogoCircle.Height;
 
-            using var font = new Font("Segoe UI", 14F);
-            using var textBrush = new SolidBrush(Color.White);
-            string leaf = "🍵";
-            var sz = g.MeasureString(leaf, font);
-            g.DrawString(leaf, font, textBrush, (28 - sz.Width) / 2, (28 - sz.Height) / 2);
+            // Draw a white outline circle border
+            using (var borderPen = new Pen(Color.White, 2f))
+            {
+                g.DrawEllipse(borderPen, 2, 2, w - 5, h - 5);
+            }
+
+            // Draw a beautiful white vector cup icon (matcha bowl with steam) inside
+            using (var pen = new Pen(Color.White, 2f))
+            using (var brush = new SolidBrush(Color.White))
+            {
+                float cx = w / 2f;
+                float cy = h / 2f;
+
+                float bowlW = w * 0.45f;
+                float bowlH = h * 0.30f;
+                float bowlX = cx - bowlW / 2f;
+                float bowlY = cy - bowlH / 2f + 4; // space for steam
+
+                // Draw matcha bowl path
+                using (var path = new GraphicsPath())
+                {
+                    float r = bowlH * 0.4f; // bottom corner radius
+                    path.AddLine(bowlX, bowlY, bowlX + bowlW, bowlY);
+                    path.AddArc(bowlX + bowlW - r, bowlY + bowlH - r, r, r, 0, 90);
+                    path.AddLine(bowlX + bowlW - r, bowlY + bowlH, bowlX + r, bowlY + bowlH);
+                    path.AddArc(bowlX, bowlY + bowlH - r, r, r, 90, 90);
+                    path.CloseFigure();
+                    g.FillPath(brush, path);
+                }
+
+                // Draw base
+                float baseW = bowlW * 0.4f;
+                float baseH = bowlH * 0.15f;
+                g.FillRectangle(brush, cx - baseW / 2f, bowlY + bowlH, baseW, baseH);
+
+                // Draw steam lines
+                // Steam 1
+                g.DrawBezier(pen, 
+                    cx - 3, bowlY - 3,
+                    cx - 5, bowlY - 7,
+                    cx - 1, bowlY - 11,
+                    cx - 3, bowlY - 15);
+                // Steam 2
+                g.DrawBezier(pen, 
+                    cx + 3, bowlY - 3,
+                    cx + 1, bowlY - 7,
+                    cx + 5, bowlY - 11,
+                    cx + 3, bowlY - 15);
+            }
         }
 
         /// <summary>Separator line at top of sidebar bottom.</summary>
         private void PnlSidebarBottom_Paint(object? sender, PaintEventArgs e)
         {
-            using var pen = new Pen(BorderLine, 1);
+            using var pen = new Pen(Color.FromArgb(40, Color.White), 1);
             e.Graphics.DrawLine(pen, 16, 0, pnlSidebarBottom.Width - 16, 0);
         }
 
@@ -253,6 +302,40 @@ namespace TheMatchaClubApp.Forms
         private void BtnLogout_Click(object? sender, EventArgs e)
         {
             this.Close(); // FormClosed event in LoginDesign shows LoginForm
+        }
+
+        // ────────────────────────────────────────────────────────────
+        //  SIDEBAR ROUNDING
+        // ────────────────────────────────────────────────────────────
+        private void ApplySidebarRounding()
+        {
+            int radius = 80; // Radius of rounding for top-right corner
+            RoundControlCorner(pnlSidebar, radius);
+            RoundControlCorner(pnlLogoHeader, radius);
+        }
+
+        private void RoundControlCorner(Control ctrl, int radius)
+        {
+            if (ctrl.Width <= 0 || ctrl.Height <= 0) return;
+
+            using var path = new GraphicsPath();
+            int w = ctrl.Width;
+            int h = ctrl.Height;
+
+            // Top-left corner (sharp)
+            path.AddLine(0, 0, 0, 0);
+
+            // Top-right corner (rounded)
+            path.AddArc(w - radius, 0, radius, radius, 270, 90);
+
+            // Bottom-right corner (sharp)
+            path.AddLine(w, h, w, h);
+
+            // Bottom-left corner (sharp)
+            path.AddLine(0, h, 0, h);
+
+            path.CloseAllFigures();
+            ctrl.Region = new Region(path);
         }
     }
 }

@@ -54,10 +54,19 @@ namespace TheMatchaClubApp.Forms
             pnlFilters.BackColor = CCardBg;
             
             StyleFilterButton(btnFilterAll, true);
+            btnFilterAll.Width = 60;
+            
             StyleFilterButton(btnFilterNew, false);
+            btnFilterNew.Width = 60;
+            
             StyleFilterButton(btnFilterRegular, false);
+            btnFilterRegular.Width = 90;
+            
             StyleFilterButton(btnFilterLoyal, false);
+            btnFilterLoyal.Width = 70;
+            
             StyleFilterButton(btnFilterFrequent, false);
+            btnFilterFrequent.Width = 100;
 
             // Sort dropdown
             cmbSort.BorderRadius = 6;
@@ -187,7 +196,9 @@ namespace TheMatchaClubApp.Forms
         private void StyleFilterButton(Guna.UI2.WinForms.Guna2Button btn, bool active)
         {
             btn.BorderRadius = 15;
-            btn.Font = new Font("Segoe UI Semibold", 9F);
+            btn.Font = new Font("Segoe UI Semibold", 8.5F);
+            btn.Padding = new Padding(0);
+            btn.TextOffset = new Point(0, 0);
             if (active)
             {
                 btn.FillColor = CGreen;

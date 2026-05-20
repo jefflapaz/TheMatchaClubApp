@@ -164,7 +164,7 @@ namespace TheMatchaClubApp.Forms
             lblCard3Value.Text = $"₱{avgOrder:#,##0.00}";
             lblCard4Value.Text = $"₱{cashOnHand:#,##0.00}";
             lblCard5Value.Text = unitsSold.ToString();
-            lblCard6Value.Text = bestSeller.Length > 14 ? bestSeller[..14] + "…" : bestSeller;
+            lblCard6Value.Text = bestSeller;
             UpdateSessionDuration(); // Card 7
             lblCard8Value.Text = peakHour;
 
@@ -185,7 +185,7 @@ namespace TheMatchaClubApp.Forms
                 lblCard1Title.Text = "Total Sales Today";
             }
 
-            lblDate.Text = "📅 " + DateTime.Today.ToString("M/d/yyyy");
+            lblDate.Text = "📅 " + DateTime.Now.ToString("MM/dd/yyyy");
 
             // ── Build Chart Data ──────────────────────────────────
             _hourlySalesData = new Dictionary<int, decimal>();
@@ -557,6 +557,7 @@ namespace TheMatchaClubApp.Forms
         // ══════════════════════════════════════════════════════════════
         private void UpdateSessionDuration()
         {
+            lblDate.Text = "📅 " + DateTime.Now.ToString("MM/dd/yyyy");
             var session = Program.SessionService.GetActiveSession();
             if (session != null)
             {

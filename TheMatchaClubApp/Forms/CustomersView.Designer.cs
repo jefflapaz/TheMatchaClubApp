@@ -109,7 +109,7 @@ namespace TheMatchaClubApp.Forms
 
             // Split Container
             splitContainerMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            splitContainerMain.SplitterDistance = 350;
+            splitContainerMain.SplitterDistance = 410;
             splitContainerMain.SplitterWidth = 2;
             splitContainerMain.Panel1.Controls.Add(pnlDirectory);
             splitContainerMain.Panel2.Controls.Add(pnlProfile);
